@@ -8,3 +8,8 @@ erl_crash.dump
 *.beam
 /config/*.secret.exs
 .elixir_ls/
+
+# Devenv
+.devenv*
+devenv.local.nix
+.direnv
