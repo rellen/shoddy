@@ -9,6 +9,9 @@ erl_crash.dump
 /config/*.secret.exs
 .elixir_ls/
 
+# Dialyzer PLTs
+/priv/plts/
+
 # Devenv
 .devenv*
 devenv.local.nix
