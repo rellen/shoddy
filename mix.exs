@@ -8,8 +8,17 @@ defmodule Quicksand.MixProject do
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
       description: "A grab-bag of utility functions for Elixir.",
       dialyzer: [plt_local_path: "priv/plts"]
+    ]
+  end
+
+  defp aliases do
+    [
+      "hook.install": [
+        "cmd cp hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push"
+      ]
     ]
   end
 
