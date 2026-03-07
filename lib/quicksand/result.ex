@@ -274,11 +274,9 @@ defmodule Quicksand.Result do
   def unwrap!({:ok, value}), do: value
   def unwrap!(:ok), do: nil
 
-  def unwrap!({:error, reason}),
-    do: raise(ArgumentError, "unwrap! called on error result: #{inspect(reason)}")
+  def unwrap!({:error, reason}), do: raise(ArgumentError, "unwrap! called on error result: #{inspect(reason)}")
 
-  def unwrap!(:error),
-    do: raise(ArgumentError, "unwrap! called on error result: nil")
+  def unwrap!(:error), do: raise(ArgumentError, "unwrap! called on error result: nil")
 
   @doc """
   Extracts the value from an ok tuple, or returns the default on error.

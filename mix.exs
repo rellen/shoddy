@@ -25,6 +25,7 @@ defmodule Quicksand.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:quokka, "~> 2.12", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.22.0", only: :dev, runtime: false},
       {:ex_check, "~> 0.16.0", only: :dev, runtime: false},
