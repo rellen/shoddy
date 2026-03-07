@@ -11,9 +11,9 @@
 ## Working with This Project
 
 - This is an Elixir project using Mix as the build tool
-- Run `mix test` before committing to ensure tests pass
-- Run `mix format` to format code before committing
-- Run `mix compile --warnings-as-errors` to check for compiler warnings
+- Run `mix format && mix check --no-retry` to format and verify everything before committing
+- Do: `mix check --no-retry` — runs all checks (compiler, tests, credo, dialyzer, etc.) in parallel
+- Don't: `mix test`, `mix compile --warnings-as-errors`, `mix credo` separately — `mix check` runs them all
 
 ## Code Style
 
