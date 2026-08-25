@@ -6,12 +6,14 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
-# Install mise if not already installed
+# Install mise if not already installed.
+#
+# Use the official installer rather than fetching a GitHub release directly:
+# web sessions scope GitHub access to the session's own repositories, so
+# github.com release assets return 403. mise.run downloads from mise.jdx.dev,
+# verifies the checksum, detects os/arch, and installs to $HOME/.local/bin/mise.
 if ! command -v mise &>/dev/null; then
-  mkdir -p "$HOME/.local/bin"
-  MISE_VERSION=$(curl -sI https://github.com/jdx/mise/releases/latest | grep -i location | sed 's/.*tag\/v//' | tr -d '[:space:]')
-  curl -fsSL "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" -o "$HOME/.local/bin/mise"
-  chmod +x "$HOME/.local/bin/mise"
+  curl -fsSL https://mise.run | sh
 fi
 
 export PATH="$HOME/.local/bin:$PATH"
