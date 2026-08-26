@@ -1,46 +1,50 @@
 defmodule Quicksand.Result do
   @moduledoc """
-  Functions for working with result tuples (`{:ok, value}` and `{:error, reason}`).
+  Functions that operate on result tuples, that is `{:ok, value}` and
+  `{:error, reason}`.
 
-  Provides pipe-friendly operations for transforming, inspecting, and converting
-  result tuples — the standard Elixir pattern for representing success and failure.
-
-  All functions take the result as the first argument for natural use in pipelines:
+  Elixir uses these tuples as the usual way to show success and failure. The
+  functions in this module transform, examine, and convert them. Each function
+  takes the result as the first argument. Thus you can use these functions in
+  a pipeline:
 
       fetch_user(id)
       |> Quicksand.Result.map_ok(& &1.name)
       |> Quicksand.Result.unwrap("unknown")
 
-  Both bare atoms (`:ok`, `:error`) and tagged tuples (`{:ok, value}`,
-  `{:error, reason}`) are supported. Bare `:ok` is passed through unchanged
-  by transformation functions like `map_ok/2` and `then_ok/2` (there is
-  no value to transform). For `unwrap!/1` and `unwrap/2`, bare `:ok` is treated
-  as success with no value, returning `nil`.
+  The functions accept the bare atoms `:ok` and `:error`, and also the tuples
+  `{:ok, value}` and `{:error, reason}`. A bare `:ok` has no value. Thus
+  `map_ok/2` and `then_ok/2` return a bare `:ok` with no change, and
+  `unwrap!/1` and `unwrap/2` accept a bare `:ok` as a success and return
+  `nil`.
 
-  Most functions raise `FunctionClauseError` if given a non-result input
-  (e.g., a plain integer or unrelated atom). Exceptions: `ok?/1` and `error?/1`
-  are total predicates that return `false` for non-results, `flatten/1` passes
-  non-results through unchanged, and `from_nil/2` is a constructor that accepts
-  any value.
+  Most of the functions raise `FunctionClauseError` if the input is not a
+  result. A plain integer or an unrelated atom causes this error. There are
+  three exceptions:
+
+  - `ok?/1` and `error?/1` always return a boolean. For an input that is not
+    a result, they return `false`.
+  - `flatten/1` returns an input that is not a result with no change.
+  - `from_nil/2` is a constructor and accepts all values.
 
   ## Constructors
 
-  For constructing result tuples, see `Quicksand.Tagging.ok/1` and
+  To construct result tuples, refer to `Quicksand.Tagging.ok/1` and
   `Quicksand.Tagging.error/1`.
   """
 
-  @typedoc "A result tuple or bare ok/error atom."
+  @typedoc "A result tuple or a bare ok or error atom."
   @type t :: t(any(), any())
 
-  @typedoc "A result with typed value and error."
+  @typedoc "A result with a typed value and a typed error."
   @type t(value, reason) :: :ok | {:ok, value} | :error | {:error, reason}
 
   # Guards
 
   @doc """
-  A guard-safe check for ok results.
+  Tests if a result is ok.
 
-  Matches `:ok` and `{:ok, _}`.
+  You can use this macro in a guard. It matches `:ok` and `{:ok, _}`.
 
   ## Examples
 
@@ -61,9 +65,9 @@ defmodule Quicksand.Result do
                   (is_tuple(result) and tuple_size(result) == 2 and elem(result, 0) == :ok)
 
   @doc """
-  A guard-safe check for error results.
+  Tests if a result is an error.
 
-  Matches `:error` and `{:error, _}`.
+  You can use this macro in a guard. It matches `:error` and `{:error, _}`.
 
   ## Examples
 
@@ -88,8 +92,9 @@ defmodule Quicksand.Result do
   @doc """
   Returns `true` if the result is ok.
 
-  Unlike the other functions in this module, this is a total function —
-  it returns `false` for any non-result input rather than raising.
+  This function is different from most of the functions in this module. It
+  always returns a boolean and it does not raise. For an input that is not a
+  result, it returns `false`.
 
   ## Examples
 
@@ -115,8 +120,9 @@ defmodule Quicksand.Result do
   @doc """
   Returns `true` if the result is an error.
 
-  Unlike the other functions in this module, this is a total function —
-  it returns `false` for any non-result input rather than raising.
+  This function is different from most of the functions in this module. It
+  always returns a boolean and it does not raise. For an input that is not a
+  result, it returns `false`.
 
   ## Examples
 
@@ -142,14 +148,14 @@ defmodule Quicksand.Result do
   # Core operations
 
   @doc """
-  Applies a function to the value inside an ok tuple.
+  Applies a function to the value in an ok tuple.
 
-  If the result is `{:ok, value}`, returns `{:ok, fun.(value)}`.
-  If the result is `:ok`, returns `:ok` (no value to map over).
-  Errors are passed through unchanged.
+  If the result is `{:ok, value}`, this function returns `{:ok, fun.(value)}`.
+  If the result is a bare `:ok`, this function returns `:ok`, because there is
+  no value. This function returns an error with no change.
 
-  Named `map_ok` rather than `map` to avoid conflicts with `Enum.map/2`
-  when imported.
+  The name of this function is `map_ok` and not `map`. Thus it does not
+  conflict with `Enum.map/2` if you import this module.
 
   ## Examples
 
@@ -165,7 +171,7 @@ defmodule Quicksand.Result do
       iex> Quicksand.Result.map_ok(:error, &(&1 * 2))
       :error
 
-  Works in pipelines:
+  Use the function in a pipeline:
 
       iex> {:ok, "hello"} |> Quicksand.Result.map_ok(&String.upcase/1)
       {:ok, "HELLO"}
@@ -177,11 +183,12 @@ defmodule Quicksand.Result do
   def map_ok(:error, fun) when is_function(fun, 1), do: :error
 
   @doc """
-  Applies a function to the reason inside an error tuple.
+  Applies a function to the reason in an error tuple.
 
-  If the result is `{:error, reason}`, returns `{:error, fun.(reason)}`.
-  If the result is `:error`, returns `:error` (no reason to map over).
-  Ok values are passed through unchanged.
+  If the result is `{:error, reason}`, this function returns
+  `{:error, fun.(reason)}`. If the result is a bare `:error`, this function
+  returns `:error`, because there is no reason. This function returns an ok
+  result with no change.
 
   ## Examples
 
@@ -204,15 +211,17 @@ defmodule Quicksand.Result do
   def map_error(:ok, fun) when is_function(fun, 1), do: :ok
 
   @doc """
-  Chains a function that itself returns a result tuple.
+  Calls a function that itself returns a result tuple.
 
-  If the result is `{:ok, value}`, calls `fun.(value)` (which should return
-  a result tuple, though this is not enforced at runtime).
-  If the result is `:ok`, returns `:ok` (no value to pass to the function).
-  Errors are passed through unchanged.
+  If the result is `{:ok, value}`, this function calls `fun.(value)`. The
+  given function must return a result tuple, but this module does not enforce
+  that at run time. If the result is a bare `:ok`, this function returns
+  `:ok`, because there is no value for the given function. This function
+  returns an error with no change.
 
-  Also known as monadic bind, `flat_map`, or `and_then`. Named `then_ok` to
-  complement `Quicksand.then_if/2` — "if ok, then do this next thing."
+  In functional programming, the name of this operation is monadic bind. Other
+  names are `flat_map` and `and_then`. The name `then_ok` agrees with
+  `Quicksand.then_if/2`. If the result is ok, then do the next operation.
 
   ## Examples
 
@@ -228,7 +237,7 @@ defmodule Quicksand.Result do
       iex> Quicksand.Result.then_ok(:error, fn x -> {:ok, x + 1} end)
       :error
 
-  Chaining multiple fallible operations:
+  This example chains two operations that can fail:
 
       iex> {:ok, "123"}
       ...> |> Quicksand.Result.then_ok(fn s ->
@@ -249,12 +258,13 @@ defmodule Quicksand.Result do
   def then_ok(:error, fun) when is_function(fun, 1), do: :error
 
   @doc """
-  Extracts the value from an ok tuple, raising on error.
+  Extracts the value from an ok tuple, or raises if the result is an error.
 
-  Bare `:ok` is treated as `{:ok, nil}` and returns `nil`.
+  This function accepts a bare `:ok` as `{:ok, nil}` and returns `nil`.
 
-  Raises `ArgumentError` on error inputs, following the Elixir convention
-  for bang functions (see `String.to_integer/1`, `URI.new!/1`).
+  For an error input, this function raises `ArgumentError`. This agrees with
+  the Elixir convention for functions that raise, such as
+  `String.to_integer/1` and `URI.new!/1`.
 
   ## Examples
 
@@ -279,10 +289,11 @@ defmodule Quicksand.Result do
   def unwrap!(:error), do: raise(ArgumentError, "unwrap! called on error result: nil")
 
   @doc """
-  Extracts the value from an ok tuple, or returns the default on error.
+  Extracts the value from an ok tuple, or returns the default if the result is
+  an error.
 
-  Bare `:ok` is treated as `{:ok, nil}` and returns `nil` (not the default,
-  since the result is still ok).
+  This function accepts a bare `:ok` as `{:ok, nil}` and returns `nil`. It
+  does not return the default, because the result is still ok.
 
   ## Examples
 
@@ -307,16 +318,16 @@ defmodule Quicksand.Result do
   # Conversion helpers
 
   @doc """
-  Flattens a nested result tuple.
+  Flattens a result tuple that contains a result tuple.
 
-  Converts `{:ok, {:ok, value}}` to `{:ok, value}` and
-  `{:ok, {:error, reason}}` to `{:error, reason}`.
-  Only flattens one level. Other values are returned unchanged.
+  This function converts `{:ok, {:ok, value}}` to `{:ok, value}`, and
+  `{:ok, {:error, reason}}` to `{:error, reason}`. It flattens one level only.
+  It returns all other values with no change.
 
-  Note: because bare `:ok` and `:error` are recognized as result types,
-  `{:ok, :ok}` flattens to `:ok` and `{:ok, :error}` flattens to `:error`.
-  If you need to store the atoms `:ok` or `:error` as literal values inside
-  a result tuple, avoid using `flatten/1`.
+  Note: this module accepts the bare atoms `:ok` and `:error` as results. Thus
+  `{:ok, :ok}` becomes `:ok`, and `{:ok, :error}` becomes `:error`. Do not use
+  `flatten/1` if you must keep the atom `:ok` or the atom `:error` as a value
+  in a result tuple.
 
   ## Examples
 
@@ -346,10 +357,10 @@ defmodule Quicksand.Result do
   def flatten(other), do: other
 
   @doc """
-  Converts a possibly-nil value into a result tuple.
+  Converts a value that can be `nil` into a result tuple.
 
-  Returns `{:ok, value}` when the value is not `nil`, or
-  `{:error, error}` when it is `nil`.
+  If the value is not `nil`, this function returns `{:ok, value}`. If the
+  value is `nil`, this function returns `{:error, error}`.
 
   ## Examples
 
@@ -362,7 +373,7 @@ defmodule Quicksand.Result do
       iex> Quicksand.Result.from_nil(false, :not_found)
       {:ok, false}
 
-  Useful in pipelines:
+  Use the function in a pipeline:
 
       iex> Map.get(%{a: 1}, :b) |> Quicksand.Result.from_nil(:key_missing)
       {:error, :key_missing}
@@ -372,9 +383,9 @@ defmodule Quicksand.Result do
   def from_nil(value, _error), do: {:ok, value}
 
   @doc """
-  Converts `{:ok, value}` to bare `:ok`, discarding the value.
+  Converts `{:ok, value}` to the bare atom `:ok` and discards the value.
 
-  Errors are passed through unchanged.
+  This function returns an error with no change.
 
   ## Examples
 
@@ -397,10 +408,10 @@ defmodule Quicksand.Result do
   def ignore(:error), do: :error
 
   @doc """
-  Runs a side-effect function on the value inside an ok tuple.
+  Calls a function for its side effect on the value in an ok tuple.
 
-  Returns the original result unchanged. Errors are passed through without
-  calling the function.
+  This function returns the initial result with no change. If the result is an
+  error, this function does not call the given function.
 
   ## Examples
 
@@ -424,10 +435,10 @@ defmodule Quicksand.Result do
   def tap_ok(:error, fun) when is_function(fun, 1), do: :error
 
   @doc """
-  Runs a side-effect function on the reason inside an error tuple.
+  Calls a function for its side effect on the reason in an error tuple.
 
-  Returns the original result unchanged. Ok values are passed through without
-  calling the function.
+  This function returns the initial result with no change. If the result is
+  ok, this function does not call the given function.
 
   ## Examples
 

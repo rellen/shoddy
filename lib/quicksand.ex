@@ -1,17 +1,21 @@
 defmodule Quicksand do
   @moduledoc """
-  A grab-bag of utility functions for Elixir.
+  Small functions for tasks that occur frequently in Elixir code.
   """
 
   @doc """
-  Conditionally applies a function to a value, like a conditional `Kernel.then/2`.
+  Applies a function to a value if the value is truthy.
 
-  Calls `fun.(value)` only when `value` is truthy (not `nil` or `false`).
-  When `value` is falsy, it is returned unchanged.
+  A truthy value is a value that is not `nil` and not `false`. A falsy value
+  is `nil` or `false`.
+
+  `Kernel.then/2` always calls the given function. This function calls
+  `fun.(value)` only if `value` is truthy. If `value` is falsy, this function
+  returns `value` with no change.
 
   ## Examples
 
-  Truthy values get transformed:
+  The function transforms a truthy value:
 
       iex> Quicksand.then_if(42, &(&1 * 2))
       84
@@ -28,7 +32,7 @@ defmodule Quicksand do
       iex> Quicksand.then_if(%{a: 1}, &map_size/1)
       1
 
-  Falsy values pass through unchanged:
+  The function returns a falsy value with no change:
 
       iex> Quicksand.then_if(nil, &(&1 * 2))
       nil
@@ -36,7 +40,7 @@ defmodule Quicksand do
       iex> Quicksand.then_if(false, fn _ -> :was_true end)
       false
 
-  Works naturally in pipelines:
+  Use the function in a pipeline:
 
       iex> 10 |> Quicksand.then_if(&(&1 + 5))
       15
@@ -44,12 +48,12 @@ defmodule Quicksand do
       iex> nil |> Quicksand.then_if(&(&1 + 5))
       nil
 
-  Zero is truthy in Elixir:
+  In Elixir, zero is truthy:
 
       iex> Quicksand.then_if(0, &(&1 + 1))
       1
 
-  Empty collections are truthy:
+  In Elixir, an empty collection is truthy:
 
       iex> Quicksand.then_if([], &[1 | &1])
       [1]
@@ -60,16 +64,17 @@ defmodule Quicksand do
   end
 
   @doc """
-  Conditionally applies a function to a value based on a predicate.
+  Applies a function to a value if a predicate gives a truthy result.
 
-  Evaluates `predicate` to decide whether to call `fun.(value)`. The predicate
-  can be a 0-arity function (ignores the value) or a 1-arity function (receives
-  the value). When the predicate returns a truthy result, `fun.(value)` is called.
-  Otherwise, `value` is returned unchanged.
+  The `predicate` argument controls the operation. A predicate of arity 0
+  ignores the value. A predicate of arity 1 receives the value.
+
+  If the predicate gives a truthy result, this function calls `fun.(value)`.
+  If not, this function returns `value` with no change.
 
   ## Examples
 
-  With a 1-arity predicate that inspects the value:
+  A predicate of arity 1 examines the value:
 
       iex> Quicksand.then_if(4, &(rem(&1, 2) == 0), &(&1 * 10))
       40
@@ -83,7 +88,7 @@ defmodule Quicksand do
       iex> Quicksand.then_if("hi", &(String.length(&1) > 3), &String.upcase/1)
       "hi"
 
-  With a 0-arity predicate (external condition):
+  A predicate of arity 0 uses a condition that is external to the value:
 
       iex> Quicksand.then_if(42, fn -> true end, &(&1 * 2))
       84
@@ -94,7 +99,7 @@ defmodule Quicksand do
       iex> Quicksand.then_if(42, fn -> nil end, &(&1 * 2))
       42
 
-  Works in pipelines:
+  Use the function in a pipeline:
 
       iex> 100 |> Quicksand.then_if(&(&1 > 50), &(&1 - 50))
       50
@@ -102,7 +107,8 @@ defmodule Quicksand do
       iex> 30 |> Quicksand.then_if(&(&1 > 50), &(&1 - 50))
       30
 
-  Predicate receives the original value, even when falsy:
+  A predicate of arity 1 always receives the initial value, even a falsy
+  value:
 
       iex> Quicksand.then_if(nil, &is_nil/1, fn _ -> :was_nil end)
       :was_nil

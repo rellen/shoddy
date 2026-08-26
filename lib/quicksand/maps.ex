@@ -1,31 +1,35 @@
 defmodule Quicksand.Maps do
   @moduledoc """
-  Functions for working with maps that complement the standard `Map` module.
+  Functions that operate on maps and add to the standard `Map` module.
 
-  All functions take the map as the first argument, mirroring `Map` itself, so
-  they compose naturally in pipelines:
+  Each function takes the map as the first argument. This is the same as the
+  `Map` module, and it lets you use these functions in a pipeline:
 
       %{}
       |> Quicksand.Maps.put_if(:name, params["name"])
       |> Quicksand.Maps.put_if(:email, params["email"])
 
-  Named `Maps` (plural) so it can be aliased as `Maps` alongside the built-in
-  `Map` without shadowing it.
+  The name of this module is `Maps`, in the plural. Thus the alias `Maps`
+  does not hide the standard `Map` module.
   """
 
   @doc """
-  Puts the value into the map, but only when the value is truthy.
+  Puts a value into a map if the value is truthy.
 
-  When `value` is falsy (`nil` or `false`), the map is returned unchanged —
-  including any existing entry under `key`, which is left as it was rather
-  than being overwritten or removed.
+  A truthy value is a value that is not `nil` and not `false`. A falsy value
+  is `nil` or `false`.
 
-  Useful for building maps from optional data, where absent fields should be
-  omitted instead of stored as `nil`.
+  If `value` is falsy, this function returns the map with no change. An entry
+  that is already in the map under `key` also stays with no change. This
+  function does not replace that entry and does not remove it.
+
+  Use this function to build a map from optional data. The map does not get
+  an entry for a field that is absent, and it does not get a `nil` value for
+  that field.
 
   ## Examples
 
-  Truthy values are put into the map:
+  The function puts a truthy value into the map:
 
       iex> Quicksand.Maps.put_if(%{}, :name, "Ada")
       %{name: "Ada"}
@@ -33,7 +37,7 @@ defmodule Quicksand.Maps do
       iex> Quicksand.Maps.put_if(%{a: 1}, :b, 2)
       %{a: 1, b: 2}
 
-  Falsy values are skipped:
+  The function ignores a falsy value:
 
       iex> Quicksand.Maps.put_if(%{a: 1}, :b, nil)
       %{a: 1}
@@ -41,7 +45,7 @@ defmodule Quicksand.Maps do
       iex> Quicksand.Maps.put_if(%{a: 1}, :b, false)
       %{a: 1}
 
-  An existing entry is overwritten only by a truthy value:
+  Only a truthy value replaces an entry that is already in the map:
 
       iex> Quicksand.Maps.put_if(%{a: 1}, :a, 2)
       %{a: 2}
@@ -49,7 +53,8 @@ defmodule Quicksand.Maps do
       iex> Quicksand.Maps.put_if(%{a: 1}, :a, nil)
       %{a: 1}
 
-  Zero and empty collections are truthy in Elixir, so they are put:
+  In Elixir, zero, an empty collection, and an empty string are truthy. Thus
+  the function puts them into the map:
 
       iex> Quicksand.Maps.put_if(%{}, :count, 0)
       %{count: 0}
@@ -60,7 +65,7 @@ defmodule Quicksand.Maps do
       iex> Quicksand.Maps.put_if(%{}, :name, "")
       %{name: ""}
 
-  Building a map of optional fields in a pipeline:
+  This example builds a map of optional fields in a pipeline:
 
       iex> params = %{"name" => "Ada", "email" => nil}
       iex> %{}

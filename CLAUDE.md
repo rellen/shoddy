@@ -2,26 +2,34 @@
 
 ## Commit Messages
 
-- Use the conventional commits format: `type(scope): description`
-- Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
-- Keep the subject line under 72 characters
-- Use imperative mood in the subject (e.g. "add feature" not "added feature")
-- Include a body for non-trivial changes explaining the "why"
+- Use the conventional commits format: `type(scope): description`.
+- Use one of these types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`,
+  `ci`.
+- Keep the subject line shorter than 72 characters.
+- Write the subject in the imperative mood. For example, write "add feature",
+  not "added feature".
+- Add a body to each commit that is not trivial. In the body, tell why you
+  made the change.
 
-## Working with This Project
+## How to Work on This Project
 
-- This is an Elixir project using Mix as the build tool
-- Run `mix format && mix check --no-retry` to format and verify everything before committing
-- Do: `mix check --no-retry` — runs all checks (compiler, tests, credo, dialyzer, etc.) in parallel
-- Don't: `mix test`, `mix compile --warnings-as-errors`, `mix credo` separately — `mix check` runs them all
+- This project uses Elixir. Mix is the build tool.
+- Run `mix format && mix check --no-retry` before each commit. This command
+  formats the code and does all the checks.
+- Use `mix check --no-retry`. It does all the checks in parallel. The checks
+  include the compiler, the tests, Credo, and Dialyzer.
+- Do not run `mix test`, `mix compile --warnings-as-errors`, or `mix credo` as
+  separate commands. `mix check` does all of them.
 
 ## Code Style
 
-- Follow standard Elixir conventions and the project `.formatter.exs` if present
-- Do not add dependencies without discussing with the maintainer first
-- Keep modules focused and small
+- Obey the usual Elixir conventions and the `.formatter.exs` file of the
+  project, if that file is present.
+- Do not add a dependency before you discuss it with the maintainer.
+- Keep each module small. Give each module one clear purpose.
 
 ## Branch Strategy
 
-- Feature branches should branch from `main`
-- Use descriptive branch names prefixed with the change type (e.g. `feat/add-parser`, `fix/timeout-issue`)
+- Make each feature branch from `main`.
+- Give each branch a descriptive name. Put the change type at the start of the
+  name. For example: `feat/add-parser` or `fix/timeout-issue`.
