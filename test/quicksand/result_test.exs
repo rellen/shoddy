@@ -24,13 +24,13 @@ defmodule Quicksand.ResultTest do
       refute is_ok(:error)
     end
 
-    test "does not match other values" do
+    test "does not match a value that is not a result" do
       refute is_ok(:something)
       refute is_ok(42)
       refute is_ok({:ok, 1, 2})
     end
 
-    test "works in guard clauses" do
+    test "operates in a guard clause" do
       result = fn
         x when is_ok(x) -> :matched_ok
         _ -> :no_match
@@ -59,13 +59,13 @@ defmodule Quicksand.ResultTest do
       refute is_error(:ok)
     end
 
-    test "does not match other values" do
+    test "does not match a value that is not a result" do
       refute is_error(:something)
       refute is_error(42)
       refute is_error({:error, 1, 2})
     end
 
-    test "works in guard clauses" do
+    test "operates in a guard clause" do
       result = fn
         x when is_error(x) -> :matched_error
         _ -> :no_match
@@ -96,7 +96,7 @@ defmodule Quicksand.ResultTest do
       refute ok?(:error)
     end
 
-    test "returns false for other values" do
+    test "returns false for a value that is not a result" do
       refute ok?(:something)
       refute ok?(42)
     end
@@ -119,7 +119,7 @@ defmodule Quicksand.ResultTest do
       refute error?(:ok)
     end
 
-    test "returns false for other values" do
+    test "returns false for a value that is not a result" do
       refute error?(:something)
       refute error?(42)
     end
@@ -132,23 +132,23 @@ defmodule Quicksand.ResultTest do
       assert map_ok({:ok, 3}, &(&1 * 2)) == {:ok, 6}
     end
 
-    test "passes through errors unchanged" do
+    test "passes through an error with no change" do
       assert map_ok({:error, :fail}, &(&1 * 2)) == {:error, :fail}
     end
 
-    test "transforms nil values normally" do
+    test "transforms a nil value" do
       assert map_ok({:ok, nil}, &is_nil/1) == {:ok, true}
     end
 
-    test "handles bare :ok" do
+    test "returns a bare :ok with no change" do
       assert map_ok(:ok, &(&1 * 2)) == :ok
     end
 
-    test "handles bare :error" do
+    test "returns a bare :error with no change" do
       assert map_ok(:error, &(&1 * 2)) == :error
     end
 
-    test "works in pipelines" do
+    test "operates in a pipeline" do
       result =
         {:ok, "hello"}
         |> map_ok(&String.upcase/1)
@@ -157,7 +157,7 @@ defmodule Quicksand.ResultTest do
       assert result == {:ok, "OLLEH"}
     end
 
-    test "pipeline short-circuits on error" do
+    test "stops the pipeline at the first error" do
       result =
         {:error, :fail}
         |> map_ok(&(&1 + 1))
@@ -172,47 +172,47 @@ defmodule Quicksand.ResultTest do
       assert map_error({:error, :not_found}, &to_string/1) == {:error, "not_found"}
     end
 
-    test "passes through ok values unchanged" do
+    test "passes through an ok result with no change" do
       assert map_error({:ok, 42}, &to_string/1) == {:ok, 42}
     end
 
-    test "handles bare :error" do
+    test "returns a bare :error with no change" do
       assert map_error(:error, &to_string/1) == :error
     end
 
-    test "handles bare :ok" do
+    test "returns a bare :ok with no change" do
       assert map_error(:ok, &to_string/1) == :ok
     end
   end
 
   describe "then_ok/2" do
-    test "chains successful operations" do
+    test "chains operations that succeed" do
       assert then_ok({:ok, 1}, fn x -> {:ok, x + 1} end) == {:ok, 2}
     end
 
-    test "returns error from the function" do
+    test "returns the error from the function" do
       assert then_ok({:ok, 1}, fn _ -> {:error, :boom} end) == {:error, :boom}
     end
 
-    test "passes through errors without calling the function" do
+    test "passes through an error and does not call the function" do
       assert then_ok({:error, :fail}, fn _ -> raise "should not be called" end) ==
                {:error, :fail}
     end
 
-    test "handles bare :ok" do
+    test "returns a bare :ok with no change" do
       assert then_ok(:ok, fn _ -> {:ok, 42} end) == :ok
     end
 
-    test "handles bare :error" do
+    test "returns a bare :error with no change" do
       assert then_ok(:error, fn _ -> raise "should not be called" end) == :error
     end
 
-    test "does not enforce return type of function" do
-      # The function should return a result tuple, but this is not enforced
+    test "does not enforce the return type of the function" do
+      # The function must return a result tuple, but this module does not enforce that.
       assert then_ok({:ok, 1}, fn x -> x + 1 end) == 2
     end
 
-    test "chains multiple fallible operations" do
+    test "chains two operations that can fail" do
       result =
         {:ok, "42"}
         |> then_ok(fn s ->
@@ -230,7 +230,7 @@ defmodule Quicksand.ResultTest do
   end
 
   describe "unwrap!/1" do
-    test "extracts value from ok tuple" do
+    test "extracts the value from an ok tuple" do
       assert unwrap!({:ok, 42}) == 42
     end
 
@@ -242,13 +242,13 @@ defmodule Quicksand.ResultTest do
       assert unwrap!(:ok) == nil
     end
 
-    test "raises ArgumentError on error tuple" do
+    test "raises ArgumentError for an error tuple" do
       assert_raise ArgumentError, ~r/unwrap! called on error result: :fail/, fn ->
         unwrap!({:error, :fail})
       end
     end
 
-    test "raises ArgumentError on bare :error" do
+    test "raises ArgumentError for a bare :error" do
       assert_raise ArgumentError, ~r/unwrap! called on error result: nil/, fn ->
         unwrap!(:error)
       end
@@ -256,15 +256,15 @@ defmodule Quicksand.ResultTest do
   end
 
   describe "unwrap/2" do
-    test "extracts value from ok tuple" do
+    test "extracts the value from an ok tuple" do
       assert unwrap({:ok, 42}, 0) == 42
     end
 
-    test "returns default on error tuple" do
+    test "returns the default for an error tuple" do
       assert unwrap({:error, :fail}, 0) == 0
     end
 
-    test "returns nil from {:ok, nil} not the default" do
+    test "returns nil for {:ok, nil}, and not the default" do
       assert unwrap({:ok, nil}, :default) == nil
     end
 
@@ -272,7 +272,7 @@ defmodule Quicksand.ResultTest do
       assert unwrap(:ok, 0) == nil
     end
 
-    test "returns default on bare :error" do
+    test "returns the default for a bare :error" do
       assert unwrap(:error, 0) == 0
     end
   end
@@ -280,31 +280,31 @@ defmodule Quicksand.ResultTest do
   # Conversion helpers
 
   describe "flatten/1" do
-    test "flattens nested ok" do
+    test "flattens an ok tuple that contains an ok tuple" do
       assert flatten({:ok, {:ok, 42}}) == {:ok, 42}
     end
 
-    test "flattens ok wrapping error" do
+    test "flattens an ok tuple that contains an error tuple" do
       assert flatten({:ok, {:error, :fail}}) == {:error, :fail}
     end
 
-    test "flattens ok wrapping bare :ok" do
+    test "flattens an ok tuple that contains a bare :ok" do
       assert flatten({:ok, :ok}) == :ok
     end
 
-    test "flattens ok wrapping bare :error" do
+    test "flattens an ok tuple that contains a bare :error" do
       assert flatten({:ok, :error}) == :error
     end
 
-    test "only flattens one level" do
+    test "flattens one level only" do
       assert flatten({:ok, {:ok, {:ok, 42}}}) == {:ok, {:ok, 42}}
     end
 
-    test "leaves non-nested ok unchanged" do
+    test "does not change an ok tuple that contains no result" do
       assert flatten({:ok, 42}) == {:ok, 42}
     end
 
-    test "leaves errors unchanged" do
+    test "does not change an error" do
       assert flatten({:error, :fail}) == {:error, :fail}
     end
 
@@ -316,37 +316,37 @@ defmodule Quicksand.ResultTest do
       assert flatten(:error) == :error
     end
 
-    test "passes through non-result values" do
+    test "passes through a value that is not a result" do
       assert flatten(42) == 42
       assert flatten(:something) == :something
     end
   end
 
   describe "from_nil/2" do
-    test "wraps non-nil value in ok tuple" do
+    test "puts a value that is not nil into an ok tuple" do
       assert from_nil(42, :not_found) == {:ok, 42}
     end
 
-    test "converts nil to error tuple" do
+    test "converts nil into an error tuple" do
       assert from_nil(nil, :not_found) == {:error, :not_found}
     end
 
-    test "false is not nil" do
+    test "accepts false as a value that is not nil" do
       assert from_nil(false, :not_found) == {:ok, false}
     end
 
-    test "nil error reason is allowed" do
+    test "accepts nil as the error reason" do
       assert from_nil(nil, nil) == {:error, nil}
     end
 
-    test "works with Map.get" do
+    test "operates together with Map.get" do
       assert Map.get(%{a: 1}, :b) |> from_nil(:missing) == {:error, :missing}
       assert Map.get(%{a: 1}, :a) |> from_nil(:missing) == {:ok, 1}
     end
   end
 
   describe "ignore/1" do
-    test "discards value from ok tuple" do
+    test "discards the value from an ok tuple" do
       assert ignore({:ok, 42}) == :ok
     end
 
@@ -354,7 +354,7 @@ defmodule Quicksand.ResultTest do
       assert ignore(:ok) == :ok
     end
 
-    test "passes through error tuple" do
+    test "passes through an error tuple" do
       assert ignore({:error, :fail}) == {:error, :fail}
     end
 
@@ -364,46 +364,46 @@ defmodule Quicksand.ResultTest do
   end
 
   describe "tap_ok/2" do
-    test "runs side-effect on ok value and returns result" do
+    test "calls the function for its side effect and returns the result" do
       assert tap_ok({:ok, 42}, fn val -> send(self(), {:got, val}) end) == {:ok, 42}
       assert_received {:got, 42}
     end
 
-    test "does not call function on error" do
+    test "does not call the function for an error" do
       assert tap_ok({:error, :fail}, fn _ -> send(self(), :called) end) == {:error, :fail}
       refute_received :called
     end
 
-    test "handles bare :ok" do
+    test "returns a bare :ok and does not call the function" do
       assert tap_ok(:ok, fn _ -> send(self(), :called) end) == :ok
       refute_received :called
     end
 
-    test "handles bare :error" do
+    test "returns a bare :error and does not call the function" do
       assert tap_ok(:error, fn _ -> send(self(), :called) end) == :error
       refute_received :called
     end
   end
 
   describe "tap_error/2" do
-    test "runs side-effect on error reason and returns result" do
+    test "calls the function for its side effect and returns the result" do
       assert tap_error({:error, :fail}, fn reason -> send(self(), {:err, reason}) end) ==
                {:error, :fail}
 
       assert_received {:err, :fail}
     end
 
-    test "does not call function on ok" do
+    test "does not call the function for an ok result" do
       assert tap_error({:ok, 42}, fn _ -> send(self(), :called) end) == {:ok, 42}
       refute_received :called
     end
 
-    test "handles bare :error" do
+    test "returns a bare :error and does not call the function" do
       assert tap_error(:error, fn _ -> send(self(), :called) end) == :error
       refute_received :called
     end
 
-    test "handles bare :ok" do
+    test "returns a bare :ok and does not call the function" do
       assert tap_error(:ok, fn _ -> send(self(), :called) end) == :ok
       refute_received :called
     end

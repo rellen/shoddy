@@ -2,5 +2,5 @@
 
 set -euo pipefail
 
-echo "Running mix check before push..."
+echo "This hook runs mix check before the push."
 mix check --no-retry
