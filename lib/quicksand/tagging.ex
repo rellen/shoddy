@@ -1,10 +1,11 @@
 defmodule Quicksand.Tagging do
   @moduledoc """
-  Convenience functions for wrapping values in tagged tuples.
+  Functions that put values into tagged tuples.
 
-  Tagged tuples like `{:ok, value}` and `{:error, reason}` are used extensively
-  in Elixir and OTP. This module provides helpers to construct them, which is
-  especially useful in pipelines.
+  Elixir and OTP use tagged tuples such as `{:ok, value}` and
+  `{:error, reason}` frequently. The functions in this module construct these
+  tuples. Each function takes the value as the first argument. Thus you can
+  use these functions in a pipeline.
 
   ## Examples
 
@@ -19,7 +20,7 @@ defmodule Quicksand.Tagging do
   """
 
   @doc """
-  Wraps a value in an `:ok` tuple.
+  Puts a value into an `:ok` tuple.
 
   ## Examples
 
@@ -33,7 +34,7 @@ defmodule Quicksand.Tagging do
   def ok(value), do: tag(value, :ok)
 
   @doc """
-  Wraps a value in an `:error` tuple.
+  Puts a value into an `:error` tuple.
 
   ## Examples
 
@@ -47,7 +48,7 @@ defmodule Quicksand.Tagging do
   def error(value), do: tag(value, :error)
 
   @doc """
-  Wraps a value in a `:noreply` tuple.
+  Puts a value into a `:noreply` tuple.
 
   ## Examples
 
@@ -58,9 +59,10 @@ defmodule Quicksand.Tagging do
   def noreply(value), do: tag(value, :noreply)
 
   @doc """
-  Wraps a state and timeout/action in a `:noreply` 3-tuple.
+  Puts a state and a timeout or an action into a `:noreply` 3-tuple.
 
-  Useful for GenServer callbacks that return `{:noreply, state, timeout}`.
+  Use this function in a GenServer callback that returns
+  `{:noreply, state, timeout}`.
 
   ## Examples
 
@@ -74,9 +76,9 @@ defmodule Quicksand.Tagging do
   def noreply(value, extra), do: tag(value, extra, :noreply)
 
   @doc """
-  Wraps a value in a `:cont` tuple.
+  Puts a value into a `:cont` tuple.
 
-  Useful with `Enum.reduce_while/3` and Plug pipelines.
+  Use this function with `Enum.reduce_while/3` and with Plug pipelines.
 
   ## Examples
 
@@ -87,9 +89,9 @@ defmodule Quicksand.Tagging do
   def cont(value), do: tag(value, :cont)
 
   @doc """
-  Wraps a value in a `:halt` tuple.
+  Puts a value into a `:halt` tuple.
 
-  Useful with `Enum.reduce_while/3` and Plug pipelines.
+  Use this function with `Enum.reduce_while/3` and with Plug pipelines.
 
   ## Examples
 
@@ -100,7 +102,7 @@ defmodule Quicksand.Tagging do
   def halt(value), do: tag(value, :halt)
 
   @doc """
-  Wraps a value in a `:reply` tuple.
+  Puts a value into a `:reply` tuple.
 
   ## Examples
 
@@ -111,9 +113,9 @@ defmodule Quicksand.Tagging do
   def reply(value), do: tag(value, :reply)
 
   @doc """
-  Wraps a reply and state in a `:reply` 3-tuple.
+  Puts a reply and a state into a `:reply` 3-tuple.
 
-  Useful for GenServer `handle_call/3` callbacks.
+  Use this function in a GenServer `handle_call/3` callback.
 
   ## Examples
 
@@ -124,7 +126,7 @@ defmodule Quicksand.Tagging do
   def reply(value, extra), do: tag(value, extra, :reply)
 
   @doc """
-  Wraps a value in a `:stop` tuple.
+  Puts a value into a `:stop` tuple.
 
   ## Examples
 
@@ -135,9 +137,9 @@ defmodule Quicksand.Tagging do
   def stop(value), do: tag(value, :stop)
 
   @doc """
-  Wraps a reason and state in a `:stop` 3-tuple.
+  Puts a reason and a state into a `:stop` 3-tuple.
 
-  Useful for GenServer callbacks that need to stop the process.
+  Use this function in a GenServer callback that must stop the process.
 
   ## Examples
 
@@ -148,9 +150,9 @@ defmodule Quicksand.Tagging do
   def stop(value, extra), do: tag(value, extra, :stop)
 
   @doc """
-  Wraps a value in a tagged tuple with the given atom tag.
+  Puts a value into a tagged tuple with the given atom tag.
 
-  The tag argument comes last so the function works naturally in pipelines.
+  The tag is the last argument. Thus you can use this function in a pipeline.
 
   ## Examples
 
@@ -167,9 +169,9 @@ defmodule Quicksand.Tagging do
   def tag(value, tag) when is_atom(tag), do: {tag, value}
 
   @doc """
-  Wraps two values in a 3-element tagged tuple with the given atom tag.
+  Puts two values into a 3-element tagged tuple with the given atom tag.
 
-  The tag argument comes last so the function works naturally in pipelines.
+  The tag is the last argument. Thus you can use this function in a pipeline.
 
   ## Examples
 

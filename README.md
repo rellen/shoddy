@@ -1,6 +1,9 @@
 # Quicksand
 
-A grab-bag of utility functions for Elixir. One dependency, many tools.
+Quicksand is an Elixir library. It contains small functions for tasks that
+occur frequently in Elixir code.
+
+The library has no runtime dependencies.
 
 ## License
 

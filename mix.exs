@@ -9,7 +9,7 @@ defmodule Quicksand.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
-      description: "A grab-bag of utility functions for Elixir.",
+      description: "Small functions for tasks that occur frequently in Elixir code.",
       dialyzer: [plt_local_path: "priv/plts"]
     ]
   end
