@@ -2,20 +2,27 @@
   parallel: true,
   skipped: true,
   tools: [
-    # GHSA-rhv4-8758-jx7v — decimal < 3.0.0, unbounded exponent in Decimal.new
-    # enables unauthenticated DoS. Accepted risk, not exploitable here:
+    # This project accepts the risk from advisory GHSA-rhv4-8758-jx7v.
     #
-    #   * decimal is a transitive dev-only dependency (doctor ~> 0.22.0, which
-    #     pins decimal ~> 2.0). Every dep in mix.exs is only: [:dev, :test],
-    #     runtime: false, so it never reaches a release and never sees
-    #     untrusted input.
-    #   * It cannot be patched. The first fixed version is 3.0.0, but jason
-    #     caps decimal at "~> 1.0 or ~> 2.0" in every published release
-    #     including 1.5.0-alpha.2, and jason is required by both credo and
-    #     mix_audit. doctor 0.23.0 wants decimal ~> 3.1 and so is unresolvable.
+    # The advisory reports that decimal, in each version before 3.0.0, does
+    # not limit the exponent in Decimal.new. An attacker can use this defect
+    # to cause a denial of service, and the attacker needs no authentication.
     #
-    # Revisit when jason ships decimal ~> 3.0 support; then bump doctor to
-    # ~> 0.23.0 and drop this override.
+    # The risk is not applicable to this project, for two reasons:
+    #
+    #   * decimal is an indirect dependency of the dev environment only. The
+    #     doctor package, version ~> 0.22.0, requires decimal ~> 2.0. Every
+    #     dependency in mix.exs has only: [:dev, :test] and runtime: false.
+    #     Thus decimal is never part of a release, and it never receives data
+    #     from a user.
+    #   * A patch is not possible. The first corrected version is 3.0.0. But
+    #     jason limits decimal to "~> 1.0 or ~> 2.0" in all of its releases,
+    #     and this includes version 1.5.0-alpha.2. Both credo and mix_audit
+    #     require jason. The doctor package, version 0.23.0, requires decimal
+    #     ~> 3.1. Thus the dependencies cannot resolve.
+    #
+    # Examine this decision again when jason gives support for decimal
+    # ~> 3.0. Then change doctor to ~> 0.23.0 and remove this override.
     {:mix_audit, "mix deps.audit --ignore-advisory-ids GHSA-rhv4-8758-jx7v"}
   ]
 ]
