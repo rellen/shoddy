@@ -12,7 +12,7 @@ defmodule Quicksand.ResultTest do
       assert is_ok({:ok, 42})
     end
 
-    test "matches bare :ok" do
+    test "matches a bare :ok" do
       assert is_ok(:ok)
     end
 
@@ -20,7 +20,7 @@ defmodule Quicksand.ResultTest do
       refute is_ok({:error, :fail})
     end
 
-    test "does not match bare :error" do
+    test "does not match a bare :error" do
       refute is_ok(:error)
     end
 
@@ -47,7 +47,7 @@ defmodule Quicksand.ResultTest do
       assert is_error({:error, :not_found})
     end
 
-    test "matches bare :error" do
+    test "matches a bare :error" do
       assert is_error(:error)
     end
 
@@ -55,7 +55,7 @@ defmodule Quicksand.ResultTest do
       refute is_error({:ok, 42})
     end
 
-    test "does not match bare :ok" do
+    test "does not match a bare :ok" do
       refute is_error(:ok)
     end
 
@@ -84,7 +84,7 @@ defmodule Quicksand.ResultTest do
       assert ok?({:ok, 42})
     end
 
-    test "returns true for bare :ok" do
+    test "returns true for a bare :ok" do
       assert ok?(:ok)
     end
 
@@ -92,7 +92,7 @@ defmodule Quicksand.ResultTest do
       refute ok?({:error, :fail})
     end
 
-    test "returns false for bare :error" do
+    test "returns false for a bare :error" do
       refute ok?(:error)
     end
 
@@ -107,7 +107,7 @@ defmodule Quicksand.ResultTest do
       assert error?({:error, :not_found})
     end
 
-    test "returns true for bare :error" do
+    test "returns true for a bare :error" do
       assert error?(:error)
     end
 
@@ -115,7 +115,7 @@ defmodule Quicksand.ResultTest do
       refute error?({:ok, 42})
     end
 
-    test "returns false for bare :ok" do
+    test "returns false for a bare :ok" do
       refute error?(:ok)
     end
 
@@ -132,7 +132,7 @@ defmodule Quicksand.ResultTest do
       assert map_ok({:ok, 3}, &(&1 * 2)) == {:ok, 6}
     end
 
-    test "passes through an error with no change" do
+    test "returns an error with no change" do
       assert map_ok({:error, :fail}, &(&1 * 2)) == {:error, :fail}
     end
 
@@ -172,7 +172,7 @@ defmodule Quicksand.ResultTest do
       assert map_error({:error, :not_found}, &to_string/1) == {:error, "not_found"}
     end
 
-    test "passes through an ok result with no change" do
+    test "returns an ok result with no change" do
       assert map_error({:ok, 42}, &to_string/1) == {:ok, 42}
     end
 
@@ -194,8 +194,8 @@ defmodule Quicksand.ResultTest do
       assert then_ok({:ok, 1}, fn _ -> {:error, :boom} end) == {:error, :boom}
     end
 
-    test "passes through an error and does not call the function" do
-      assert then_ok({:error, :fail}, fn _ -> raise "should not be called" end) ==
+    test "returns an error with no change and does not call the function" do
+      assert then_ok({:error, :fail}, fn _ -> raise "then_ok must not call this function" end) ==
                {:error, :fail}
     end
 
@@ -204,11 +204,12 @@ defmodule Quicksand.ResultTest do
     end
 
     test "returns a bare :error with no change" do
-      assert then_ok(:error, fn _ -> raise "should not be called" end) == :error
+      assert then_ok(:error, fn _ -> raise "then_ok must not call this function" end) == :error
     end
 
     test "does not enforce the return type of the function" do
-      # The function must return a result tuple, but this module does not enforce that.
+      # The function must return a result tuple, but Quicksand.Result does not
+      # enforce that.
       assert then_ok({:ok, 1}, fn x -> x + 1 end) == 2
     end
 
@@ -238,7 +239,7 @@ defmodule Quicksand.ResultTest do
       assert unwrap!({:ok, nil}) == nil
     end
 
-    test "returns nil for bare :ok" do
+    test "returns nil for a bare :ok" do
       assert unwrap!(:ok) == nil
     end
 
@@ -268,7 +269,7 @@ defmodule Quicksand.ResultTest do
       assert unwrap({:ok, nil}, :default) == nil
     end
 
-    test "returns nil for bare :ok" do
+    test "returns nil for a bare :ok" do
       assert unwrap(:ok, 0) == nil
     end
 
@@ -308,15 +309,15 @@ defmodule Quicksand.ResultTest do
       assert flatten({:error, :fail}) == {:error, :fail}
     end
 
-    test "passes through bare :ok" do
+    test "returns a bare :ok with no change" do
       assert flatten(:ok) == :ok
     end
 
-    test "passes through bare :error" do
+    test "returns a bare :error with no change" do
       assert flatten(:error) == :error
     end
 
-    test "passes through a value that is not a result" do
+    test "returns a value that is not a result with no change" do
       assert flatten(42) == 42
       assert flatten(:something) == :something
     end
@@ -350,15 +351,15 @@ defmodule Quicksand.ResultTest do
       assert ignore({:ok, 42}) == :ok
     end
 
-    test "passes through bare :ok" do
+    test "returns a bare :ok with no change" do
       assert ignore(:ok) == :ok
     end
 
-    test "passes through an error tuple" do
+    test "returns an error tuple with no change" do
       assert ignore({:error, :fail}) == {:error, :fail}
     end
 
-    test "passes through bare :error" do
+    test "returns a bare :error with no change" do
       assert ignore(:error) == :error
     end
   end

@@ -3,7 +3,8 @@ defmodule Quicksand.Tagging do
   Functions that put values into tagged tuples.
 
   Elixir and OTP use tagged tuples such as `{:ok, value}` and
-  `{:error, reason}` frequently. The functions in this module construct these
+  `{:error, reason}` frequently. OTP is the set of standard libraries of the
+  Erlang platform. The functions in this module construct these
   tuples. Each function takes the value as the first argument. Thus you can
   use these functions in a pipeline.
 
@@ -20,7 +21,7 @@ defmodule Quicksand.Tagging do
   """
 
   @doc """
-  Puts a value into an `:ok` tuple.
+  Puts a value into an ok tuple.
 
   ## Examples
 
@@ -34,7 +35,7 @@ defmodule Quicksand.Tagging do
   def ok(value), do: tag(value, :ok)
 
   @doc """
-  Puts a value into an `:error` tuple.
+  Puts a value into an error tuple.
 
   ## Examples
 
@@ -59,7 +60,9 @@ defmodule Quicksand.Tagging do
   def noreply(value), do: tag(value, :noreply)
 
   @doc """
-  Puts a state and a timeout or an action into a `:noreply` 3-tuple.
+  Puts a state and a timeout into a `:noreply` tagged tuple of three elements.
+
+  The second argument can also be `:hibernate` or a `{:continue, term}` tuple.
 
   Use this function in a GenServer callback that returns
   `{:noreply, state, timeout}`.
@@ -113,7 +116,7 @@ defmodule Quicksand.Tagging do
   def reply(value), do: tag(value, :reply)
 
   @doc """
-  Puts a reply and a state into a `:reply` 3-tuple.
+  Puts a reply and a state into a `:reply` tagged tuple of three elements.
 
   Use this function in a GenServer `handle_call/3` callback.
 
@@ -137,7 +140,7 @@ defmodule Quicksand.Tagging do
   def stop(value), do: tag(value, :stop)
 
   @doc """
-  Puts a reason and a state into a `:stop` 3-tuple.
+  Puts a reason and a state into a `:stop` tagged tuple of three elements.
 
   Use this function in a GenServer callback that must stop the process.
 
@@ -169,7 +172,7 @@ defmodule Quicksand.Tagging do
   def tag(value, tag) when is_atom(tag), do: {tag, value}
 
   @doc """
-  Puts two values into a 3-element tagged tuple with the given atom tag.
+  Puts two values into a tagged tuple of three elements with the given atom tag.
 
   The tag is the last argument. Thus you can use this function in a pipeline.
 

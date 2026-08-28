@@ -20,6 +20,8 @@ defmodule Quicksand.ResultPropertyTest do
     filter(simple(), fn value -> value not in [:ok, :error] end)
   end
 
+  # A functor law is a rule about a function that changes the value inside a
+  # container and keeps the shape of that container. There are two such laws.
   describe "map_ok/2 obeys the functor laws" do
     property "the identity function makes no change" do
       check all(value <- result()) do
@@ -56,6 +58,9 @@ defmodule Quicksand.ResultPropertyTest do
     end
   end
 
+  # A monad law is a rule about a function that chains one operation to the
+  # next operation. There are three such laws. The names of the three laws are
+  # left identity, right identity, and associativity.
   describe "then_ok/2 obeys the monad laws" do
     property "left identity: an ok tuple gives the value to the function" do
       check all(value <- integer()) do

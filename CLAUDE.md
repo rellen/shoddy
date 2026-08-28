@@ -6,7 +6,8 @@
 Technical English. This rule is not optional. Do not write documentation in
 any other style.**
 
-STE keeps text short, active, and unambiguous. A reader who does not speak
+This document says STE for ASD-STE100 after this point. STE keeps text
+short, active, and unambiguous. A reader who does not speak
 English as a first language can then read the text correctly. A machine
 translation of the text also stays correct. A reader must never need to guess
 what a sentence means.
@@ -42,9 +43,9 @@ Obey these nine rules each time you write or change that text:
    "for example". Do not write "e.g.".
 
 There is one permitted exception. The summary line of a `@doc` can keep the
-usual Elixir form and start with a verb, as in "Applies a function to a
-value". That line is the title of the entry in the generated documentation,
-and STE permits a short form in a title.
+usual Elixir form. That line can start with a verb, as in "Applies a function
+to a value". That line is the title of the entry in the generated
+documentation, and STE permits a short form in a title.
 
 Read your text again before each commit. Check it against the nine rules
 above. A change that adds documentation in another style is not complete.
@@ -78,7 +79,8 @@ above. A change that adds documentation in another style is not complete.
 
 - Obey the usual Elixir conventions and the `.formatter.exs` file of the
   project, if that file is present.
-- Write every comment, docstring, and test description in ASD-STE100. Obey
+- Write every comment, `@moduledoc`, `@doc`, `@typedoc`, and test
+  description in ASD-STE100. Obey
   the rules in the first section.
 - Do not add a dependency before you discuss it with the maintainer.
 - Keep each module small. Give each module one clear purpose.
