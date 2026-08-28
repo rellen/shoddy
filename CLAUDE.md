@@ -70,6 +70,9 @@ above. A change that adds documentation in another style is not complete.
   include the compiler, the tests, Credo, and Dialyzer.
 - Do not run `mix test`, `mix compile --warnings-as-errors`, or `mix credo` as
   separate commands. `mix check` does all of them.
+- Run `mix hook.install` one time in each new clone. That command tells git to
+  use the `hooks` directory of this project. Git then runs `mix check` before
+  each push.
 
 ## Code Style
 
