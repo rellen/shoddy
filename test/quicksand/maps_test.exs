@@ -62,7 +62,7 @@ defmodule Quicksand.MapsTest do
       assert result == %{name: "Ada", age: 36}
     end
 
-    test "raises for a first argument that is not a map" do
+    test "raises FunctionClauseError for a first argument that is not a map" do
       assert_raise FunctionClauseError, fn -> put_if([a: 1], :b, 2) end
       assert_raise FunctionClauseError, fn -> put_if(nil, :b, 2) end
     end

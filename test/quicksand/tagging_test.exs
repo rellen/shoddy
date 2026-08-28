@@ -36,11 +36,11 @@ defmodule Quicksand.TaggingTest do
   end
 
   describe "noreply/2" do
-    test "puts a state and a timeout into a :noreply 3-tuple" do
+    test "puts a state and a timeout into a :noreply tagged tuple of three elements" do
       assert noreply(%{count: 0}, 5000) == {:noreply, %{count: 0}, 5000}
     end
 
-    test "puts a state and :hibernate into a :noreply 3-tuple" do
+    test "puts a state and :hibernate into a :noreply tagged tuple of three elements" do
       assert noreply(%{}, :hibernate) == {:noreply, %{}, :hibernate}
     end
   end
@@ -64,7 +64,7 @@ defmodule Quicksand.TaggingTest do
   end
 
   describe "reply/2" do
-    test "puts a reply and a state into a :reply 3-tuple" do
+    test "puts a reply and a state into a :reply tagged tuple of three elements" do
       assert reply(:ok, %{count: 1}) == {:reply, :ok, %{count: 1}}
     end
   end
@@ -76,7 +76,7 @@ defmodule Quicksand.TaggingTest do
   end
 
   describe "stop/2" do
-    test "puts a reason and a state into a :stop 3-tuple" do
+    test "puts a reason and a state into a :stop tagged tuple of three elements" do
       assert stop(:normal, %{}) == {:stop, :normal, %{}}
     end
   end

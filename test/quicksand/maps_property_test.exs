@@ -5,8 +5,9 @@ defmodule Quicksand.MapsPropertyTest do
   alias Quicksand.Maps
 
   # These generators give simple values on purpose. The function put_if/3
-  # examines only whether a value is truthy, so a deep value gives no more
-  # cover than a simple value, and it makes the test much slower.
+  # examines only whether a value is truthy. A large value with many levels
+  # thus tests no more behaviour than a simple value, and it makes the test
+  # much slower.
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
   defp falsy, do: member_of([nil, false])

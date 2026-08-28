@@ -41,7 +41,7 @@ defmodule Quicksand.TaggingPropertyTest do
   end
 
   describe "the named functions agree with tag/2" do
-    property "ok/1, error/1, noreply/1, cont/1, halt/1, reply/1, and stop/1" do
+    property "each named function of arity 1 gives the same tuple as tag/2" do
       check all(value <- simple()) do
         assert Tagging.ok(value) == Tagging.tag(value, :ok)
         assert Tagging.error(value) == Tagging.tag(value, :error)
@@ -55,7 +55,7 @@ defmodule Quicksand.TaggingPropertyTest do
   end
 
   describe "the named functions agree with tag/3" do
-    property "noreply/2, reply/2, and stop/2" do
+    property "each named function of arity 2 gives the same tuple as tag/3" do
       check all(value <- simple(), extra <- simple()) do
         assert Tagging.noreply(value, extra) == Tagging.tag(value, extra, :noreply)
         assert Tagging.reply(value, extra) == Tagging.tag(value, extra, :reply)

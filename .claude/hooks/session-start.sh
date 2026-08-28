@@ -9,16 +9,17 @@ fi
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 
 # This variable holds one more directory for the PATH. The fallback function
-# below sets it. It stays empty when the usual install succeeds.
+# below sets it. It stays empty when the usual installation succeeds.
 FALLBACK_BIN=""
 
 # Install mise, if it is not installed already.
 #
 # Use the official installer at mise.run. A direct download of a mise release
 # needs the version number first. The "releases/latest" page of github.com
-# gives that number, but it gives error 403 in a web session. The block
-# applies to that page. It does not apply to a release asset with a pinned
-# tag. The fallback below thus can use a pinned asset, but this step cannot.
+# gives that number, but it gives error 403 in a web session. That error
+# applies to the "releases/latest" page only. It does not apply to a release
+# asset with a pinned tag. The fallback below thus can use a pinned asset, but
+# this step cannot.
 #
 # The installer at mise.run gets mise from mise.jdx.dev. It also examines the
 # checksum, finds the operating system and the architecture, and installs mise
