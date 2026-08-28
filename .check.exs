@@ -12,9 +12,10 @@
     #
     #   * decimal is an indirect dependency of the dev environment only. The
     #     doctor package, version ~> 0.22.0, requires decimal ~> 2.0. Every
-    #     dependency in mix.exs has only: [:dev, :test] and runtime: false.
-    #     Thus decimal is never part of a release, and it never receives data
-    #     from a user.
+    #     dependency in mix.exs has runtime: false. Each dependency is limited
+    #     to the dev environment, or to the dev environment and the test
+    #     environment. Thus decimal is never part of a release, and it never
+    #     receives data from a user.
     #   * A patch is not possible. The first corrected version is 3.0.0. But
     #     jason limits decimal to "~> 1.0 or ~> 2.0" in all of its releases,
     #     and this includes version 1.5.0-alpha.2. Both credo and mix_audit
