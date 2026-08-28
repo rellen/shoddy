@@ -48,6 +48,15 @@ defmodule QuicksandPropertyTest do
       end
     end
 
+    property "applies the function for a truthy result that is not the atom true" do
+      # The doc says "truthy", not "true". Every other test gives a predicate
+      # that returns true, false, or nil, so no other test states this rule.
+      check all(value <- term(), result <- member_of([:yes, 42, "x", [], %{}, 0])) do
+        assert Quicksand.then_if(value, fn -> result end, fn _ -> :called end) == :called
+        assert Quicksand.then_if(value, fn _ -> result end, fn _ -> :called end) == :called
+      end
+    end
+
     property "ignores the value for a predicate of arity 0" do
       check all(value <- term(), decision <- boolean()) do
         expected = if decision, do: :called, else: value
