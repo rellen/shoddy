@@ -7,8 +7,15 @@ defmodule Quicksand.Hourglass do
   element is the value. The second element is the precision, which is a count
   of digits from 0 to 6.
 
-  Elixir has `DateTime.truncate/2`, which lowers the precision. Elixir has no
-  function that makes the precision higher. `extend/2` does that.
+  Elixir has `DateTime.truncate/2`, `NaiveDateTime.truncate/2`, and
+  `Time.truncate/2`. Each of these functions lowers the precision.
+
+  Elixir can also make the precision higher. A call to `DateTime.add/4` with
+  an amount of 0 gives the precision of the unit. `NaiveDateTime.add/3` and
+  `Time.add/3` do the same. Those calls give the correct result, but the name
+  `add` does not tell the reader the intent. `extend/2` gives the same result
+  under a name that tells the intent, and one call accepts all three struct
+  types.
 
   Two values that show the same point in time are not equal if the precision
   of each value is different. The operator `==` compares the two structs, and
@@ -45,15 +52,23 @@ defmodule Quicksand.Hourglass do
 
   This function never lowers the precision. If the value already has a higher
   precision than `precision`, this function returns the value with no change.
-  To lower the precision, use `DateTime.truncate/2`.
+  To lower the precision, use `DateTime.truncate/2`,
+  `NaiveDateTime.truncate/2`, or `Time.truncate/2`. Each of those functions
+  accepts one struct type only.
 
   This function does not accept `:second`. A precision of 0 digits is the
   lowest precision, so such a call can never change a value. A call that gives
   `:second` is thus a mistake, and this function raises `FunctionClauseError`
   for it.
 
-  A change of the precision does not change the point in time, because this
-  function adds digits that are zero.
+  This function changes the precision only. It does not change the value of
+  the fractional second, so the point in time stays the same.
+
+  Elixir does not force the digits after the precision to be zero. A value of
+  `{123456, 3}` is correct, and it shows as `.123`. This function makes that
+  value show as `.123456`. The two forms are the same point in time, and
+  `DateTime.compare/2` gives `:eq` for them. `DateTime.add/4` also behaves in
+  this way.
 
   ## Examples
 

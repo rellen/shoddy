@@ -78,7 +78,7 @@ defmodule Quicksand.Tagging do
   @doc """
   Puts a value into a `:cont` tuple.
 
-  Use this function with `Enum.reduce_while/3` and with Plug pipelines.
+  Use this function with `Enum.reduce_while/3`.
 
   ## Examples
 
@@ -91,7 +91,7 @@ defmodule Quicksand.Tagging do
   @doc """
   Puts a value into a `:halt` tuple.
 
-  Use this function with `Enum.reduce_while/3` and with Plug pipelines.
+  Use this function with `Enum.reduce_while/3`.
 
   ## Examples
 

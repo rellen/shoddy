@@ -262,9 +262,9 @@ defmodule Quicksand.Result do
 
   This function accepts a bare `:ok` as `{:ok, nil}` and returns `nil`.
 
-  For an error input, this function raises `ArgumentError`. This agrees with
-  the Elixir convention for functions that raise, such as
-  `String.to_integer/1` and `URI.new!/1`.
+  For an error input, this function raises `ArgumentError`. The Elixir
+  function `String.to_integer/1` also raises `ArgumentError` for an input that
+  it cannot accept.
 
   ## Examples
 
