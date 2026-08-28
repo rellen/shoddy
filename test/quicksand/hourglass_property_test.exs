@@ -8,17 +8,19 @@ defmodule Quicksand.HourglassPropertyTest do
 
   defp precision_name, do: member_of([:millisecond, :microsecond])
 
-  # Remove the digits that the precision does not keep. Elixir holds a
-  # fractional second as {value, precision}, and the value must have a zero in
-  # each position after the precision.
-  defp scrub(value, precision) do
-    factor = Integer.pow(10, 6 - precision)
-    div(value, factor) * factor
-  end
-
+  # Elixir keeps the fractional second as a tuple of a value and a precision.
+  # Elixir does not force the digits after the precision to be zero. The guard
+  # of Calendar.ISO checks the range of each element only. Thus a value such as
+  # {123456, 3} is correct, and Elixir itself constructs one. This generator
+  # therefore makes values with digits after the precision, because extend/2
+  # must be correct for them.
+  #
+  # A first form of this generator removed those digits. That form rested on a
+  # belief about Elixir that is not true, and it hid a whole class of input
+  # from every property in this file.
   defp fraction do
     gen all(value <- integer(0..999_999), precision <- integer(0..6)) do
-      {scrub(value, precision), precision}
+      {value, precision}
     end
   end
 
@@ -92,6 +94,14 @@ defmodule Quicksand.HourglassPropertyTest do
     property "always gives a precision of 6" do
       check all(value <- time_value()) do
         assert {_, 6} = Hourglass.extend(value).microsecond
+      end
+    end
+
+    property "gives the same result as DateTime.add/4 with an amount of 0" do
+      # The moduledoc states this agreement. If the two ever differ, the
+      # moduledoc is wrong and this property says so.
+      check all(value <- datetime()) do
+        assert Hourglass.extend(value) == DateTime.add(value, 0, :microsecond)
       end
     end
 
