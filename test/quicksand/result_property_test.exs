@@ -16,8 +16,15 @@ defmodule Quicksand.ResultPropertyTest do
     ])
   end
 
+  # This generator must make tuples as well as simple values. A first form gave
+  # simple values only, so no property saw a tuple that is not a result, and a
+  # change that removed the guard of flatten/1 broke no property.
   defp not_a_result do
-    filter(simple(), fn value -> value not in [:ok, :error] end)
+    one_of([
+      filter(simple(), fn value -> value not in [:ok, :error] end),
+      tuple({member_of([:foo, :noreply, :cont]), simple()}),
+      tuple({constant(:ok), simple(), simple()})
+    ])
   end
 
   # A functor law is a rule about a function that changes the value inside a
@@ -99,10 +106,12 @@ defmodule Quicksand.ResultPropertyTest do
       end
     end
 
-    property "both predicates return false for a value that is not a result" do
+    property "both predicates return the atom false for a value that is not a result" do
+      # Use == false, not refute. The moduledoc promises a boolean, and refute
+      # also accepts nil, so refute cannot state this rule.
       check all(value <- not_a_result()) do
-        refute Result.ok?(value)
-        refute Result.error?(value)
+        assert Result.ok?(value) == false
+        assert Result.error?(value) == false
       end
     end
   end
@@ -142,6 +151,12 @@ defmodule Quicksand.ResultPropertyTest do
     property "flatten/1 returns a value that is not a result with no change" do
       check all(value <- not_a_result()) do
         assert Result.flatten(value) == value
+      end
+    end
+
+    property "flatten/1 keeps an ok tuple that holds a value which is not a result" do
+      check all(inner <- not_a_result()) do
+        assert Result.flatten({:ok, inner}) == {:ok, inner}
       end
     end
 

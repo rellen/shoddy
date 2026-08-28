@@ -409,4 +409,41 @@ defmodule Quicksand.ResultTest do
       refute_received :called
     end
   end
+
+  # The moduledoc states that most functions raise FunctionClauseError for an
+  # input that is not a result. No test stated that rule, so a catch-all clause
+  # on any of these functions broke no test.
+  describe "the contract for an input that is not a result" do
+    test "map_ok/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> map_ok(42, &Function.identity/1) end
+    end
+
+    test "map_error/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> map_error(42, &Function.identity/1) end
+    end
+
+    test "then_ok/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> then_ok(42, &{:ok, &1}) end
+    end
+
+    test "unwrap!/1 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> unwrap!(42) end
+    end
+
+    test "unwrap/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> unwrap(42, :default) end
+    end
+
+    test "ignore/1 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> ignore(42) end
+    end
+
+    test "tap_ok/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> tap_ok(42, &Function.identity/1) end
+    end
+
+    test "tap_error/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> tap_error(42, &Function.identity/1) end
+    end
+  end
 end
