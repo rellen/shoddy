@@ -45,6 +45,21 @@ defmodule Quicksand.HourglassTest do
     end
   end
 
+  describe "the digits after the precision" do
+    test "reveals them, and agrees with the add function of the standard library" do
+      # Elixir does not force these digits to be zero, so this value is correct.
+      value = Time.new!(0, 0, 0, {123_456, 3})
+      assert Time.to_iso8601(value) == "00:00:00.123"
+      assert Time.to_iso8601(extend(value)) == "00:00:00.123456"
+      assert extend(value) == Time.add(value, 0, :microsecond)
+    end
+
+    test "does not change the point in time" do
+      value = DateTime.new!(~D[2024-01-01], Time.new!(0, 0, 0, {123_456, 3}))
+      assert DateTime.compare(extend(value), value) == :eq
+    end
+  end
+
   describe "extend/2" do
     test "extends to a precision of 3 for :millisecond" do
       assert extend(~U[2024-01-01 00:00:00Z], :millisecond).microsecond == {0, 3}
