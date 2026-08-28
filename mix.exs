@@ -31,7 +31,8 @@ defmodule Quicksand.MixProject do
       {:ex_check, "~> 0.16.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.40.1", only: :dev, runtime: false},
       {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
-      {:sobelow, "~> 0.14.1", only: [:dev, :test], runtime: false}
+      {:sobelow, "~> 0.14.1", only: [:dev, :test], runtime: false},
+      {:stream_data, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 end
