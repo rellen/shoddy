@@ -413,37 +413,45 @@ defmodule Quicksand.ResultTest do
   # The moduledoc states that most functions raise FunctionClauseError for an
   # input that is not a result. No test stated that rule, so a catch-all clause
   # on any of these functions broke no test.
+  #
+  # Each test below calls a function through apply/2. The compiler examines
+  # the type of each argument at a direct call. It reports a type violation
+  # for an argument that no clause of the function accepts. Each test here
+  # gives such an argument on purpose, because each test states the behaviour
+  # at run time. The compiler does not examine the arguments of apply/2, and
+  # it thus reports no violation. The capture of the function lets the
+  # compiler check that the function exists with that arity.
   describe "the contract for an input that is not a result" do
     test "map_ok/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> map_ok(42, &Function.identity/1) end
+      assert_raise FunctionClauseError, fn -> apply(&map_ok/2, [42, &Function.identity/1]) end
     end
 
     test "map_error/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> map_error(42, &Function.identity/1) end
+      assert_raise FunctionClauseError, fn -> apply(&map_error/2, [42, &Function.identity/1]) end
     end
 
     test "then_ok/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> then_ok(42, &{:ok, &1}) end
+      assert_raise FunctionClauseError, fn -> apply(&then_ok/2, [42, &{:ok, &1}]) end
     end
 
     test "unwrap!/1 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> unwrap!(42) end
+      assert_raise FunctionClauseError, fn -> apply(&unwrap!/1, [42]) end
     end
 
     test "unwrap/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> unwrap(42, :default) end
+      assert_raise FunctionClauseError, fn -> apply(&unwrap/2, [42, :default]) end
     end
 
     test "ignore/1 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> ignore(42) end
+      assert_raise FunctionClauseError, fn -> apply(&ignore/1, [42]) end
     end
 
     test "tap_ok/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> tap_ok(42, &Function.identity/1) end
+      assert_raise FunctionClauseError, fn -> apply(&tap_ok/2, [42, &Function.identity/1]) end
     end
 
     test "tap_error/2 raises FunctionClauseError" do
-      assert_raise FunctionClauseError, fn -> tap_error(42, &Function.identity/1) end
+      assert_raise FunctionClauseError, fn -> apply(&tap_error/2, [42, &Function.identity/1]) end
     end
   end
 end
