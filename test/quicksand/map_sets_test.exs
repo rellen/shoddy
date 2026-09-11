@@ -5,6 +5,12 @@ defmodule Quicksand.MapSetsTest do
 
   doctest Quicksand.MapSets
 
+  # Some tests below call a function through apply/2. The compiler examines
+  # the type of each argument at a direct call. It reports a type violation
+  # for an argument that no clause of the function accepts. Those tests give
+  # such an argument on purpose, because they state the behaviour at run time.
+  # The compiler does not examine the arguments of apply/2.
+
   describe "toggle/2" do
     test "puts an element that is not a member into the map set" do
       assert toggle(MapSet.new([:a, :b]), :c) == MapSet.new([:a, :b, :c])
@@ -57,9 +63,9 @@ defmodule Quicksand.MapSetsTest do
     end
 
     test "raises FunctionClauseError for a first argument that is not a map set" do
-      assert_raise FunctionClauseError, fn -> toggle([:a], :b) end
-      assert_raise FunctionClauseError, fn -> toggle(%{a: 1}, :b) end
-      assert_raise FunctionClauseError, fn -> toggle(nil, :b) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle/2, [[:a], :b]) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle/2, [%{a: 1}, :b]) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle/2, [nil, :b]) end
     end
   end
 
@@ -123,8 +129,8 @@ defmodule Quicksand.MapSetsTest do
     end
 
     test "raises FunctionClauseError for a first argument that is not a map set" do
-      assert_raise FunctionClauseError, fn -> toggle_all([:a], [:b]) end
-      assert_raise FunctionClauseError, fn -> toggle_all(nil, [:b]) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle_all/2, [[:a], [:b]]) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle_all/2, [nil, [:b]]) end
     end
   end
 end
