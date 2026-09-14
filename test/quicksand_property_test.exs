@@ -202,4 +202,24 @@ defmodule QuicksandPropertyTest do
       end
     end
   end
+
+  describe "id/1" do
+    property "gives back the same term for any term" do
+      check all(value <- term()) do
+        assert Quicksand.id(value) === value
+      end
+    end
+
+    property "changes no list when Enum.map/2 uses it" do
+      check all(list <- list_of(term(), max_length: 10)) do
+        assert Enum.map(list, &Quicksand.id/1) == list
+      end
+    end
+
+    property "gives the same result as Function.identity/1" do
+      check all(value <- term()) do
+        assert Quicksand.id(value) === Function.identity(value)
+      end
+    end
+  end
 end
