@@ -252,4 +252,35 @@ defmodule QuicksandTest do
       assert_raise FunctionClauseError, fn -> apply(&Quicksand.coalesce/2, [[nil], :reject]) end
     end
   end
+
+  describe "id/1" do
+    test "gives back the value with no change" do
+      assert Quicksand.id(42) == 42
+      assert Quicksand.id("text") == "text"
+      assert Quicksand.id([1, 2]) == [1, 2]
+      assert Quicksand.id(%{a: 1}) == %{a: 1}
+    end
+
+    test "gives back nil and false with no change" do
+      assert Quicksand.id(nil) == nil
+      assert Quicksand.id(false) == false
+    end
+
+    test "gives back the same term, not an equal term" do
+      assert Quicksand.id(1.0) === 1.0
+      refute Quicksand.id(1.0) === 1
+    end
+
+    test "gives back a function with no call" do
+      fun = fn -> :called end
+
+      assert Quicksand.id(fun) == fun
+    end
+
+    test "works as a capture where a function of arity 1 is required" do
+      assert Enum.map([1, 2, 3], &Quicksand.id/1) == [1, 2, 3]
+      assert Enum.filter([1, nil, 2, false], &Quicksand.id/1) == [1, 2]
+      assert Quicksand.then_if(42, &Quicksand.id/1) == 42
+    end
+  end
 end

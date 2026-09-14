@@ -128,6 +128,35 @@ defmodule Quicksand do
   end
 
   @doc """
+  Returns the value with no change.
+
+  This function is the identity function. Use this function where code
+  requires a function of arity 1 but must not change the value. The standard
+  library gives the same function as `Function.identity/1`. The capture
+  `&Quicksand.id/1` is shorter than `&Function.identity/1`.
+
+  ## Examples
+
+      iex> Quicksand.id(42)
+      42
+
+      iex> Quicksand.id(nil)
+      nil
+
+  Use the function to keep the truthy values of a list:
+
+      iex> Enum.filter([1, nil, 2, false, 3], &Quicksand.id/1)
+      [1, 2, 3]
+
+  Use the function to remove one level of nested lists:
+
+      iex> Enum.flat_map([[1, 2], [], [3]], &Quicksand.id/1)
+      [1, 2, 3]
+  """
+  @spec id(value) :: value when value: any()
+  def id(value), do: value
+
+  @doc """
   Returns the first value in a list that this function does not reject.
 
   The `:reject` option gives the list of the values that this function
