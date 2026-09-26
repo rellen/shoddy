@@ -87,9 +87,14 @@ above. A change that adds documentation in another style is not complete.
 - Do not trust the count of invalid mutants. Muex sometimes reports a mutant
   as invalid, although the mutant compiles and the tests kill it. Two runs of
   the same code can give different invalid mutants.
-- A GitHub Actions workflow runs `mix test.mutation` for each pull request.
-  The workflow reports the result, and it never makes a check fail. It puts
-  a warning on the line of each mutant that survives.
+- The workflow `.github/workflows/check.yml` runs each tool of `mix check` for
+  each pull request, in separate jobs. A defect that one tool finds makes the
+  check fail.
+- The job `mutation` of that workflow runs `mix test.mutation` after the
+  tests succeed. That job reports the result, and it never makes a check fail.
+  It puts a warning on the line of each mutant that survives.
+- The workflow has its own copy of the versions of `.tool-versions`. Change
+  the versions in `.tool-versions`, `devenv.nix` and the workflow together.
 
 ## Code Style
 
