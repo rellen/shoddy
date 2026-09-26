@@ -76,6 +76,17 @@ above. A change that adds documentation in another style is not complete.
 - Run `mix hook.install` one time in each new clone. That command tells git to
   use the `hooks` directory of this project. Git then runs `mix check` before
   each push.
+- Run `mix test.mutation` to find a gap in the tests. This alias runs muex,
+  which is a tool for mutation testing. The command `mix check` does not run
+  this alias. A low score does not make this alias fail. A run takes about
+  one minute.
+- Mutation testing makes many copies of the code. Each copy has one small
+  change, and it is a mutant. If a test fails for a mutant, the tests kill
+  that mutant. If no test fails, the mutant survives, and the tests have a
+  gap. Examine each mutant that survives.
+- Do not trust the count of invalid mutants. Muex sometimes reports a mutant
+  as invalid, although the mutant compiles and the tests kill it. Two runs of
+  the same code can give different invalid mutants.
 
 ## Code Style
 
