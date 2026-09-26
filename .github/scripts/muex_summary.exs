@@ -1,11 +1,19 @@
 # This script reads the JSON report of muex and writes a summary for GitHub
 # Actions. It also writes a warning annotation for each mutant that survives.
 # The script always exits with the status 0, so it cannot make a check fail.
+#
+# The first argument is the path of the report. An optional second argument
+# is the path of a file. The script writes the same summary into that file,
+# and the workflow posts that file as a comment on the pull request.
 
 defmodule MuexSummary do
   @moduledoc false
 
-  def run([path]) do
+  def run([path]), do: run([path, nil])
+
+  def run([path, copy]) do
+    Process.put(:copy, copy)
+
     case File.read(path) do
       {:ok, json} -> report(JSON.decode!(json))
       {:error, _reason} -> no_report()
@@ -80,6 +88,11 @@ defmodule MuexSummary do
     case System.get_env("GITHUB_STEP_SUMMARY") do
       nil -> IO.write(text)
       file -> File.write!(file, text, [:append])
+    end
+
+    case Process.get(:copy) do
+      nil -> :ok
+      copy -> File.write!(copy, text)
     end
   end
 

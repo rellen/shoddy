@@ -112,10 +112,21 @@ jobs:
   #
   # The summary of the job shows the results. Each mutant that survives gets a
   # warning annotation on its line of code.
+  #
+  # For a pull request, the job also posts the summary as a comment. The job
+  # keeps one comment for each pull request, and each run replaces the text
+  # of that comment. The comment names its commit, because a failed job
+  # `test` skips this job and leaves the comment of an earlier commit. A
+  # pull request from a fork gets a token that cannot write, so that step
+  # has continue-on-error. This job is the only job that can write to a pull
+  # request.
   mutation:
     name: mutation (report only)
     needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
@@ -127,7 +138,30 @@ jobs:
         run: mix test.mutation --format json --output _build/muex-report.json
       - name: Write the summary
         if: always()
-        run: elixir .github/scripts/muex_summary.exs _build/muex-report.json
+        run: elixir .github/scripts/muex_summary.exs _build/muex-report.json _build/muex-summary.md
+      - name: Post the summary on the pull request
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker="<!-- muex-report -->"
+          body="${marker}
+          $(cat _build/muex-summary.md)
+
+          This comment shows the result for commit ${SHA}. [The run](${RUN_URL}) has the full report."
+          id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n 1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${id}" -f body="$body" > /dev/null
+            echo "The job replaced the text of the comment ${id}."
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" -f body="$body" > /dev/null
+            echo "The job posted a new comment."
+          fi
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v7
