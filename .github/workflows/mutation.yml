@@ -1,0 +1,65 @@
+# This workflow runs mutation testing with muex, and it reports the result.
+# It never makes a check fail:
+#
+#   * The alias mix test.mutation gives --fail-at 0, so a low score does not
+#     make it fail.
+#   * The step that runs muex has continue-on-error, so a crash or a timeout
+#     of muex does not make the job fail.
+#   * The summary script always exits with the status 0.
+#
+# Each mutant that survives gets a warning annotation on its line of code.
+name: Mutation testing
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    name: Mutation testing (report only)
+    runs-on: ubuntu-24.04
+    env:
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-
+
+      - run: mix deps.get
+
+      - name: Run muex
+        continue-on-error: true
+        timeout-minutes: 15
+        run: mix test.mutation --format json --output _build/muex-report.json
+
+      - name: Write the summary
+        if: always()
+        run: elixir .github/scripts/muex_summary.exs _build/muex-report.json
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: muex-report
+          path: _build/muex-report.json
+          if-no-files-found: ignore
