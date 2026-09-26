@@ -252,30 +252,23 @@ defmodule Quicksand.ResultPropertyTest do
   end
 
   describe "the contract for an input that is not a result" do
-    property "each function that requires a result raises FunctionClauseError for any other term" do
-      calls = [
-        map_ok: &Result.map_ok(&1, fn x -> x end),
-        map_error: &Result.map_error(&1, fn x -> x end),
-        then_ok: &Result.then_ok(&1, fn x -> {:ok, x} end),
-        unwrap!: &Result.unwrap!/1,
-        unwrap: &Result.unwrap(&1, :default),
-        ignore: &Result.ignore/1,
-        tap_ok: &Result.tap_ok(&1, fn x -> x end),
-        tap_error: &Result.tap_error(&1, fn x -> x end)
-      ]
+    # Each function raises before it calls its function argument. Thus the
+    # value of that argument does not change the result of these properties.
+    for {name, args} <- [
+          map_ok: [&Function.identity/1],
+          map_error: [&Function.identity/1],
+          then_ok: [&Function.identity/1],
+          unwrap!: [],
+          unwrap: [:default],
+          ignore: [],
+          tap_ok: [&Function.identity/1],
+          tap_error: [&Function.identity/1]
+        ] do
+      property "#{name}/#{length(args) + 1} raises FunctionClauseError for any term that is not a result" do
+        args = unquote(Macro.escape(args))
 
-      check all(value <- not_a_result()) do
-        for {name, call} <- calls do
-          raised =
-            try do
-              call.(value)
-              nil
-            rescue
-              error -> error
-            end
-
-          assert match?(%FunctionClauseError{}, raised),
-                 "#{name} did not raise FunctionClauseError for #{inspect(value)}"
+        check all(value <- not_a_result()) do
+          assert_raise FunctionClauseError, fn -> apply(Result, unquote(name), [value | args]) end
         end
       end
     end
