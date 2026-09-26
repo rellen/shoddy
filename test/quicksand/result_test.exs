@@ -411,16 +411,16 @@ defmodule Quicksand.ResultTest do
   end
 
   # The moduledoc states that most functions raise FunctionClauseError for an
-  # input that is not a result. No test stated that rule, so a catch-all clause
-  # on any of these functions broke no test.
+  # input that is not a result. The tests below examine that rule. Without
+  # them, no test fails if a change adds a clause that accepts every input.
   #
   # Each test below calls a function through apply/2. The compiler examines
   # the type of each argument at a direct call. It reports a type violation
   # for an argument that no clause of the function accepts. Each test here
-  # gives such an argument on purpose, because each test states the behaviour
-  # at run time. The compiler does not examine the arguments of apply/2, and
-  # it thus reports no violation. The capture of the function lets the
-  # compiler check that the function exists with that arity.
+  # must pass such an argument, because each test examines the behaviour at
+  # run time. The compiler does not examine the arguments of apply/2, and it
+  # thus reports no violation. The capture of the function lets the compiler
+  # check that the function exists with that arity.
   describe "the contract for an input that is not a result" do
     test "map_ok/2 raises FunctionClauseError" do
       assert_raise FunctionClauseError, fn -> apply(&map_ok/2, [42, &Function.identity/1]) end

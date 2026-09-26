@@ -11,13 +11,12 @@ defmodule Quicksand.HourglassPropertyTest do
   # Elixir keeps the fractional second as a tuple of a value and a precision.
   # Elixir does not force the digits after the precision to be zero. The guard
   # of Calendar.ISO checks the range of each element only. Thus a value such as
-  # {123456, 3} is correct, and Elixir itself constructs one. This generator
-  # therefore makes values with digits after the precision, because extend/2
+  # {123456, 3} is correct, and Elixir can construct such a value. This
+  # generator makes values with digits after the precision, because extend/2
   # must be correct for them.
   #
-  # A first form of this generator removed those digits. That form rested on a
-  # belief about Elixir that is not true, and it hid a whole class of input
-  # from every property in this file.
+  # Do not remove those digits from this generator. An earlier version removed
+  # them, and then no property in this file examined such a value.
   defp fraction do
     gen all(value <- integer(0..999_999), precision <- integer(0..6)) do
       {value, precision}
@@ -53,7 +52,7 @@ defmodule Quicksand.HourglassPropertyTest do
       end
     end
 
-    property "gives the higher of the current precision and the argument" do
+    property "sets the precision to the higher of the current precision and the argument" do
       check all(value <- time_value(), name <- precision_name()) do
         {_, before} = value.microsecond
         {_, result} = Hourglass.extend(value, name).microsecond
@@ -69,7 +68,7 @@ defmodule Quicksand.HourglassPropertyTest do
       end
     end
 
-    property "is idempotent" do
+    property "makes no further change on a second call" do
       check all(value <- time_value(), name <- precision_name()) do
         once = Hourglass.extend(value, name)
         assert Hourglass.extend(once, name) == once
@@ -91,15 +90,15 @@ defmodule Quicksand.HourglassPropertyTest do
   end
 
   describe "extend/1" do
-    property "always gives a precision of 6" do
+    property "always sets the precision to 6" do
       check all(value <- time_value()) do
         assert {_, 6} = Hourglass.extend(value).microsecond
       end
     end
 
-    property "gives the same result as DateTime.add/4 with an amount of 0" do
-      # The moduledoc states this agreement. If the two ever differ, the
-      # moduledoc is wrong and this property says so.
+    property "returns the same result as DateTime.add/4 with an amount of 0" do
+      # The moduledoc states that the two results are the same. If they
+      # differ, the moduledoc is wrong, and this property fails.
       check all(value <- datetime()) do
         assert Hourglass.extend(value) == DateTime.add(value, 0, :microsecond)
       end
@@ -118,7 +117,7 @@ defmodule Quicksand.HourglassPropertyTest do
       end
     end
 
-    property "gives a result that DateTime.truncate/2 returns to the second" do
+    property "returns a value that truncates to the same second as the argument" do
       check all(value <- datetime()) do
         assert value |> Hourglass.extend() |> DateTime.truncate(:second) ==
                  DateTime.truncate(value, :second)

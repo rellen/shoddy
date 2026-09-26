@@ -64,13 +64,14 @@ defmodule Quicksand do
   end
 
   @doc """
-  Applies a function to a value if a predicate gives a truthy result.
+  Applies a function to a value if a predicate returns a truthy value.
 
   The `predicate` argument controls the operation. A predicate of arity 0
   ignores the value. A predicate of arity 1 receives the value.
 
-  If the predicate gives a truthy result, this function calls `fun.(value)`.
-  If not, this function returns `value` with no change.
+  If the predicate returns a truthy value, this function calls
+  `fun.(value)`. If the predicate returns a falsy value, this function
+  returns `value` with no change.
 
   ## Examples
 
@@ -130,10 +131,10 @@ defmodule Quicksand do
   @doc """
   Returns the value with no change.
 
-  This function is the identity function. Use this function where code
-  requires a function of arity 1 but must not change the value. The standard
-  library gives the same function as `Function.identity/1`. The capture
-  `&Quicksand.id/1` is shorter than `&Function.identity/1`.
+  This function is the identity function. Use it where the code requires a
+  function of arity 1 but must not change the value. `Function.identity/1`
+  in the standard library is the same function, but the capture
+  `&Quicksand.id/1` is shorter.
 
   ## Examples
 
@@ -159,36 +160,36 @@ defmodule Quicksand do
   @doc """
   Returns the first value in a list that this function does not reject.
 
-  The `:reject` option gives the list of the values that this function
-  rejects. That option has the default `[nil]`. This function thus gives
-  back the first value that is not `nil`.
+  The `:reject` option lists the values that this function rejects. The
+  default is `[nil]`. Thus, with no options, this function returns the first
+  value that is not `nil`.
 
   This function examines the values one after the other. If it rejects each
-  value, it gives back the value of the `:default` option. An empty list
-  also gives back that value.
+  value, it returns the value of the `:default` option. It also returns that
+  value for an empty list.
 
   If a value is a function of arity 0, this function calls it one time. The
   result of that call is then the value, and this function does not call
   that result again. A function of another arity is an ordinary value.
 
-  This function stops at the value that it gives back, and it does not
-  examine a later value. A caller can thus put an expensive operation into a
-  function of arity 0. That operation runs only if the search reaches it.
+  This function stops at the value that it returns, and it does not examine
+  a later value. Thus you can put an expensive operation into a function of
+  arity 0. That operation runs only if this function examines that value.
 
   ## Options
 
-    * `:reject` - a list of the values that this function rejects. The
-      default is `[nil]`. This function compares two values with the strict
-      equality operator `===/2`. Thus a list of `[0]` does not reject the
-      float `0.0`.
+    * `:reject` - This option lists the values that this function rejects.
+      The default is `[nil]`. This function compares two values with the
+      strict equality operator `===/2`. Thus the list `[0]` does not reject
+      the float `0.0`.
 
-    * `:default` - the value that this function gives back if it rejects
-      each value in the list. The default is `nil`. This function does not
-      call this value, even if it is a function of arity 0.
+    * `:default` - This function returns the value of this option if it
+      rejects each value in the list. The default is `nil`. This function
+      does not call this value, even if it is a function of arity 0.
 
-    * `:call_functions?` - a boolean. The default is `true`. If this option
-      is `false`, this function treats a function of arity 0 as an ordinary
-      value and does not call it.
+    * `:call_functions?` - This option is a boolean. The default is `true`.
+      If this option is `false`, this function treats a function of arity 0
+      as an ordinary value and does not call it.
 
   This function raises `ArgumentError` for an option that is not in the list
   above. It also raises `ArgumentError` for an option value of the wrong
@@ -196,7 +197,7 @@ defmodule Quicksand do
 
   ## Examples
 
-  The function gives back the first value that is not `nil`:
+  The function returns the first value that is not `nil`:
 
       iex> Quicksand.coalesce([nil, nil, 3, 4])
       3
@@ -204,7 +205,7 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([1, nil, 3])
       1
 
-  The function gives back `nil` if it rejects each value:
+  The function returns `nil` if it rejects each value:
 
       iex> Quicksand.coalesce([nil, nil])
       nil
@@ -212,7 +213,7 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([])
       nil
 
-  The function calls a function of arity 0 and gives back the result:
+  The function calls a function of arity 0 and returns the result:
 
       iex> Quicksand.coalesce([nil, fn -> :computed end])
       :computed
@@ -220,12 +221,13 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([nil, fn -> nil end, :last])
       :last
 
-  In Elixir, `false` is not `nil`. The default list thus keeps `false`:
+  In Elixir, `false` is not `nil`, and the default list rejects only `nil`.
+  Thus the function returns `false`:
 
       iex> Quicksand.coalesce([nil, false, :other])
       false
 
-  The option `:reject` gives the values that the function rejects:
+  The option `:reject` lists the values that the function rejects:
 
       iex> Quicksand.coalesce([nil, false, :other], reject: [nil, false])
       :other
@@ -233,12 +235,14 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([nil, "", "text"], reject: [nil, ""])
       "text"
 
-  An empty list of values to reject keeps the first value:
+  If the option `:reject` is an empty list, the function returns the first
+  value:
 
       iex> Quicksand.coalesce([nil, :other], reject: [])
       nil
 
-  The option `:default` gives the result if the function rejects each value:
+  If the function rejects each value, it returns the value of the option
+  `:default`:
 
       iex> Quicksand.coalesce([nil, nil], default: :none)
       :none
@@ -249,8 +253,8 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([nil, :value], default: :none)
       :value
 
-  The option `:call_functions?` treats a function of arity 0 as an ordinary
-  value:
+  With `call_functions?: false`, the function treats a function of arity 0
+  as an ordinary value:
 
       iex> fun = fn -> :computed end
       iex> Quicksand.coalesce([nil, fun], call_functions?: false) == fun
@@ -262,7 +266,7 @@ defmodule Quicksand do
       iex> Quicksand.coalesce([nil, fun]) == fun
       true
 
-  The function calls no function after the value that it gives back:
+  The function calls no function after the value that it returns:
 
       iex> Quicksand.coalesce([:first, fn -> send(self(), :called) end])
       :first
@@ -273,7 +277,7 @@ defmodule Quicksand do
       ...> end
       :the_function_did_not_run
 
-  This example takes a value from the first source that gives one:
+  This example uses the first of three sources that has a value:
 
       iex> params = %{}
       iex> from_config = nil

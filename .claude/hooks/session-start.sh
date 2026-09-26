@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This hook runs only in a remote environment, that is Claude Code on the web.
+# This hook runs only in Claude Code on the web, which is a remote environment.
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
@@ -16,7 +16,7 @@ FALLBACK_BIN=""
 #
 # Use the official installer at mise.run. A direct download of a mise release
 # needs the version number first. The "releases/latest" page of github.com
-# gives that number, but it gives error 403 in a web session. That error
+# shows that number, but it returns error 403 in a web session. That error
 # applies to the "releases/latest" page only. It does not apply to a release
 # asset with a pinned tag. The fallback below thus can use a pinned asset, but
 # this step cannot.
@@ -70,9 +70,9 @@ if ! mise install --yes && ! mise install --yes; then
   # Erlang has no prebuilt file on github.com. A build from source needs more
   # than 10 minutes on this machine. This hook does not do such a build,
   # because the hook runs at the start of every session. The hook stops here
-  # and gives you the command that builds Erlang.
+  # and shows the command that builds Erlang.
   if ! mise which erl &>/dev/null && ! command -v erl &>/dev/null; then
-    echo "Erlang is absent. The host builds.hex.pm is probably blocked." >&2
+    echo "Erlang is absent. The network policy probably blocks the host builds.hex.pm." >&2
     echo "To build Erlang from source, run this command:" >&2
     echo "  MISE_ALL_COMPILE=1 mise install erlang --yes" >&2
     exit 1

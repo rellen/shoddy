@@ -35,6 +35,8 @@ Obey these nine rules each time you write or change that text:
 5. Use articles. Write "an ok tuple". Do not write "ok tuple".
 6. Use one term for one thing. Do not use a second word for variety. This
    repository says "puts a value into". It never says "wraps a value in".
+   It says "returns" for the result of a function. It never says "gives
+   back".
 7. Do not use slang, idiom, or undefined jargon. Define each technical term
    at the place where you first use it.
 8. Keep the punctuation simple. Do not use an em dash. Do not use a slash

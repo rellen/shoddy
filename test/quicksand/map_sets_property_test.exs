@@ -4,19 +4,18 @@ defmodule Quicksand.MapSetsPropertyTest do
 
   alias Quicksand.MapSets
 
-  # These generators give simple values on purpose. The functions in the
-  # module examine only whether an element is a member. A large value with
-  # many levels thus tests no more behaviour than a simple value, and it
-  # makes the test much slower.
+  # These generators make only simple values. The functions in the module
+  # examine only whether an element is a member. Thus a large value with many
+  # levels tests no more behaviour than a simple value, and it makes the test
+  # much slower.
   defp element, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
   defp any_map_set, do: map(list_of(element(), max_length: 10), &MapSet.new/1)
 
   defp elements, do: list_of(element(), max_length: 10)
 
-  # This generator gives a map set and an element that is a member of it. The
-  # generator gives a map set that is not empty, because an empty map set has
-  # no member.
+  # This generator makes a map set and an element that is a member of it. The
+  # map set is not empty, because an empty map set has no member.
   defp map_set_with_member do
     bind(list_of(element(), min_length: 1, max_length: 10), fn list ->
       bind(member_of(list), fn element -> constant({MapSet.new(list), element}) end)
@@ -64,7 +63,7 @@ defmodule Quicksand.MapSetsPropertyTest do
       end
     end
 
-    property "gives back the first map set after two calls" do
+    property "returns the initial map set after two calls" do
       check all(map_set <- any_map_set(), element <- element()) do
         assert map_set |> MapSets.toggle(element) |> MapSets.toggle(element) == map_set
       end
@@ -89,7 +88,7 @@ defmodule Quicksand.MapSetsPropertyTest do
   end
 
   describe "toggle_all/2" do
-    property "gives the same result as one call to toggle/2 for each element" do
+    property "returns the same result as one call to toggle/2 for each element" do
       check all(map_set <- any_map_set(), list <- elements()) do
         expected = Enum.reduce(list, map_set, fn element, acc -> MapSets.toggle(acc, element) end)
 
@@ -97,7 +96,7 @@ defmodule Quicksand.MapSetsPropertyTest do
       end
     end
 
-    property "gives back the map set with no change for an empty list" do
+    property "returns the map set with no change for an empty list" do
       check all(map_set <- any_map_set()) do
         assert MapSets.toggle_all(map_set, []) == map_set
       end
@@ -121,7 +120,7 @@ defmodule Quicksand.MapSetsPropertyTest do
       end
     end
 
-    property "gives back the first map set after two calls with the same list" do
+    property "returns the initial map set after two calls with the same list" do
       check all(map_set <- any_map_set(), list <- elements()) do
         assert map_set |> MapSets.toggle_all(list) |> MapSets.toggle_all(list) == map_set
       end
@@ -134,7 +133,7 @@ defmodule Quicksand.MapSetsPropertyTest do
       end
     end
 
-    property "gives the same result as toggle/2 for a list of one element" do
+    property "returns the same result as toggle/2 for a list of one element" do
       check all(map_set <- any_map_set(), element <- element()) do
         assert MapSets.toggle_all(map_set, [element]) == MapSets.toggle(map_set, element)
       end

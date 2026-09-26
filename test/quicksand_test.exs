@@ -6,7 +6,7 @@ defmodule QuicksandTest do
   describe "then_if/2" do
     test "raises FunctionClauseError for a falsy value and a second argument that is not a function" do
       # A falsy value takes the branch that does not call the function. Only
-      # the guard can reject a bad second argument for such a value.
+      # the guard can reject an incorrect second argument for such a value.
       assert_raise FunctionClauseError, fn -> Quicksand.then_if(nil, :not_a_function) end
       assert_raise FunctionClauseError, fn -> Quicksand.then_if(false, :not_a_function) end
     end
@@ -39,33 +39,33 @@ defmodule QuicksandTest do
 
   # Some tests below call a function through apply/2. The compiler examines
   # the type of each argument at a direct call. It reports a type violation
-  # for an argument that no clause of the function accepts. Those tests give
-  # such an argument on purpose, because they state the behaviour at run time.
+  # for an argument that no clause of the function accepts. Those tests must
+  # pass such an argument, because they examine the behaviour at run time.
   # The compiler does not examine the arguments of apply/2.
   describe "coalesce/2" do
-    test "gives back the first value that is not nil" do
+    test "returns the first value that is not nil" do
       assert Quicksand.coalesce([nil, nil, 3, 4]) == 3
       assert Quicksand.coalesce([1, nil, 3]) == 1
       assert Quicksand.coalesce([:only]) == :only
     end
 
-    test "gives back nil if each value is nil" do
+    test "returns nil if each value is nil" do
       assert Quicksand.coalesce([nil, nil, nil]) == nil
       assert Quicksand.coalesce([nil]) == nil
     end
 
-    test "gives back nil for an empty list" do
+    test "returns nil for an empty list" do
       assert Quicksand.coalesce([]) == nil
       assert Quicksand.coalesce([], reject: [nil, false]) == nil
       assert Quicksand.coalesce([], call_functions?: false) == nil
     end
 
-    test "calls a function of arity 0 and gives back the result" do
+    test "calls a function of arity 0 and returns the result" do
       assert Quicksand.coalesce([nil, fn -> :computed end]) == :computed
       assert Quicksand.coalesce([fn -> 1 end, 2]) == 1
     end
 
-    test "continues if a function of arity 0 gives back nil" do
+    test "continues if a function of arity 0 returns nil" do
       assert Quicksand.coalesce([nil, fn -> nil end, :last]) == :last
       assert Quicksand.coalesce([fn -> nil end, fn -> nil end]) == nil
     end
@@ -84,32 +84,32 @@ defmodule QuicksandTest do
       assert Quicksand.coalesce([nil, fun2]) == fun2
     end
 
-    test "gives back false, because the default list rejects nil only" do
+    test "returns false, because the default list rejects only nil" do
       assert Quicksand.coalesce([nil, false, :other]) == false
       assert Quicksand.coalesce([false]) == false
       assert Quicksand.coalesce([nil, fn -> false end, :other]) == false
     end
 
-    test "gives back zero, an empty string, and an empty collection" do
+    test "returns zero, an empty string, and an empty collection" do
       assert Quicksand.coalesce([nil, 0]) == 0
       assert Quicksand.coalesce([nil, ""]) == ""
       assert Quicksand.coalesce([nil, []]) == []
       assert Quicksand.coalesce([nil, %{}]) == %{}
     end
 
-    test "calls no function after the value that it gives back" do
+    test "calls no function after the value that it returns" do
       Quicksand.coalesce([:first, fn -> send(self(), :called) end])
 
       refute_received :called
     end
 
-    test "calls no function after a function that gives back a value" do
+    test "calls no function after a function that returns a value" do
       Quicksand.coalesce([fn -> :first end, fn -> send(self(), :called) end])
 
       refute_received :called
     end
 
-    test "calls each function before the value that it gives back" do
+    test "calls each function before the value that it returns" do
       first = fn ->
         send(self(), :one)
         nil
@@ -132,17 +132,17 @@ defmodule QuicksandTest do
       assert Quicksand.coalesce([nil, fn -> false end, :other], reject: [nil, false]) == :other
     end
 
-    test "rejects a value that the :reject option lists but nil does not name" do
+    test "rejects only the values that the :reject option lists, so it can keep nil" do
       assert Quicksand.coalesce([:skip, :keep], reject: [:skip]) == :keep
       assert Quicksand.coalesce([nil, :keep], reject: [:skip]) == nil
     end
 
-    test "keeps the first value for an empty :reject option" do
+    test "returns the first value for an empty :reject option" do
       assert Quicksand.coalesce([nil, :other], reject: []) == nil
       assert Quicksand.coalesce([false, :other], reject: []) == false
     end
 
-    test "gives back the default if the :reject option rejects each value" do
+    test "returns the default if the :reject option lists each value" do
       assert Quicksand.coalesce([nil, false], reject: [nil, false]) == nil
       assert Quicksand.coalesce([:a, :b], reject: [:a, :b]) == nil
     end
@@ -153,14 +153,14 @@ defmodule QuicksandTest do
       assert Quicksand.coalesce([1.0, :other], reject: [1.0]) == :other
     end
 
-    test "gives back the :default option if it rejects each value" do
+    test "returns the value of the :default option if it rejects each value" do
       assert Quicksand.coalesce([nil, nil], default: :none) == :none
       assert Quicksand.coalesce([], default: 0) == 0
       assert Quicksand.coalesce([nil], default: false) == false
       assert Quicksand.coalesce([:a], reject: [:a], default: :none) == :none
     end
 
-    test "ignores the :default option if it keeps a value" do
+    test "ignores the :default option if it does not reject a value" do
       assert Quicksand.coalesce([nil, :value], default: :none) == :value
       assert Quicksand.coalesce([false], default: :none) == false
     end
@@ -172,7 +172,7 @@ defmodule QuicksandTest do
       assert Quicksand.coalesce([], default: fun) == fun
     end
 
-    test "treats a function of arity 0 as a value with call_functions?: false" do
+    test "treats a function of arity 0 as an ordinary value with call_functions?: false" do
       fun = fn -> :computed end
 
       assert Quicksand.coalesce([nil, fun], call_functions?: false) == fun
@@ -254,30 +254,30 @@ defmodule QuicksandTest do
   end
 
   describe "id/1" do
-    test "gives back the value with no change" do
+    test "returns the value with no change" do
       assert Quicksand.id(42) == 42
       assert Quicksand.id("text") == "text"
       assert Quicksand.id([1, 2]) == [1, 2]
       assert Quicksand.id(%{a: 1}) == %{a: 1}
     end
 
-    test "gives back nil and false with no change" do
+    test "returns nil and false with no change" do
       assert Quicksand.id(nil) == nil
       assert Quicksand.id(false) == false
     end
 
-    test "gives back the same term, not an equal term" do
+    test "returns a term that is strictly equal to the argument" do
       assert Quicksand.id(1.0) === 1.0
       refute Quicksand.id(1.0) === 1
     end
 
-    test "gives back a function with no call" do
+    test "returns a function and does not call it" do
       fun = fn -> :called end
 
       assert Quicksand.id(fun) == fun
     end
 
-    test "works as a capture where a function of arity 1 is required" do
+    test "operates as a capture where the code requires a function of arity 1" do
       assert Enum.map([1, 2, 3], &Quicksand.id/1) == [1, 2, 3]
       assert Enum.filter([1, nil, 2, false], &Quicksand.id/1) == [1, 2]
       assert Quicksand.then_if(42, &Quicksand.id/1) == 42

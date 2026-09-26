@@ -11,11 +11,11 @@ defmodule Quicksand.Hourglass do
   `Time.truncate/2`. Each of these functions lowers the precision.
 
   Elixir can also make the precision higher. A call to `DateTime.add/4` with
-  an amount of 0 gives the precision of the unit. `NaiveDateTime.add/3` and
-  `Time.add/3` do the same. Those calls give the correct result, but the name
-  `add` does not tell the reader the intent. `extend/2` gives the same result
-  under a name that tells the intent, and one call accepts all three struct
-  types.
+  an amount of 0 returns a value that has the precision of the unit.
+  `NaiveDateTime.add/3` and `Time.add/3` do the same. These calls return the
+  correct result, but the name `add` does not tell the reader the purpose of
+  the call. `extend/2` returns the same result, and its name tells the
+  purpose. It also accepts all three struct types.
 
   Two values that show the same point in time are not equal if the precision
   of each value is different. The operator `==` compares the two structs, and
@@ -32,10 +32,10 @@ defmodule Quicksand.Hourglass do
   6.
   """
 
-  @typedoc "A time value that has a `:microsecond` field."
+  @typedoc "A time value is a `DateTime`, a `NaiveDateTime`, or a `Time`."
   @type t :: DateTime.t() | NaiveDateTime.t() | Time.t()
 
-  @typedoc "A name for a count of digits after the decimal point."
+  @typedoc "A precision is a name for a count of digits after the decimal point."
   @type precision :: :millisecond | :microsecond
 
   @precisions [:millisecond, :microsecond]
@@ -57,8 +57,8 @@ defmodule Quicksand.Hourglass do
   accepts one struct type only.
 
   This function does not accept `:second`. A precision of 0 digits is the
-  lowest precision, so such a call can never change a value. A call that gives
-  `:second` is thus a mistake, and this function raises `FunctionClauseError`
+  lowest precision, so a call with `:second` can never change a value. Such a
+  call is always a mistake, and this function raises `FunctionClauseError`
   for it.
 
   This function changes the precision only. It does not change the value of
@@ -67,7 +67,7 @@ defmodule Quicksand.Hourglass do
   Elixir does not force the digits after the precision to be zero. A value of
   `{123456, 3}` is correct, and it shows as `.123`. This function makes that
   value show as `.123456`. The two forms are the same point in time, and
-  `DateTime.compare/2` gives `:eq` for them. `DateTime.add/4` also behaves in
+  `DateTime.compare/2` returns `:eq` for them. `DateTime.add/4` also behaves in
   this way.
 
   ## Examples
@@ -103,7 +103,8 @@ defmodule Quicksand.Hourglass do
       iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00.123456Z], :millisecond)
       ~U[2024-01-01 00:00:00.123456Z]
 
-  Two values with the same precision are equal:
+  Two values that are the same point in time and have the same precision are
+  equal:
 
       iex> a = Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00Z])
       iex> b = ~U[2024-01-01 00:00:00.000000Z]
