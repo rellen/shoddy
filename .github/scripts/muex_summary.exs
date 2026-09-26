@@ -96,7 +96,6 @@ defmodule MuexSummary do
     end
   end
 
-  # GitHub Actions requires these escape sequences in a workflow command.
   defp escape_data(text) do
     text
     |> String.replace("%", "%25")
