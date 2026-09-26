@@ -16,8 +16,9 @@ defmodule Quicksand.MixProject do
 
   defp aliases do
     [
-      # Point git at the tracked hooks directory. Do not copy the file into
-      # .git/hooks. A copy becomes old when a person changes the tracked file.
+      # Tell git to use the tracked hooks directory. Do not copy the file into
+      # .git/hooks, because a copy does not change when a person changes the
+      # tracked file.
       # Mix runs this command without a shell, so the command must be one
       # command with no operator.
       "hook.install": [

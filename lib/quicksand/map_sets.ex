@@ -2,8 +2,8 @@ defmodule Quicksand.MapSets do
   @moduledoc """
   Functions that operate on map sets and add to the standard `MapSet` module.
 
-  Each function takes the map set as the first argument. This is the same as
-  the `MapSet` module, and it lets you use these functions in a pipeline:
+  Each function takes the map set as the first argument, as in the `MapSet`
+  module. Thus you can use these functions in a pipeline:
 
       MapSet.new([:read])
       |> Quicksand.MapSets.toggle(:write)
@@ -20,20 +20,20 @@ defmodule Quicksand.MapSets do
   element. If the element is not a member, this function puts the element
   into the map set. The function changes no other element.
 
-  Two calls with the same element give back a map set that is equal to the
-  first map set.
+  Two calls with the same element return a map set that is equal to the
+  initial map set.
 
   This function always operates on one element. A list in the second
   argument is one element. It is not a list of elements. To toggle each
   element of a list, use `toggle_all/2`.
 
-  Use this function for a selection that a person switches on and off. An
-  example is a set of filters in a user interface.
+  Use this function for a selection that a user turns on and off. A set of
+  filters in a user interface is an example.
 
-  This function decides membership in the same manner as `MapSet.member?/2`.
-  That function compares two elements with the strict equality operator
-  `===/2`. Thus the integer `1` and the float `1.0` are two different
-  elements.
+  This function uses `MapSet.member?/2` to find whether the element is a
+  member. That function compares two elements with the strict equality
+  operator `===/2`. Thus the integer `1` and the float `1.0` are two
+  different elements.
 
   ## Examples
 
@@ -53,7 +53,7 @@ defmodule Quicksand.MapSets do
       iex> Quicksand.MapSets.toggle(MapSet.new([:a]), :a)
       MapSet.new([])
 
-  Two calls with the same element give back the first map set:
+  Two calls with the same element return the initial map set:
 
       iex> set = MapSet.new([:a, :b])
       iex> set |> Quicksand.MapSets.toggle(:c) |> Quicksand.MapSets.toggle(:c)
@@ -88,16 +88,16 @@ defmodule Quicksand.MapSets do
   Toggles the membership of each element of a list in a map set.
 
   This function calls `toggle/2` one time for each element of the list. The
-  function starts at the first element of the list. An empty list gives back
-  the map set with no change.
+  function starts at the first element of the list. If the list is empty,
+  this function returns the map set with no change.
 
   The second argument must be a list. Each element of that list is one
-  element of the map set. A list inside that list is thus one element.
+  element of the map set. Thus a list inside that list is one element.
 
   The function toggles an element one time for each occurrence of the
-  element in the list. Two occurrences of an element thus give no change.
-  For the same reason, two calls with the same list give back a map set that
-  is equal to the first map set.
+  element in the list. Thus two occurrences of an element cause no change.
+  For the same reason, two calls with the same list return a map set that is
+  equal to the initial map set.
 
   The order of the elements in the list does not change the result.
 
@@ -114,7 +114,7 @@ defmodule Quicksand.MapSets do
       iex> Quicksand.MapSets.toggle_all(MapSet.new([:a, :b, :c]), [:a, :c])
       MapSet.new([:b])
 
-  An empty list gives back the map set with no change:
+  The function returns the map set with no change for an empty list:
 
       iex> Quicksand.MapSets.toggle_all(MapSet.new([:a]), [])
       MapSet.new([:a])

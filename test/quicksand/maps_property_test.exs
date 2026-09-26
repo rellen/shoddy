@@ -4,10 +4,9 @@ defmodule Quicksand.MapsPropertyTest do
 
   alias Quicksand.Maps
 
-  # These generators give simple values on purpose. The function put_if/3
-  # examines only whether a value is truthy. A large value with many levels
-  # thus tests no more behaviour than a simple value, and it makes the test
-  # much slower.
+  # These generators make only simple values. The function put_if/3 examines
+  # only whether a value is truthy. Thus a large value with many levels tests
+  # no more behaviour than a simple value, and it makes the test much slower.
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
   defp falsy, do: member_of([nil, false])
@@ -29,7 +28,7 @@ defmodule Quicksand.MapsPropertyTest do
       end
     end
 
-    property "gives the same result as Map.put/3 for a truthy value" do
+    property "returns the same result as Map.put/3 for a truthy value" do
       check all(map <- any_map(), key <- simple(), value <- truthy()) do
         assert Maps.put_if(map, key, value) == Map.put(map, key, value)
       end
@@ -41,7 +40,7 @@ defmodule Quicksand.MapsPropertyTest do
       end
     end
 
-    property "gives one of two results only" do
+    property "returns one of two results only" do
       check all(map <- any_map(), key <- simple(), value <- simple()) do
         result = Maps.put_if(map, key, value)
         assert result == map or result == Map.put(map, key, value)

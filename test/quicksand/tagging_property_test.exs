@@ -19,7 +19,7 @@ defmodule Quicksand.TaggingPropertyTest do
       end
     end
 
-    property "keeps the value, so the value comes back with no change" do
+    property "keeps the value with no change" do
       check all(value <- simple(), tag <- atom(:alphanumeric)) do
         assert value |> Tagging.tag(tag) |> elem(1) == value
       end
@@ -41,7 +41,7 @@ defmodule Quicksand.TaggingPropertyTest do
   end
 
   describe "the named functions agree with tag/2" do
-    property "each named function of arity 1 gives the same tuple as tag/2" do
+    property "each named function of arity 1 returns the same tuple as tag/2" do
       check all(value <- simple()) do
         assert Tagging.ok(value) == Tagging.tag(value, :ok)
         assert Tagging.error(value) == Tagging.tag(value, :error)
@@ -55,7 +55,7 @@ defmodule Quicksand.TaggingPropertyTest do
   end
 
   describe "the named functions agree with tag/3" do
-    property "each named function of arity 2 gives the same tuple as tag/3" do
+    property "each named function of arity 2 returns the same tuple as tag/3" do
       check all(value <- simple(), extra <- simple()) do
         assert Tagging.noreply(value, extra) == Tagging.tag(value, extra, :noreply)
         assert Tagging.reply(value, extra) == Tagging.tag(value, extra, :reply)

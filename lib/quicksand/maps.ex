@@ -2,8 +2,8 @@ defmodule Quicksand.Maps do
   @moduledoc """
   Functions that operate on maps and add to the standard `Map` module.
 
-  Each function takes the map as the first argument. This is the same as the
-  `Map` module, and it lets you use these functions in a pipeline:
+  Each function takes the map as the first argument, as in the `Map` module.
+  Thus you can use these functions in a pipeline:
 
       %{}
       |> Quicksand.Maps.put_if(:name, params["name"])

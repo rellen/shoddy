@@ -7,8 +7,8 @@ defmodule Quicksand.MapSetsTest do
 
   # Some tests below call a function through apply/2. The compiler examines
   # the type of each argument at a direct call. It reports a type violation
-  # for an argument that no clause of the function accepts. Those tests give
-  # such an argument on purpose, because they state the behaviour at run time.
+  # for an argument that no clause of the function accepts. Those tests must
+  # pass such an argument, because they examine the behaviour at run time.
   # The compiler does not examine the arguments of apply/2.
 
   describe "toggle/2" do
@@ -24,7 +24,7 @@ defmodule Quicksand.MapSetsTest do
       assert toggle(MapSet.new([:a, :b]), :a) == MapSet.new([:b])
     end
 
-    test "gives an empty map set if it deletes the only element" do
+    test "returns an empty map set if it deletes the only element" do
       assert toggle(MapSet.new([:a]), :a) == MapSet.new()
     end
 
@@ -32,7 +32,7 @@ defmodule Quicksand.MapSetsTest do
       assert toggle(MapSet.new([:a, :b, :c]), :b) == MapSet.new([:a, :c])
     end
 
-    test "gives back the first map set after two calls with the same element" do
+    test "returns the initial map set after two calls with the same element" do
       set = MapSet.new([:a, :b])
 
       assert set |> toggle(:c) |> toggle(:c) == set
@@ -82,7 +82,7 @@ defmodule Quicksand.MapSetsTest do
       assert toggle_all(MapSet.new([:a, :b]), [:b, :c]) == MapSet.new([:a, :c])
     end
 
-    test "gives back the map set with no change for an empty list" do
+    test "returns the map set with no change for an empty list" do
       assert toggle_all(MapSet.new([:a, :b]), []) == MapSet.new([:a, :b])
       assert toggle_all(MapSet.new(), []) == MapSet.new()
     end
@@ -93,13 +93,13 @@ defmodule Quicksand.MapSetsTest do
       assert toggle_all(MapSet.new([:a]), [:a, :a]) == MapSet.new([:a])
     end
 
-    test "gives back the first map set after two calls with the same list" do
+    test "returns the initial map set after two calls with the same list" do
       set = MapSet.new([:a, :b])
 
       assert set |> toggle_all([:b, :c]) |> toggle_all([:b, :c]) == set
     end
 
-    test "gives the same result as one call to toggle/2 for each element" do
+    test "returns the same result as one call to toggle/2 for each element" do
       set = MapSet.new([:a, :b])
 
       assert toggle_all(set, [:b, :c, :d]) == set |> toggle(:b) |> toggle(:c) |> toggle(:d)

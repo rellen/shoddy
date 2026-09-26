@@ -16,9 +16,10 @@ defmodule Quicksand.ResultPropertyTest do
     ])
   end
 
-  # This generator must make tuples as well as simple values. A first form gave
-  # simple values only, so no property saw a tuple that is not a result, and a
-  # change that removed the guard of flatten/1 broke no property.
+  # This generator must make tuples as well as simple values. An earlier
+  # version made only simple values. Then no property examined a tuple that is
+  # not a result, and no property failed after a change removed the guard of
+  # flatten/1.
   defp not_a_result do
     one_of([
       filter(simple(), fn value -> value not in [:ok, :error] end),
@@ -29,6 +30,8 @@ defmodule Quicksand.ResultPropertyTest do
 
   # A functor law is a rule about a function that changes the value inside a
   # container and keeps the shape of that container. There are two such laws.
+  # The composition of two functions is one function that calls the first
+  # function and then calls the second function with the result.
   describe "map_ok/2 obeys the functor laws" do
     property "the identity function makes no change" do
       check all(value <- result()) do
@@ -36,7 +39,7 @@ defmodule Quicksand.ResultPropertyTest do
       end
     end
 
-    property "two applications are the same as one application of the composition" do
+    property "two calls return the same result as one call with the composition" do
       check all(value <- result()) do
         f = &(&1 * 2)
         g = &(&1 + 1)
@@ -54,7 +57,7 @@ defmodule Quicksand.ResultPropertyTest do
       end
     end
 
-    property "two applications are the same as one application of the composition" do
+    property "two calls return the same result as one call with the composition" do
       check all(value <- result()) do
         f = &inspect/1
         g = &String.upcase/1
@@ -69,20 +72,20 @@ defmodule Quicksand.ResultPropertyTest do
   # next operation. There are three such laws. The names of the three laws are
   # left identity, right identity, and associativity.
   describe "then_ok/2 obeys the monad laws" do
-    property "left identity: an ok tuple gives the value to the function" do
+    property "left identity: an ok tuple passes its value to the function" do
       check all(value <- integer()) do
         f = fn x -> {:ok, x + 1} end
         assert Result.then_ok({:ok, value}, f) == f.(value)
       end
     end
 
-    property "right identity: a function that only puts the value back makes no change" do
+    property "right identity: a function that only puts the value into an ok tuple makes no change" do
       check all(value <- result()) do
         assert Result.then_ok(value, &{:ok, &1}) == value
       end
     end
 
-    property "associativity: the order of the two chains does not matter" do
+    property "associativity: the two ways to nest the chained calls return the same result" do
       check all(value <- result()) do
         f = fn x -> {:ok, x * 2} end
         g = fn x -> {:ok, x + 1} end
@@ -107,8 +110,9 @@ defmodule Quicksand.ResultPropertyTest do
     end
 
     property "both predicates return the atom false for a value that is not a result" do
-      # Use == false, not refute. The moduledoc promises a boolean, and refute
-      # also accepts nil, so refute cannot state this rule.
+      # Use == false, not refute. The moduledoc states that the result is a
+      # boolean. The refute macro also accepts nil, so refute cannot examine
+      # this rule.
       check all(value <- not_a_result()) do
         assert Result.ok?(value) == false
         assert Result.error?(value) == false
@@ -117,7 +121,7 @@ defmodule Quicksand.ResultPropertyTest do
   end
 
   describe "other operations" do
-    property "ignore/1 keeps whether the result is an error" do
+    property "ignore/1 does not change whether the result is an error" do
       check all(value <- result()) do
         assert Result.error?(Result.ignore(value)) == Result.error?(value)
       end
@@ -136,13 +140,13 @@ defmodule Quicksand.ResultPropertyTest do
       end
     end
 
-    property "from_nil/2 gives an ok result for every value that is not nil" do
+    property "from_nil/2 returns an ok result for every value that is not nil" do
       check all(value <- filter(simple(), &(not is_nil(&1))), error <- simple()) do
         assert Result.from_nil(value, error) == {:ok, value}
       end
     end
 
-    property "from_nil/2 gives an error result for nil" do
+    property "from_nil/2 returns an error result for nil" do
       check all(error <- simple()) do
         assert Result.from_nil(nil, error) == {:error, error}
       end
@@ -154,13 +158,13 @@ defmodule Quicksand.ResultPropertyTest do
       end
     end
 
-    property "flatten/1 keeps an ok tuple that holds a value which is not a result" do
+    property "flatten/1 does not change an ok tuple that contains no result" do
       check all(inner <- not_a_result()) do
         assert Result.flatten({:ok, inner}) == {:ok, inner}
       end
     end
 
-    property "flatten/1 removes one level from an ok tuple that holds a result" do
+    property "flatten/1 removes one level from an ok tuple that contains a result" do
       check all(value <- result()) do
         assert Result.flatten({:ok, value}) == value
       end

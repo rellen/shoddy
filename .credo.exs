@@ -1,25 +1,22 @@
-# This file contains the configuration for Credo and you are probably reading
-# this after creating it with `mix credo.gen.config`.
-#
-# If you find anything wrong or unclear in this file, please report an
-# issue on GitHub: https://github.com/rrrene/credo/issues
+# This file configures Credo. The command `mix credo.gen.config` made the
+# first version of this file, and this project then changed it.
 #
 %{
   #
-  # You can have as many configs as you like in the `configs:` field.
+  # The `configs:` field can contain more than one configuration.
   configs: [
     %{
       #
-      # Run any config using `mix credo -C <name>`. If no config name is given
-      # "default" is used.
+      # To run a configuration, use `mix credo -C <name>`. If you give no
+      # name, Credo uses the configuration "default".
       #
       name: "default",
       #
-      # These are the files included in the analysis:
+      # Credo examines the files below.
       files: %{
         #
-        # You can give explicit globs or simply directories.
-        # In the latter case `**/*.{ex,exs}` will be used.
+        # Each entry is a file pattern or a directory. For a directory, Credo
+        # uses the pattern `**/*.{ex,exs}`.
         #
         included: [
           "lib/",
@@ -34,35 +31,34 @@
         excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/"]
       },
       #
-      # Load and configure plugins here:
+      # Put the Credo plugins here.
       #
       plugins: [],
       #
-      # If you create your own checks, you must specify the source files for
-      # them here, so they can be loaded by Credo before running the analysis.
+      # Put the source file of each custom check here. Credo loads these files
+      # before it examines the code.
       #
       requires: [],
       #
       # Strict mode reports a finding of low priority as well. The two checks
       # that this file changes, MaxLineLength and AliasUsage, are both of low
-      # priority. Without strict mode they never report anything, so the
-      # setting of 120 characters had no effect.
+      # priority. Without strict mode, these checks never report a finding.
+      # Thus the limit of 120 characters has an effect only in strict mode.
       #
       strict: true,
       #
-      # To modify the timeout for parsing files, change this value:
+      # This value is the time limit, in milliseconds, to parse one file.
       #
       parse_timeout: 5000,
       #
-      # If you want to use uncolored output by default, you can change `color`
-      # to `false` below:
+      # To get output with no color, set `color` to `false`.
       #
       color: true,
       #
-      # You can customize the parameters of any check by adding a second element
-      # to the tuple.
+      # To change the parameters of a check, put them in the second element of
+      # the tuple of that check.
       #
-      # To disable a check put `false` as second element:
+      # To disable a check, put `false` in the second element:
       #
       #     {Credo.Check.Design.DuplicatedCode, false}
       #
@@ -81,14 +77,13 @@
           #
           ## Design Checks
           #
-          # You can customize the priority of any check
-          # Priority values are: `low, normal, high, higher`
+          # You can change the priority of each check. The priority values are
+          # `:low`, `:normal`, `:high`, and `:higher`.
           #
           {Credo.Check.Design.AliasUsage, [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
           {Credo.Check.Design.TagFIXME, []},
-          # You can also customize the exit_status of each check.
-          # If you don't want TODO comments to cause `mix credo` to fail, just
-          # set this value to 0 (zero).
+          # You can also change the exit status of each check. If a TODO
+          # comment must not make `mix credo` fail, set this value to 0.
           #
           {Credo.Check.Design.TagTODO, [exit_status: 2]},
 
@@ -166,12 +161,13 @@
         ],
         disabled: [
           #
-          # Checks scheduled for next check update (opt-in for now)
+          # Credo plans to enable the check below in a later version.
           {Credo.Check.Refactor.UtcNowTruncate, []},
 
           #
-          # Controversial and experimental checks (opt-in, just move the check to `:enabled`
-          #   and be sure to use `mix credo --strict` to see low priority checks)
+          # The checks below are controversial or experimental. To enable a
+          # check, move it to `:enabled`. This file sets `strict: true`, so
+          # Credo also reports each finding of low priority.
           #
           {Credo.Check.Consistency.MultiAliasImportRequireUse, []},
           {Credo.Check.Consistency.UnusedVariableNames, []},
@@ -212,7 +208,7 @@
           # {Credo.Check.Refactor.MapInto, []},
 
           #
-          # Custom checks can be created using `mix credo.gen.check`.
+          # The command `mix credo.gen.check` makes a custom check.
           #
         ]
       }
