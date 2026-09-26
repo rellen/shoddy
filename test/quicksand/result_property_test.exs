@@ -4,17 +4,16 @@ defmodule Quicksand.ResultPropertyTest do
 
   alias Quicksand.Result
 
+  require Result
+
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
   # A result is a bare :ok, a bare :error, an ok tuple, or an error tuple.
-  defp result do
-    one_of([
-      constant(:ok),
-      constant(:error),
-      tuple({constant(:ok), integer()}),
-      tuple({constant(:error), simple()})
-    ])
-  end
+  defp result, do: one_of([ok_result(), error_result()])
+
+  defp ok_result, do: one_of([constant(:ok), tuple({constant(:ok), integer()})])
+
+  defp error_result, do: one_of([constant(:error), tuple({constant(:error), simple()})])
 
   # This generator must make tuples as well as simple values. An earlier
   # version made only simple values. Then no property examined a tuple that is
@@ -24,7 +23,8 @@ defmodule Quicksand.ResultPropertyTest do
     one_of([
       filter(simple(), fn value -> value not in [:ok, :error] end),
       tuple({member_of([:foo, :noreply, :cont]), simple()}),
-      tuple({constant(:ok), simple(), simple()})
+      tuple({constant(:ok), simple(), simple()}),
+      tuple({constant(:error), simple(), simple()})
     ])
   end
 
@@ -167,6 +167,116 @@ defmodule Quicksand.ResultPropertyTest do
     property "flatten/1 removes one level from an ok tuple that contains a result" do
       check all(value <- result()) do
         assert Result.flatten({:ok, value}) == value
+      end
+    end
+  end
+
+  describe "guards" do
+    property "is_ok/1 matches a bare :ok and an ok tuple, and nothing else" do
+      # The function ok?/1 uses the guard is_ok/1. Thus a comparison with ok?/1
+      # cannot find an error in the guard. This property uses a pattern match.
+      check all(value <- one_of([result(), not_a_result()])) do
+        guard = fn
+          x when Result.is_ok(x) -> true
+          _ -> false
+        end
+
+        assert guard.(value) == (value == :ok or match?({:ok, _}, value))
+      end
+    end
+
+    property "is_error/1 matches a bare :error and an error tuple, and nothing else" do
+      check all(value <- one_of([result(), not_a_result()])) do
+        guard = fn
+          x when Result.is_error(x) -> true
+          _ -> false
+        end
+
+        assert guard.(value) == (value == :error or match?({:error, _}, value))
+      end
+    end
+  end
+
+  describe "tap_ok/2 and tap_error/2" do
+    property "tap_ok/2 returns the result with no change for any return value of the function" do
+      check all(value <- result(), returned <- simple()) do
+        assert Result.tap_ok(value, fn _ -> returned end) == value
+      end
+    end
+
+    property "tap_ok/2 calls the function one time for an ok tuple, and never for another result" do
+      check all(value <- result()) do
+        Result.tap_ok(value, &send(self(), {:called, &1}))
+
+        case value do
+          {:ok, inner} -> assert_received {:called, ^inner}
+          _other -> :ok
+        end
+
+        refute_received {:called, _}
+      end
+    end
+
+    property "tap_error/2 returns the result with no change for any return value of the function" do
+      check all(value <- result(), returned <- simple()) do
+        assert Result.tap_error(value, fn _ -> returned end) == value
+      end
+    end
+
+    property "tap_error/2 calls the function one time for an error tuple, and never for another result" do
+      check all(value <- result()) do
+        Result.tap_error(value, &send(self(), {:called, &1}))
+
+        case value do
+          {:error, reason} -> assert_received {:called, ^reason}
+          _other -> :ok
+        end
+
+        refute_received {:called, _}
+      end
+    end
+  end
+
+  describe "unwrap!/1" do
+    property "raises ArgumentError for every error result" do
+      check all(value <- error_result()) do
+        assert_raise ArgumentError, fn -> Result.unwrap!(value) end
+      end
+    end
+
+    property "returns the same value as unwrap/2 for every ok result" do
+      check all(value <- ok_result()) do
+        assert Result.unwrap!(value) == Result.unwrap(value, :default)
+      end
+    end
+  end
+
+  describe "the contract for an input that is not a result" do
+    property "each function that requires a result raises FunctionClauseError for any other term" do
+      calls = [
+        map_ok: &Result.map_ok(&1, fn x -> x end),
+        map_error: &Result.map_error(&1, fn x -> x end),
+        then_ok: &Result.then_ok(&1, fn x -> {:ok, x} end),
+        unwrap!: &Result.unwrap!/1,
+        unwrap: &Result.unwrap(&1, :default),
+        ignore: &Result.ignore/1,
+        tap_ok: &Result.tap_ok(&1, fn x -> x end),
+        tap_error: &Result.tap_error(&1, fn x -> x end)
+      ]
+
+      check all(value <- not_a_result()) do
+        for {name, call} <- calls do
+          raised =
+            try do
+              call.(value)
+              nil
+            rescue
+              error -> error
+            end
+
+          assert match?(%FunctionClauseError{}, raised),
+                 "#{name} did not raise FunctionClauseError for #{inspect(value)}"
+        end
       end
     end
   end
