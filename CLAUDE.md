@@ -93,6 +93,9 @@ above. A change that adds documentation in another style is not complete.
 - The job `mutation` of that workflow runs `mix test.mutation` after the
   tests succeed. That job reports the result, and it never makes a check fail.
   It puts a warning on the line of each mutant that survives.
+- For a pull request, the job `mutation` also posts its summary as a comment.
+  The job keeps one comment for each pull request, and each run replaces its
+  text. The comment names the commit that it describes.
 - The workflow has its own copy of the versions of `.tool-versions`. Change
   the versions in `.tool-versions`, `devenv.nix` and the workflow together.
 
