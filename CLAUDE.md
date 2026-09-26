@@ -87,6 +87,9 @@ above. A change that adds documentation in another style is not complete.
 - Do not trust the count of invalid mutants. Muex sometimes reports a mutant
   as invalid, although the mutant compiles and the tests kill it. Two runs of
   the same code can give different invalid mutants.
+- A GitHub Actions workflow runs `mix test.mutation` for each pull request.
+  The workflow reports the result, and it never makes a check fail. It puts
+  a warning on the line of each mutant that survives.
 
 ## Code Style
 
