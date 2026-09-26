@@ -8,17 +8,12 @@ defmodule Quicksand.ResultPropertyTest do
 
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
-  # A result is a bare :ok, a bare :error, an ok tuple, or an error tuple.
   defp result, do: one_of([ok_result(), error_result()])
 
   defp ok_result, do: one_of([constant(:ok), tuple({constant(:ok), integer()})])
 
   defp error_result, do: one_of([constant(:error), tuple({constant(:error), simple()})])
 
-  # This generator must make tuples as well as simple values. An earlier
-  # version made only simple values. Then no property examined a tuple that is
-  # not a result, and no property failed after a change removed the guard of
-  # flatten/1.
   defp not_a_result do
     one_of([
       filter(simple(), fn value -> value not in [:ok, :error] end),

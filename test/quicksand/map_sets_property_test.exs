@@ -4,18 +4,12 @@ defmodule Quicksand.MapSetsPropertyTest do
 
   alias Quicksand.MapSets
 
-  # These generators make only simple values. The functions in the module
-  # examine only whether an element is a member. Thus a large value with many
-  # levels tests no more behaviour than a simple value, and it makes the test
-  # much slower.
   defp element, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
   defp any_map_set, do: map(list_of(element(), max_length: 10), &MapSet.new/1)
 
   defp elements, do: list_of(element(), max_length: 10)
 
-  # This generator makes a map set and an element that is a member of it. The
-  # map set is not empty, because an empty map set has no member.
   defp map_set_with_member do
     bind(list_of(element(), min_length: 1, max_length: 10), fn list ->
       bind(member_of(list), fn element -> constant({MapSet.new(list), element}) end)

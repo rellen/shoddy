@@ -8,15 +8,6 @@ defmodule Quicksand.HourglassPropertyTest do
 
   defp precision_name, do: member_of([:millisecond, :microsecond])
 
-  # Elixir keeps the fractional second as a tuple of a value and a precision.
-  # Elixir does not force the digits after the precision to be zero. The guard
-  # of Calendar.ISO checks the range of each element only. Thus a value such as
-  # {123456, 3} is correct, and Elixir can construct such a value. This
-  # generator makes values with digits after the precision, because extend/2
-  # must be correct for them.
-  #
-  # Do not remove those digits from this generator. An earlier version removed
-  # them, and then no property in this file examined such a value.
   defp fraction do
     gen all(value <- integer(0..999_999), precision <- integer(0..6)) do
       {value, precision}
