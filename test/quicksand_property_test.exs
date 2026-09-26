@@ -2,7 +2,6 @@ defmodule QuicksandPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  # A falsy value is nil or false. Every other value is truthy.
   defp falsy, do: member_of([nil, false])
 
   defp truthy, do: filter(term(), & &1)
