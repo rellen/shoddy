@@ -67,4 +67,30 @@ defmodule Shoddy.MapsTest do
       assert_raise FunctionClauseError, fn -> put_if(nil, :b, 2) end
     end
   end
+
+  describe "put_present/3" do
+    test "puts a value that is not nil" do
+      assert put_present(%{a: 1}, :b, 2) == %{a: 1, b: 2}
+    end
+
+    test "puts false" do
+      assert put_present(%{}, :subscribed, false) == %{subscribed: false}
+    end
+
+    test "ignores nil" do
+      assert put_present(%{a: 1}, :b, nil) == %{a: 1}
+    end
+
+    test "replaces an entry that is already in the map with a value that is not nil" do
+      assert put_present(%{a: 1}, :a, false) == %{a: false}
+    end
+
+    test "does not change an entry that is already in the map if the value is nil" do
+      assert put_present(%{a: 1}, :a, nil) == %{a: 1}
+    end
+
+    test "raises FunctionClauseError for a first argument that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&put_present/3, [[a: 1], :b, 2]) end
+    end
+  end
 end

@@ -8,7 +8,7 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
@@ -46,8 +46,11 @@ A truthy value is a value that is not `nil` and not `false`. A falsy value is
 | `Shoddy.then_if/3` | The return value of the predicate. |
 | `Shoddy.Maps.put_if/3` | The value to put into the map. |
 
-`Shoddy.coalesce/2` does not use this rule. It rejects the values in its
-option `:reject`, and the default of that option is `[nil]`.
+These functions do not use this rule:
+
+- `Shoddy.Maps.put_present/3` ignores only `nil`.
+- `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
+  default of that option is `[nil]`.
 
 ## Functions as arguments
 

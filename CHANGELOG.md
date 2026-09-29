@@ -18,3 +18,5 @@ The first release also contains these changes:
 
 - Add `Shoddy.Result.collect/1`. It converts a list of results into one
   result.
+- Add `Shoddy.Maps.put_present/3`. It puts a value into a map if the value
+  is not `nil`, so it keeps `false`.

@@ -51,4 +51,13 @@ defmodule Shoddy.MapsPropertyTest do
       end
     end
   end
+
+  describe "put_present/3" do
+    property "returns the map with no change for nil, and the result of Map.put/3 for other values" do
+      check all(map <- any_map(), key <- simple(), value <- one_of([constant(nil), simple()])) do
+        expected = if is_nil(value), do: map, else: Map.put(map, key, value)
+        assert Maps.put_present(map, key, value) == expected
+      end
+    end
+  end
 end
