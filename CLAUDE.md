@@ -64,6 +64,36 @@ above. A change that adds documentation in another style is not complete.
   made the change.
 - Write the body in ASD-STE100. Obey the rules in the first section.
 
+## Versions and Releases
+
+- Change the version in `mix.exs` only in a release. Do not change it in
+  another pull request.
+- If a pull request changes the behavior of the library, add one line for
+  each change to the section "Unreleased" of `CHANGELOG.md`. A change to the
+  documentation, the tests or the workflow alone does not need a line.
+- Start the line of a breaking change with "Breaking:". A breaking change is
+  a change that can make correct code of a caller fail. For example, a new
+  name for a module or a function is a breaking change. The removal of a
+  function is also a breaking change.
+- Make each release in a separate pull request. That pull request does these
+  steps:
+  1. It selects the new version with the rules below.
+  2. It changes the version in `mix.exs`.
+  3. It gives the section "Unreleased" of `CHANGELOG.md` the new version and
+     the date as its title. It then adds a new section "Unreleased" with no
+     lines.
+- After the merge of a release, add a tag with the version to the merge
+  commit. For example, the tag of version 0.4.0 is `v0.4.0`.
+- While the major version is 0, select the version with these rules:
+  - A breaking change increases the minor version. For example, 0.3.0
+    becomes 0.4.0.
+  - Another change increases the patch version. For example, 0.3.0 becomes
+    0.3.1.
+- From version 1.0.0, obey Semantic Versioning:
+  - A breaking change increases the major version.
+  - A new function increases the minor version.
+  - A correction increases the patch version.
+
 ## How to Work on This Project
 
 - This project uses Elixir. Mix is the build tool.
