@@ -1,9 +1,9 @@
-defmodule Quicksand.MapSetsTest do
+defmodule Shoddy.MapSetsTest do
   use ExUnit.Case, async: true
 
-  import Quicksand.MapSets
+  import Shoddy.MapSets
 
-  doctest Quicksand.MapSets
+  doctest Shoddy.MapSets
 
   # Some tests below call a function through apply/2. The compiler examines
   # the type of each argument at a direct call. It reports a type violation

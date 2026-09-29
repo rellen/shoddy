@@ -1,9 +1,9 @@
-defmodule Quicksand.ResultTest do
+defmodule Shoddy.ResultTest do
   use ExUnit.Case, async: true
 
-  import Quicksand.Result
+  import Shoddy.Result
 
-  doctest Quicksand.Result
+  doctest Shoddy.Result
 
   # Guards
 
@@ -208,7 +208,7 @@ defmodule Quicksand.ResultTest do
     end
 
     test "does not enforce the return type of the function" do
-      # The function must return a result tuple, but Quicksand.Result does not
+      # The function must return a result tuple, but Shoddy.Result does not
       # enforce that.
       assert then_ok({:ok, 1}, fn x -> x + 1 end) == 2
     end

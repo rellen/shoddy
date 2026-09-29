@@ -1,4 +1,4 @@
-defmodule Quicksand.Maps do
+defmodule Shoddy.Maps do
   @moduledoc """
   Functions that operate on maps and add to the standard `Map` module.
 
@@ -6,8 +6,8 @@ defmodule Quicksand.Maps do
   Thus you can use these functions in a pipeline:
 
       %{}
-      |> Quicksand.Maps.put_if(:name, params["name"])
-      |> Quicksand.Maps.put_if(:email, params["email"])
+      |> Shoddy.Maps.put_if(:name, params["name"])
+      |> Shoddy.Maps.put_if(:email, params["email"])
 
   The name of this module is `Maps`, in the plural. Thus the alias `Maps`
   does not hide the standard `Map` module.
@@ -31,46 +31,46 @@ defmodule Quicksand.Maps do
 
   The function puts a truthy value into the map:
 
-      iex> Quicksand.Maps.put_if(%{}, :name, "Ada")
+      iex> Shoddy.Maps.put_if(%{}, :name, "Ada")
       %{name: "Ada"}
 
-      iex> Quicksand.Maps.put_if(%{a: 1}, :b, 2)
+      iex> Shoddy.Maps.put_if(%{a: 1}, :b, 2)
       %{a: 1, b: 2}
 
   The function ignores a falsy value:
 
-      iex> Quicksand.Maps.put_if(%{a: 1}, :b, nil)
+      iex> Shoddy.Maps.put_if(%{a: 1}, :b, nil)
       %{a: 1}
 
-      iex> Quicksand.Maps.put_if(%{a: 1}, :b, false)
+      iex> Shoddy.Maps.put_if(%{a: 1}, :b, false)
       %{a: 1}
 
   Only a truthy value replaces an entry that is already in the map:
 
-      iex> Quicksand.Maps.put_if(%{a: 1}, :a, 2)
+      iex> Shoddy.Maps.put_if(%{a: 1}, :a, 2)
       %{a: 2}
 
-      iex> Quicksand.Maps.put_if(%{a: 1}, :a, nil)
+      iex> Shoddy.Maps.put_if(%{a: 1}, :a, nil)
       %{a: 1}
 
   In Elixir, zero, an empty collection, and an empty string are truthy. Thus
   the function puts them into the map:
 
-      iex> Quicksand.Maps.put_if(%{}, :count, 0)
+      iex> Shoddy.Maps.put_if(%{}, :count, 0)
       %{count: 0}
 
-      iex> Quicksand.Maps.put_if(%{}, :items, [])
+      iex> Shoddy.Maps.put_if(%{}, :items, [])
       %{items: []}
 
-      iex> Quicksand.Maps.put_if(%{}, :name, "")
+      iex> Shoddy.Maps.put_if(%{}, :name, "")
       %{name: ""}
 
   This example builds a map of optional fields in a pipeline:
 
       iex> params = %{"name" => "Ada", "email" => nil}
       iex> %{}
-      ...> |> Quicksand.Maps.put_if(:name, params["name"])
-      ...> |> Quicksand.Maps.put_if(:email, params["email"])
+      ...> |> Shoddy.Maps.put_if(:name, params["name"])
+      ...> |> Shoddy.Maps.put_if(:email, params["email"])
       %{name: "Ada"}
   """
   @spec put_if(map(), key, value) :: map() when key: any(), value: any()

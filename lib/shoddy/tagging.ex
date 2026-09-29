@@ -1,4 +1,4 @@
-defmodule Quicksand.Tagging do
+defmodule Shoddy.Tagging do
   @moduledoc """
   Functions that put values into tagged tuples.
 
@@ -10,13 +10,13 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> 42 |> Quicksand.Tagging.ok()
+      iex> 42 |> Shoddy.Tagging.ok()
       {:ok, 42}
 
-      iex> "not found" |> Quicksand.Tagging.error()
+      iex> "not found" |> Shoddy.Tagging.error()
       {:error, "not found"}
 
-      iex> %{count: 1} |> Quicksand.Tagging.tag(:noreply)
+      iex> %{count: 1} |> Shoddy.Tagging.tag(:noreply)
       {:noreply, %{count: 1}}
   """
 
@@ -25,10 +25,10 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.ok(42)
+      iex> Shoddy.Tagging.ok(42)
       {:ok, 42}
 
-      iex> Quicksand.Tagging.ok("hello")
+      iex> Shoddy.Tagging.ok("hello")
       {:ok, "hello"}
   """
   @spec ok(value) :: {:ok, value} when value: any()
@@ -39,10 +39,10 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.error("not found")
+      iex> Shoddy.Tagging.error("not found")
       {:error, "not found"}
 
-      iex> Quicksand.Tagging.error(:timeout)
+      iex> Shoddy.Tagging.error(:timeout)
       {:error, :timeout}
   """
   @spec error(value) :: {:error, value} when value: any()
@@ -53,7 +53,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.noreply(%{count: 1})
+      iex> Shoddy.Tagging.noreply(%{count: 1})
       {:noreply, %{count: 1}}
   """
   @spec noreply(value) :: {:noreply, value} when value: any()
@@ -69,10 +69,10 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.noreply(%{count: 1}, 5000)
+      iex> Shoddy.Tagging.noreply(%{count: 1}, 5000)
       {:noreply, %{count: 1}, 5000}
 
-      iex> Quicksand.Tagging.noreply(%{count: 1}, :hibernate)
+      iex> Shoddy.Tagging.noreply(%{count: 1}, :hibernate)
       {:noreply, %{count: 1}, :hibernate}
   """
   @spec noreply(value, extra) :: {:noreply, value, extra} when value: any(), extra: any()
@@ -85,7 +85,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.cont(0)
+      iex> Shoddy.Tagging.cont(0)
       {:cont, 0}
   """
   @spec cont(value) :: {:cont, value} when value: any()
@@ -98,7 +98,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.halt(42)
+      iex> Shoddy.Tagging.halt(42)
       {:halt, 42}
   """
   @spec halt(value) :: {:halt, value} when value: any()
@@ -109,7 +109,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.reply("hello")
+      iex> Shoddy.Tagging.reply("hello")
       {:reply, "hello"}
   """
   @spec reply(value) :: {:reply, value} when value: any()
@@ -122,7 +122,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.reply(:ok, %{count: 1})
+      iex> Shoddy.Tagging.reply(:ok, %{count: 1})
       {:reply, :ok, %{count: 1}}
   """
   @spec reply(value, extra) :: {:reply, value, extra} when value: any(), extra: any()
@@ -133,7 +133,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.stop(:normal)
+      iex> Shoddy.Tagging.stop(:normal)
       {:stop, :normal}
   """
   @spec stop(value) :: {:stop, value} when value: any()
@@ -146,7 +146,7 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.stop(:normal, %{count: 1})
+      iex> Shoddy.Tagging.stop(:normal, %{count: 1})
       {:stop, :normal, %{count: 1}}
   """
   @spec stop(value, extra) :: {:stop, value, extra} when value: any(), extra: any()
@@ -159,13 +159,13 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.tag(42, :ok)
+      iex> Shoddy.Tagging.tag(42, :ok)
       {:ok, 42}
 
-      iex> Quicksand.Tagging.tag("hello", :reply)
+      iex> Shoddy.Tagging.tag("hello", :reply)
       {:reply, "hello"}
 
-      iex> 42 |> Quicksand.Tagging.tag(:ok)
+      iex> 42 |> Shoddy.Tagging.tag(:ok)
       {:ok, 42}
   """
   @spec tag(value, tag) :: {tag, value} when tag: atom(), value: any()
@@ -178,10 +178,10 @@ defmodule Quicksand.Tagging do
 
   ## Examples
 
-      iex> Quicksand.Tagging.tag(:ok, %{count: 1}, :reply)
+      iex> Shoddy.Tagging.tag(:ok, %{count: 1}, :reply)
       {:reply, :ok, %{count: 1}}
 
-      iex> Quicksand.Tagging.tag(:normal, %{}, :stop)
+      iex> Shoddy.Tagging.tag(:normal, %{}, :stop)
       {:stop, :normal, %{}}
   """
   @spec tag(value, extra, tag) :: {tag, value, extra}

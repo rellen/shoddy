@@ -1,9 +1,9 @@
-defmodule Quicksand.MapsTest do
+defmodule Shoddy.MapsTest do
   use ExUnit.Case, async: true
 
-  import Quicksand.Maps
+  import Shoddy.Maps
 
-  doctest Quicksand.Maps
+  doctest Shoddy.Maps
 
   describe "put_if/3" do
     test "puts a truthy value into an empty map" do

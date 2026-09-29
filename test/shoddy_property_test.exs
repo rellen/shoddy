@@ -1,4 +1,4 @@
-defmodule QuicksandPropertyTest do
+defmodule ShoddyPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
@@ -9,19 +9,19 @@ defmodule QuicksandPropertyTest do
   describe "then_if/2" do
     property "returns a falsy value with no change" do
       check all(value <- falsy()) do
-        assert Quicksand.then_if(value, fn _ -> :called end) == value
+        assert Shoddy.then_if(value, fn _ -> :called end) == value
       end
     end
 
     property "applies the function to a truthy value" do
       check all(value <- truthy()) do
-        assert Quicksand.then_if(value, fn v -> {:seen, v} end) == {:seen, value}
+        assert Shoddy.then_if(value, fn v -> {:seen, v} end) == {:seen, value}
       end
     end
 
     property "does not call the function for a falsy value" do
       check all(value <- falsy()) do
-        Quicksand.then_if(value, fn _ -> send(self(), :called) end)
+        Shoddy.then_if(value, fn _ -> send(self(), :called) end)
         refute_received :called
       end
     end
@@ -30,20 +30,20 @@ defmodule QuicksandPropertyTest do
   describe "then_if/3" do
     property "applies the function when the predicate returns a truthy value" do
       check all(value <- term()) do
-        assert Quicksand.then_if(value, fn _ -> true end, fn v -> {:seen, v} end) ==
+        assert Shoddy.then_if(value, fn _ -> true end, fn v -> {:seen, v} end) ==
                  {:seen, value}
       end
     end
 
     property "returns the value with no change when the predicate returns a falsy value" do
       check all(value <- term(), result <- falsy()) do
-        assert Quicksand.then_if(value, fn _ -> result end, fn _ -> :called end) == value
+        assert Shoddy.then_if(value, fn _ -> result end, fn _ -> :called end) == value
       end
     end
 
     property "passes the value to a predicate of arity 1" do
       check all(value <- term()) do
-        assert Quicksand.then_if(value, fn v -> v == value end, fn _ -> :matched end) == :matched
+        assert Shoddy.then_if(value, fn v -> v == value end, fn _ -> :matched end) == :matched
       end
     end
 
@@ -51,15 +51,15 @@ defmodule QuicksandPropertyTest do
       # The doc says "truthy", not "true". Every other test uses a predicate
       # that returns true, false, or nil. Thus no other test examines this rule.
       check all(value <- term(), result <- member_of([:yes, 42, "x", [], %{}, 0])) do
-        assert Quicksand.then_if(value, fn -> result end, fn _ -> :called end) == :called
-        assert Quicksand.then_if(value, fn _ -> result end, fn _ -> :called end) == :called
+        assert Shoddy.then_if(value, fn -> result end, fn _ -> :called end) == :called
+        assert Shoddy.then_if(value, fn _ -> result end, fn _ -> :called end) == :called
       end
     end
 
     property "ignores the value for a predicate of arity 0" do
       check all(value <- term(), decision <- boolean()) do
         expected = if decision, do: :called, else: value
-        assert Quicksand.then_if(value, fn -> decision end, fn _ -> :called end) == expected
+        assert Shoddy.then_if(value, fn -> decision end, fn _ -> :called end) == expected
       end
     end
   end
@@ -94,19 +94,19 @@ defmodule QuicksandPropertyTest do
   describe "coalesce/2" do
     property "returns the same result as Enum.find/2 for the first value that is not nil" do
       check all(values <- plain_values()) do
-        assert Quicksand.coalesce(values) == Enum.find(values, &(&1 != nil))
+        assert Shoddy.coalesce(values) == Enum.find(values, &(&1 != nil))
       end
     end
 
     property "returns the same result as Enum.find/2 for the first truthy value" do
       check all(values <- plain_values()) do
-        assert Quicksand.coalesce(values, reject: [nil, false]) == Enum.find(values, & &1)
+        assert Shoddy.coalesce(values, reject: [nil, false]) == Enum.find(values, & &1)
       end
     end
 
     property "returns the same result as Enum.find/2 for any :reject option" do
       check all(values <- plain_values(), reject <- plain_values()) do
-        assert Quicksand.coalesce(values, reject: reject) ==
+        assert Shoddy.coalesce(values, reject: reject) ==
                  Enum.find(values, &(&1 not in reject))
       end
     end
@@ -114,26 +114,26 @@ defmodule QuicksandPropertyTest do
     property "returns the default if it rejects each value" do
       check all(values <- plain_values(), default <- plain_value()) do
         if Enum.all?(values, &(&1 == nil)) do
-          assert Quicksand.coalesce(values, default: default) === default
+          assert Shoddy.coalesce(values, default: default) === default
         end
       end
     end
 
     property "returns the default if the :reject option lists every value" do
       check all(values <- plain_values(), default <- plain_value()) do
-        assert Quicksand.coalesce(values, reject: values, default: default) === default
+        assert Shoddy.coalesce(values, reject: values, default: default) === default
       end
     end
 
     property "returns the first value for an empty :reject option" do
       check all(values <- list_of(plain_value(), min_length: 1, max_length: 10)) do
-        assert Quicksand.coalesce(values, reject: []) === hd(values)
+        assert Shoddy.coalesce(values, reject: []) === hd(values)
       end
     end
 
     property "returns a value that the list contains, or nil" do
       check all(values <- plain_values()) do
-        result = Quicksand.coalesce(values)
+        result = Shoddy.coalesce(values)
 
         assert result in values or result == nil
       end
@@ -142,7 +142,7 @@ defmodule QuicksandPropertyTest do
     property "never returns nil if the list contains a value that is not nil" do
       check all(values <- plain_values()) do
         if Enum.any?(values, &(&1 != nil)) do
-          refute Quicksand.coalesce(values) == nil
+          refute Shoddy.coalesce(values) == nil
         end
       end
     end
@@ -150,7 +150,7 @@ defmodule QuicksandPropertyTest do
     property "never returns a falsy value with reject: [nil, false] if the list contains a truthy value" do
       check all(values <- plain_values()) do
         if Enum.any?(values, & &1) do
-          assert Quicksand.coalesce(values, reject: [nil, false])
+          assert Shoddy.coalesce(values, reject: [nil, false])
         end
       end
     end
@@ -159,10 +159,10 @@ defmodule QuicksandPropertyTest do
       check all(values <- plain_values()) do
         functions = Enum.map(values, fn value -> fn -> value end end)
 
-        assert Quicksand.coalesce(functions) == Quicksand.coalesce(values)
+        assert Shoddy.coalesce(functions) == Shoddy.coalesce(values)
 
-        assert Quicksand.coalesce(functions, reject: [nil, false]) ==
-                 Quicksand.coalesce(values, reject: [nil, false])
+        assert Shoddy.coalesce(functions, reject: [nil, false]) ==
+                 Shoddy.coalesce(values, reject: [nil, false])
       end
     end
 
@@ -170,7 +170,7 @@ defmodule QuicksandPropertyTest do
       check all(values <- list_of(plain_value(), min_length: 1, max_length: 10)) do
         functions = Enum.map(values, fn value -> fn -> value end end)
 
-        assert Quicksand.coalesce(functions, call_functions?: false) == hd(functions)
+        assert Shoddy.coalesce(functions, call_functions?: false) == hd(functions)
       end
     end
 
@@ -184,7 +184,7 @@ defmodule QuicksandPropertyTest do
             end
           end)
 
-        Quicksand.coalesce(functions)
+        Shoddy.coalesce(functions)
         called = for {:called, index} <- drain_messages(), do: index
 
         assert called == expected_calls(values)
@@ -193,10 +193,10 @@ defmodule QuicksandPropertyTest do
 
     property "does not change a result that is not nil if more values follow at the end" do
       check all(values <- plain_values(), extra <- plain_values()) do
-        result = Quicksand.coalesce(values)
+        result = Shoddy.coalesce(values)
 
         if result != nil do
-          assert Quicksand.coalesce(values ++ extra) == result
+          assert Shoddy.coalesce(values ++ extra) == result
         end
       end
     end
@@ -205,19 +205,19 @@ defmodule QuicksandPropertyTest do
   describe "id/1" do
     property "returns the same term for any term" do
       check all(value <- term()) do
-        assert Quicksand.id(value) === value
+        assert Shoddy.id(value) === value
       end
     end
 
     property "changes no list when Enum.map/2 uses it" do
       check all(list <- list_of(term(), max_length: 10)) do
-        assert Enum.map(list, &Quicksand.id/1) == list
+        assert Enum.map(list, &Shoddy.id/1) == list
       end
     end
 
     property "returns the same result as Function.identity/1" do
       check all(value <- term()) do
-        assert Quicksand.id(value) === Function.identity(value)
+        assert Shoddy.id(value) === Function.identity(value)
       end
     end
   end

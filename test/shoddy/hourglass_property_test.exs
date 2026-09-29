@@ -1,8 +1,8 @@
-defmodule Quicksand.HourglassPropertyTest do
+defmodule Shoddy.HourglassPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Quicksand.Hourglass
+  alias Shoddy.Hourglass
 
   @digits %{millisecond: 3, microsecond: 6}
 
