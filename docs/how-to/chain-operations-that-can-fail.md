@@ -148,3 +148,24 @@ Enum.count(results, &Shoddy.Result.ok?/1)
 Enum.filter(results, &Shoddy.Result.error?/1)
 #=> [error: :invalid_age]
 ```
+
+## Combine the results of a list
+
+Use `Shoddy.Result.collect/1`. It returns the values of the list in an ok
+tuple, or the first error:
+
+```elixir
+["41", "5"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect()
+#=> {:ok, [41, 5]}
+
+["36", "old", "-1"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect()
+#=> {:error, :invalid_age}
+```
+
+`Shoddy.Result.collect/1` stops at the first error. To report each error,
+use `Enum.filter/2` with `Shoddy.Result.error?/1`, as the section above
+shows.

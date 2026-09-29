@@ -463,4 +463,66 @@ defmodule Shoddy.Result do
   def tap_error(:error, fun) when is_function(fun, 1), do: :error
   def tap_error({:ok, _} = ok, fun) when is_function(fun, 1), do: ok
   def tap_error(:ok, fun) when is_function(fun, 1), do: :ok
+
+  # Lists of results
+
+  @doc """
+  Converts a list of results into one result.
+
+  If each element is ok, this function returns `{:ok, values}`. The list
+  `values` contains the value of each element, in the order of the input. A
+  bare `:ok` has no value, so it puts `nil` into the list.
+
+  If an element is an error, this function returns the first error with no
+  change. It stops at that error, and it does not examine a later element.
+
+  Use this function after `Enum.map/2` with an operation that can fail.
+
+  This function raises `FunctionClauseError` for an element that is not a
+  result, if it examines that element.
+
+  ## Examples
+
+      iex> Shoddy.Result.collect([{:ok, 1}, {:ok, 2}])
+      {:ok, [1, 2]}
+
+      iex> Shoddy.Result.collect([])
+      {:ok, []}
+
+      iex> Shoddy.Result.collect([{:ok, 1}, :ok])
+      {:ok, [1, nil]}
+
+  The function returns the first error:
+
+      iex> Shoddy.Result.collect([{:ok, 1}, {:error, :bad}, {:error, :worse}])
+      {:error, :bad}
+
+      iex> Shoddy.Result.collect([:error, {:ok, 1}])
+      :error
+
+  Use the function after `Enum.map/2`:
+
+      iex> parse = fn text ->
+      ...>   case Integer.parse(text) do
+      ...>     {number, ""} -> {:ok, number}
+      ...>     _other -> {:error, {:invalid, text}}
+      ...>   end
+      ...> end
+      iex> ["1", "2", "3"] |> Enum.map(parse) |> Shoddy.Result.collect()
+      {:ok, [1, 2, 3]}
+      iex> ["1", "x", "y"] |> Enum.map(parse) |> Shoddy.Result.collect()
+      {:error, {:invalid, "x"}}
+  """
+  @spec collect([t(a, e)]) :: {:ok, [a | nil]} | :error | {:error, e} when a: any(), e: any()
+  def collect(results) when is_list(results) do
+    case Enum.reduce_while(results, [], &collect_value/2) do
+      values when is_list(values) -> {:ok, Enum.reverse(values)}
+      error -> error
+    end
+  end
+
+  defp collect_value({:ok, value}, values), do: {:cont, [value | values]}
+  defp collect_value(:ok, values), do: {:cont, [nil | values]}
+  defp collect_value({:error, _} = error, _values), do: {:halt, error}
+  defp collect_value(:error, _values), do: {:halt, :error}
 end

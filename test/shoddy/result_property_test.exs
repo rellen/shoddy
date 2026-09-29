@@ -246,6 +246,20 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
+  describe "collect/1" do
+    property "returns the values of the ok results, or the first error with no change" do
+      check all(results <- list_of(result())) do
+        expected =
+          case Enum.find(results, &Result.error?/1) do
+            nil -> {:ok, Enum.map(results, &Result.unwrap(&1, nil))}
+            error -> error
+          end
+
+        assert Result.collect(results) == expected
+      end
+    end
+  end
+
   describe "the contract for an input that is not a result" do
     # Each function raises before it calls its function argument. Thus the
     # value of that argument does not change the result of these properties.

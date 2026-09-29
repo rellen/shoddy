@@ -13,3 +13,8 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
+
+The first release also contains these changes:
+
+- Add `Shoddy.Result.collect/1`. It converts a list of results into one
+  result.

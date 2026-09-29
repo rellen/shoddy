@@ -410,6 +410,42 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  # Lists of results
+
+  describe "collect/1" do
+    test "returns an empty list in an ok tuple for an empty list" do
+      assert collect([]) == {:ok, []}
+    end
+
+    test "returns the values in the order of the input" do
+      assert collect([{:ok, 3}, {:ok, 1}, {:ok, 2}]) == {:ok, [3, 1, 2]}
+    end
+
+    test "puts nil into the list for a bare :ok" do
+      assert collect([:ok, {:ok, 1}]) == {:ok, [nil, 1]}
+    end
+
+    test "returns the first error tuple with no change" do
+      assert collect([{:ok, 1}, {:error, :first}, {:error, :second}]) == {:error, :first}
+    end
+
+    test "returns a bare :error with no change" do
+      assert collect([{:ok, 1}, :error, {:error, :second}]) == :error
+    end
+
+    test "does not examine an element after the first error" do
+      assert apply(&collect/1, [[{:error, :first}, 42]]) == {:error, :first}
+    end
+
+    test "raises FunctionClauseError for an element that is not a result" do
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [[{:ok, 1}, 42]]) end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [{:ok, 1}]) end
+    end
+  end
+
   # The moduledoc states that most functions raise FunctionClauseError for an
   # input that is not a result. The tests below examine that rule. Without
   # them, no test fails if a change adds a clause that accepts every input.
