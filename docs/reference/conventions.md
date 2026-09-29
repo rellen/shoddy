@@ -73,7 +73,7 @@ option `:reject`, and the default of that option is `[nil]`.
 | `:error` | An error result with no reason. |
 
 For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
-return `nil`.
+return `nil`, and `Shoddy.Result.collect/1` puts `nil` into its list.
 
 ## Equality
 
@@ -90,7 +90,7 @@ These functions compare two values with the strict equality operator
 | --- | --- |
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
-| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1` and `Shoddy.Result.from_nil/2` accept each value. |
+| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the list of `Shoddy.Result.collect/1` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1` and `Shoddy.Result.from_nil/2` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
