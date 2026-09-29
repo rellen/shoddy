@@ -115,4 +115,25 @@ defmodule Shoddy.DateTimesPropertyTest do
       end
     end
   end
+
+  describe "floor/2" do
+    @unit_length %{minute: 60_000_000, hour: 3_600_000_000, day: 86_400_000_000}
+
+    property "returns the start of the unit that contains the value, with the same precision" do
+      check all(
+              unit <- member_of([:minute, :hour, :day]),
+              value <- if(unit == :day, do: one_of([datetime(), naive_datetime()]), else: time_value())
+            ) do
+        result = DateTimes.floor(value, unit)
+        module = value.__struct__
+        difference = module.diff(value, result, :microsecond)
+
+        assert difference >= 0 and difference < @unit_length[unit]
+        assert result.second == 0
+        assert result.microsecond == {0, elem(value.microsecond, 1)}
+        assert unit == :minute or result.minute == 0
+        assert unit != :day or result.hour == 0
+      end
+    end
+  end
 end
