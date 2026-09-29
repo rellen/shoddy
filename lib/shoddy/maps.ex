@@ -77,4 +77,47 @@ defmodule Shoddy.Maps do
   def put_if(map, key, value) when is_map(map) do
     if value, do: Map.put(map, key, value), else: map
   end
+
+  @doc """
+  Puts a value into a map if the value is not `nil`.
+
+  If `value` is `nil`, this function returns the map with no change. An entry
+  that is already in the map under `key` also stays with no change.
+
+  This function is different from `put_if/3` for one value only.
+  `put_if/3` ignores `false`, but this function puts `false` into the map.
+  Use this function for a field that can be `false`, such as a boolean
+  option.
+
+  ## Examples
+
+  The function puts a value that is not `nil` into the map:
+
+      iex> Shoddy.Maps.put_present(%{}, :name, "Ada")
+      %{name: "Ada"}
+
+      iex> Shoddy.Maps.put_present(%{name: "Ada"}, :subscribed, false)
+      %{name: "Ada", subscribed: false}
+
+  The function ignores `nil`:
+
+      iex> Shoddy.Maps.put_present(%{name: "Ada"}, :email, nil)
+      %{name: "Ada"}
+
+      iex> Shoddy.Maps.put_present(%{email: "ada@example.com"}, :email, nil)
+      %{email: "ada@example.com"}
+
+  This example builds a map of optional fields in a pipeline:
+
+      iex> params = %{"name" => "Ada", "email" => nil, "subscribed" => false}
+      iex> %{}
+      ...> |> Shoddy.Maps.put_present(:name, params["name"])
+      ...> |> Shoddy.Maps.put_present(:email, params["email"])
+      ...> |> Shoddy.Maps.put_present(:subscribed, params["subscribed"])
+      %{name: "Ada", subscribed: false}
+  """
+  @spec put_present(map(), key, value) :: map() when key: any(), value: any()
+  def put_present(map, key, value) when is_map(map) do
+    if is_nil(value), do: map, else: Map.put(map, key, value)
+  end
 end

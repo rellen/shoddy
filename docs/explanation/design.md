@@ -47,8 +47,10 @@ macro `if` and the operators `&&` and `||` use the same rule. Thus a reader
 who knows `if` also knows the rule of these functions.
 
 This rule has a cost. `Shoddy.Maps.put_if/3` never puts `false` into a map.
+Thus `Shoddy.Maps.put_present/3` has the rule of `Shoddy.coalesce/2`, and
+it ignores only `nil`.
 [Build a map from optional data](../how-to/build-a-map-from-optional-data.md#keep-a-field-that-can-be-false)
-shows how to keep `false`.
+shows when to use each function.
 
 ## Why coalesce rejects only nil
 

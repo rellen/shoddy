@@ -4,8 +4,9 @@ This guide shows how to build a map from data in which a field can be
 absent, such as the parameters of a web form. The map gets an entry only for
 a field that has a value. It does not get an entry such as `email: nil`.
 
-The functions in this guide examine whether a value is truthy. A truthy
-value is a value that is not `nil` and not `false`.
+Most functions in this guide examine whether a value is truthy. A truthy
+value is a value that is not `nil` and not `false`. The last section shows a
+function that ignores only `nil`.
 
 ## Put each field that has a value
 
@@ -59,19 +60,15 @@ with no change.
 ## Keep a field that can be false
 
 `Shoddy.Maps.put_if/3` never puts `false` into a map. For a boolean field,
-`false` is a value that you must keep. Use `Shoddy.then_if/3` with a
-predicate that examines the type:
+`false` is a value that you must keep. Use `Shoddy.Maps.put_present/3`. It
+ignores only `nil`:
 
 ```elixir
-subscribed = false
+params = %{"name" => "Ada", "subscribed" => false, "email" => nil}
 
-%{name: "Ada"}
-|> Shoddy.then_if(
-  fn -> is_boolean(subscribed) end,
-  &Map.put(&1, :subscribed, subscribed)
-)
+%{}
+|> Shoddy.Maps.put_present(:name, params["name"])
+|> Shoddy.Maps.put_present(:subscribed, params["subscribed"])
+|> Shoddy.Maps.put_present(:email, params["email"])
 #=> %{name: "Ada", subscribed: false}
 ```
-
-The map gets the entry for `true` and for `false`. It gets no entry for
-`nil`.
