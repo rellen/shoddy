@@ -1,8 +1,8 @@
-defmodule Quicksand.ResultPropertyTest do
+defmodule Shoddy.ResultPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Quicksand.Result
+  alias Shoddy.Result
 
   require Result
 

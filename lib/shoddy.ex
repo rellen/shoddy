@@ -1,4 +1,4 @@
-defmodule Quicksand do
+defmodule Shoddy do
   @moduledoc """
   Small functions for tasks that occur frequently in Elixir code.
   """
@@ -17,45 +17,45 @@ defmodule Quicksand do
 
   The function transforms a truthy value:
 
-      iex> Quicksand.then_if(42, &(&1 * 2))
+      iex> Shoddy.then_if(42, &(&1 * 2))
       84
 
-      iex> Quicksand.then_if("hello", &String.upcase/1)
+      iex> Shoddy.then_if("hello", &String.upcase/1)
       "HELLO"
 
-      iex> Quicksand.then_if(true, fn _ -> :was_true end)
+      iex> Shoddy.then_if(true, fn _ -> :was_true end)
       :was_true
 
-      iex> Quicksand.then_if([1, 2, 3], &length/1)
+      iex> Shoddy.then_if([1, 2, 3], &length/1)
       3
 
-      iex> Quicksand.then_if(%{a: 1}, &map_size/1)
+      iex> Shoddy.then_if(%{a: 1}, &map_size/1)
       1
 
   The function returns a falsy value with no change:
 
-      iex> Quicksand.then_if(nil, &(&1 * 2))
+      iex> Shoddy.then_if(nil, &(&1 * 2))
       nil
 
-      iex> Quicksand.then_if(false, fn _ -> :was_true end)
+      iex> Shoddy.then_if(false, fn _ -> :was_true end)
       false
 
   Use the function in a pipeline:
 
-      iex> 10 |> Quicksand.then_if(&(&1 + 5))
+      iex> 10 |> Shoddy.then_if(&(&1 + 5))
       15
 
-      iex> nil |> Quicksand.then_if(&(&1 + 5))
+      iex> nil |> Shoddy.then_if(&(&1 + 5))
       nil
 
   In Elixir, zero is truthy:
 
-      iex> Quicksand.then_if(0, &(&1 + 1))
+      iex> Shoddy.then_if(0, &(&1 + 1))
       1
 
   In Elixir, an empty collection is truthy:
 
-      iex> Quicksand.then_if([], &[1 | &1])
+      iex> Shoddy.then_if([], &[1 | &1])
       [1]
   """
   @spec then_if(value, (value -> result)) :: value | result when value: any(), result: any()
@@ -77,44 +77,44 @@ defmodule Quicksand do
 
   A predicate of arity 1 examines the value:
 
-      iex> Quicksand.then_if(4, &(rem(&1, 2) == 0), &(&1 * 10))
+      iex> Shoddy.then_if(4, &(rem(&1, 2) == 0), &(&1 * 10))
       40
 
-      iex> Quicksand.then_if(3, &(rem(&1, 2) == 0), &(&1 * 10))
+      iex> Shoddy.then_if(3, &(rem(&1, 2) == 0), &(&1 * 10))
       3
 
-      iex> Quicksand.then_if("hello", &(String.length(&1) > 3), &String.upcase/1)
+      iex> Shoddy.then_if("hello", &(String.length(&1) > 3), &String.upcase/1)
       "HELLO"
 
-      iex> Quicksand.then_if("hi", &(String.length(&1) > 3), &String.upcase/1)
+      iex> Shoddy.then_if("hi", &(String.length(&1) > 3), &String.upcase/1)
       "hi"
 
   A predicate of arity 0 uses a condition that is external to the value:
 
-      iex> Quicksand.then_if(42, fn -> true end, &(&1 * 2))
+      iex> Shoddy.then_if(42, fn -> true end, &(&1 * 2))
       84
 
-      iex> Quicksand.then_if(42, fn -> false end, &(&1 * 2))
+      iex> Shoddy.then_if(42, fn -> false end, &(&1 * 2))
       42
 
-      iex> Quicksand.then_if(42, fn -> nil end, &(&1 * 2))
+      iex> Shoddy.then_if(42, fn -> nil end, &(&1 * 2))
       42
 
   Use the function in a pipeline:
 
-      iex> 100 |> Quicksand.then_if(&(&1 > 50), &(&1 - 50))
+      iex> 100 |> Shoddy.then_if(&(&1 > 50), &(&1 - 50))
       50
 
-      iex> 30 |> Quicksand.then_if(&(&1 > 50), &(&1 - 50))
+      iex> 30 |> Shoddy.then_if(&(&1 > 50), &(&1 - 50))
       30
 
   A predicate of arity 1 always receives the initial value, even a falsy
   value:
 
-      iex> Quicksand.then_if(nil, &is_nil/1, fn _ -> :was_nil end)
+      iex> Shoddy.then_if(nil, &is_nil/1, fn _ -> :was_nil end)
       :was_nil
 
-      iex> Quicksand.then_if(false, &(&1 == false), fn _ -> :was_false end)
+      iex> Shoddy.then_if(false, &(&1 == false), fn _ -> :was_false end)
       :was_false
   """
   @spec then_if(value, (value -> as_boolean(any())) | (-> as_boolean(any())), (value -> result)) ::
@@ -134,24 +134,24 @@ defmodule Quicksand do
   This function is the identity function. Use it where the code requires a
   function of arity 1 but must not change the value. `Function.identity/1`
   in the standard library is the same function, but the capture
-  `&Quicksand.id/1` is shorter.
+  `&Shoddy.id/1` is shorter.
 
   ## Examples
 
-      iex> Quicksand.id(42)
+      iex> Shoddy.id(42)
       42
 
-      iex> Quicksand.id(nil)
+      iex> Shoddy.id(nil)
       nil
 
   Use the function to keep the truthy values of a list:
 
-      iex> Enum.filter([1, nil, 2, false, 3], &Quicksand.id/1)
+      iex> Enum.filter([1, nil, 2, false, 3], &Shoddy.id/1)
       [1, 2, 3]
 
   Use the function to remove one level of nested lists:
 
-      iex> Enum.flat_map([[1, 2], [], [3]], &Quicksand.id/1)
+      iex> Enum.flat_map([[1, 2], [], [3]], &Shoddy.id/1)
       [1, 2, 3]
   """
   @spec id(value) :: value when value: any()
@@ -199,76 +199,76 @@ defmodule Quicksand do
 
   The function returns the first value that is not `nil`:
 
-      iex> Quicksand.coalesce([nil, nil, 3, 4])
+      iex> Shoddy.coalesce([nil, nil, 3, 4])
       3
 
-      iex> Quicksand.coalesce([1, nil, 3])
+      iex> Shoddy.coalesce([1, nil, 3])
       1
 
   The function returns `nil` if it rejects each value:
 
-      iex> Quicksand.coalesce([nil, nil])
+      iex> Shoddy.coalesce([nil, nil])
       nil
 
-      iex> Quicksand.coalesce([])
+      iex> Shoddy.coalesce([])
       nil
 
   The function calls a function of arity 0 and returns the result:
 
-      iex> Quicksand.coalesce([nil, fn -> :computed end])
+      iex> Shoddy.coalesce([nil, fn -> :computed end])
       :computed
 
-      iex> Quicksand.coalesce([nil, fn -> nil end, :last])
+      iex> Shoddy.coalesce([nil, fn -> nil end, :last])
       :last
 
   In Elixir, `false` is not `nil`, and the default list rejects only `nil`.
   Thus the function returns `false`:
 
-      iex> Quicksand.coalesce([nil, false, :other])
+      iex> Shoddy.coalesce([nil, false, :other])
       false
 
   The option `:reject` lists the values that the function rejects:
 
-      iex> Quicksand.coalesce([nil, false, :other], reject: [nil, false])
+      iex> Shoddy.coalesce([nil, false, :other], reject: [nil, false])
       :other
 
-      iex> Quicksand.coalesce([nil, "", "text"], reject: [nil, ""])
+      iex> Shoddy.coalesce([nil, "", "text"], reject: [nil, ""])
       "text"
 
   If the option `:reject` is an empty list, the function returns the first
   value:
 
-      iex> Quicksand.coalesce([nil, :other], reject: [])
+      iex> Shoddy.coalesce([nil, :other], reject: [])
       nil
 
   If the function rejects each value, it returns the value of the option
   `:default`:
 
-      iex> Quicksand.coalesce([nil, nil], default: :none)
+      iex> Shoddy.coalesce([nil, nil], default: :none)
       :none
 
-      iex> Quicksand.coalesce([], default: 0)
+      iex> Shoddy.coalesce([], default: 0)
       0
 
-      iex> Quicksand.coalesce([nil, :value], default: :none)
+      iex> Shoddy.coalesce([nil, :value], default: :none)
       :value
 
   With `call_functions?: false`, the function treats a function of arity 0
   as an ordinary value:
 
       iex> fun = fn -> :computed end
-      iex> Quicksand.coalesce([nil, fun], call_functions?: false) == fun
+      iex> Shoddy.coalesce([nil, fun], call_functions?: false) == fun
       true
 
   The function does not call a function of another arity:
 
       iex> fun = fn value -> value end
-      iex> Quicksand.coalesce([nil, fun]) == fun
+      iex> Shoddy.coalesce([nil, fun]) == fun
       true
 
   The function calls no function after the value that it returns:
 
-      iex> Quicksand.coalesce([:first, fn -> send(self(), :called) end])
+      iex> Shoddy.coalesce([:first, fn -> send(self(), :called) end])
       :first
       iex> receive do
       ...>   :called -> :the_function_ran
@@ -281,7 +281,7 @@ defmodule Quicksand do
 
       iex> params = %{}
       iex> from_config = nil
-      iex> Quicksand.coalesce([params["name"], from_config, fn -> "default" end])
+      iex> Shoddy.coalesce([params["name"], from_config, fn -> "default" end])
       "default"
   """
   @spec coalesce([any()], keyword()) :: any()

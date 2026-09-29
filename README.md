@@ -1,6 +1,6 @@
-# Quicksand
+# Shoddy
 
-Quicksand is an Elixir library. It contains small functions for tasks that
+Shoddy is an Elixir library. It contains small functions for tasks that
 occur frequently in Elixir code.
 
 The library has no runtime dependencies.

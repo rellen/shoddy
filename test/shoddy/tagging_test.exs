@@ -1,9 +1,9 @@
-defmodule Quicksand.TaggingTest do
+defmodule Shoddy.TaggingTest do
   use ExUnit.Case, async: true
 
-  import Quicksand.Tagging
+  import Shoddy.Tagging
 
-  doctest Quicksand.Tagging
+  doctest Shoddy.Tagging
 
   describe "ok/1" do
     test "puts a value into an :ok tuple" do

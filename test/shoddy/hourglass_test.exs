@@ -1,9 +1,9 @@
-defmodule Quicksand.HourglassTest do
+defmodule Shoddy.HourglassTest do
   use ExUnit.Case, async: true
 
-  import Quicksand.Hourglass
+  import Shoddy.Hourglass
 
-  doctest Quicksand.Hourglass
+  doctest Shoddy.Hourglass
 
   describe "extend/1" do
     test "extends a DateTime that has no fractional part" do

@@ -1,4 +1,4 @@
-defmodule Quicksand.Result do
+defmodule Shoddy.Result do
   @moduledoc """
   Functions that operate on result tuples.
 
@@ -8,8 +8,8 @@ defmodule Quicksand.Result do
   as the first argument. Thus you can use these functions in a pipeline:
 
       fetch_user(id)
-      |> Quicksand.Result.map_ok(& &1.name)
-      |> Quicksand.Result.unwrap("unknown")
+      |> Shoddy.Result.map_ok(& &1.name)
+      |> Shoddy.Result.unwrap("unknown")
 
   The functions accept the bare atoms `:ok` and `:error`, and also the tuples
   `{:ok, value}` and `{:error, reason}`. A bare `:ok` has no value. Thus
@@ -28,8 +28,8 @@ defmodule Quicksand.Result do
 
   ## Constructors
 
-  To construct result tuples, refer to `Quicksand.Tagging.ok/1` and
-  `Quicksand.Tagging.error/1`.
+  To construct result tuples, refer to `Shoddy.Tagging.ok/1` and
+  `Shoddy.Tagging.error/1`.
   """
 
   @typedoc "A result is an ok tuple, an error tuple, a bare `:ok`, or a bare `:error`."
@@ -47,15 +47,15 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> import Quicksand.Result, only: [is_ok: 1]
+      iex> import Shoddy.Result, only: [is_ok: 1]
       iex> is_ok({:ok, 42})
       true
 
-      iex> import Quicksand.Result, only: [is_ok: 1]
+      iex> import Shoddy.Result, only: [is_ok: 1]
       iex> is_ok(:ok)
       true
 
-      iex> import Quicksand.Result, only: [is_ok: 1]
+      iex> import Shoddy.Result, only: [is_ok: 1]
       iex> is_ok({:error, :fail})
       false
   """
@@ -70,15 +70,15 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> import Quicksand.Result, only: [is_error: 1]
+      iex> import Shoddy.Result, only: [is_error: 1]
       iex> is_error({:error, :not_found})
       true
 
-      iex> import Quicksand.Result, only: [is_error: 1]
+      iex> import Shoddy.Result, only: [is_error: 1]
       iex> is_error(:error)
       true
 
-      iex> import Quicksand.Result, only: [is_error: 1]
+      iex> import Shoddy.Result, only: [is_error: 1]
       iex> is_error({:ok, 42})
       false
   """
@@ -97,19 +97,19 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.ok?({:ok, 42})
+      iex> Shoddy.Result.ok?({:ok, 42})
       true
 
-      iex> Quicksand.Result.ok?(:ok)
+      iex> Shoddy.Result.ok?(:ok)
       true
 
-      iex> Quicksand.Result.ok?({:error, :fail})
+      iex> Shoddy.Result.ok?({:error, :fail})
       false
 
-      iex> Quicksand.Result.ok?(:error)
+      iex> Shoddy.Result.ok?(:error)
       false
 
-      iex> Quicksand.Result.ok?(:something_else)
+      iex> Shoddy.Result.ok?(:something_else)
       false
   """
   @spec ok?(any()) :: boolean()
@@ -125,19 +125,19 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.error?({:error, :not_found})
+      iex> Shoddy.Result.error?({:error, :not_found})
       true
 
-      iex> Quicksand.Result.error?(:error)
+      iex> Shoddy.Result.error?(:error)
       true
 
-      iex> Quicksand.Result.error?({:ok, 42})
+      iex> Shoddy.Result.error?({:ok, 42})
       false
 
-      iex> Quicksand.Result.error?(:ok)
+      iex> Shoddy.Result.error?(:ok)
       false
 
-      iex> Quicksand.Result.error?(:something_else)
+      iex> Shoddy.Result.error?(:something_else)
       false
   """
   @spec error?(any()) :: boolean()
@@ -158,21 +158,21 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.map_ok({:ok, 3}, &(&1 * 2))
+      iex> Shoddy.Result.map_ok({:ok, 3}, &(&1 * 2))
       {:ok, 6}
 
-      iex> Quicksand.Result.map_ok({:error, :not_found}, &(&1 * 2))
+      iex> Shoddy.Result.map_ok({:error, :not_found}, &(&1 * 2))
       {:error, :not_found}
 
-      iex> Quicksand.Result.map_ok(:ok, &(&1 * 2))
+      iex> Shoddy.Result.map_ok(:ok, &(&1 * 2))
       :ok
 
-      iex> Quicksand.Result.map_ok(:error, &(&1 * 2))
+      iex> Shoddy.Result.map_ok(:error, &(&1 * 2))
       :error
 
   Use the function in a pipeline:
 
-      iex> {:ok, "hello"} |> Quicksand.Result.map_ok(&String.upcase/1)
+      iex> {:ok, "hello"} |> Shoddy.Result.map_ok(&String.upcase/1)
       {:ok, "HELLO"}
   """
   @spec map_ok(t(a, e), (a -> b)) :: t(b, e) when a: any(), b: any(), e: any()
@@ -191,16 +191,16 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.map_error({:error, :not_found}, &to_string/1)
+      iex> Shoddy.Result.map_error({:error, :not_found}, &to_string/1)
       {:error, "not_found"}
 
-      iex> Quicksand.Result.map_error({:ok, 42}, &to_string/1)
+      iex> Shoddy.Result.map_error({:ok, 42}, &to_string/1)
       {:ok, 42}
 
-      iex> Quicksand.Result.map_error(:error, &to_string/1)
+      iex> Shoddy.Result.map_error(:error, &to_string/1)
       :error
 
-      iex> Quicksand.Result.map_error(:ok, &to_string/1)
+      iex> Shoddy.Result.map_error(:ok, &to_string/1)
       :ok
   """
   @spec map_error(t(a, e), (e -> f)) :: t(a, f) when a: any(), e: any(), f: any()
@@ -220,33 +220,33 @@ defmodule Quicksand.Result do
 
   In functional programming, the name of this operation is monadic bind. Other
   names are `flat_map` and `and_then`. The name `then_ok` agrees with
-  `Quicksand.then_if/2`. This function calls the next function only if the
+  `Shoddy.then_if/2`. This function calls the next function only if the
   result is ok.
 
   ## Examples
 
-      iex> Quicksand.Result.then_ok({:ok, 1}, fn x -> {:ok, x + 1} end)
+      iex> Shoddy.Result.then_ok({:ok, 1}, fn x -> {:ok, x + 1} end)
       {:ok, 2}
 
-      iex> Quicksand.Result.then_ok({:ok, 1}, fn _ -> {:error, :boom} end)
+      iex> Shoddy.Result.then_ok({:ok, 1}, fn _ -> {:error, :boom} end)
       {:error, :boom}
 
-      iex> Quicksand.Result.then_ok({:error, :fail}, fn x -> {:ok, x + 1} end)
+      iex> Shoddy.Result.then_ok({:error, :fail}, fn x -> {:ok, x + 1} end)
       {:error, :fail}
 
-      iex> Quicksand.Result.then_ok(:error, fn x -> {:ok, x + 1} end)
+      iex> Shoddy.Result.then_ok(:error, fn x -> {:ok, x + 1} end)
       :error
 
   This example chains two operations that can fail:
 
       iex> {:ok, "123"}
-      ...> |> Quicksand.Result.then_ok(fn s ->
+      ...> |> Shoddy.Result.then_ok(fn s ->
       ...>   case Integer.parse(s) do
       ...>     {n, ""} -> {:ok, n}
       ...>     _ -> {:error, :bad_integer}
       ...>   end
       ...> end)
-      ...> |> Quicksand.Result.then_ok(fn n ->
+      ...> |> Shoddy.Result.then_ok(fn n ->
       ...>   if n > 0, do: {:ok, n}, else: {:error, :not_positive}
       ...> end)
       {:ok, 123}
@@ -268,16 +268,16 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.unwrap!({:ok, 42})
+      iex> Shoddy.Result.unwrap!({:ok, 42})
       42
 
-      iex> Quicksand.Result.unwrap!(:ok)
+      iex> Shoddy.Result.unwrap!(:ok)
       nil
 
-      iex> Quicksand.Result.unwrap!({:error, :not_found})
+      iex> Shoddy.Result.unwrap!({:error, :not_found})
       ** (ArgumentError) unwrap! called on error result: :not_found
 
-      iex> Quicksand.Result.unwrap!(:error)
+      iex> Shoddy.Result.unwrap!(:error)
       ** (ArgumentError) unwrap! called on error result: nil
   """
   @spec unwrap!(t(a, any())) :: a when a: any()
@@ -297,16 +297,16 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.unwrap({:ok, 42}, 0)
+      iex> Shoddy.Result.unwrap({:ok, 42}, 0)
       42
 
-      iex> Quicksand.Result.unwrap({:error, :not_found}, 0)
+      iex> Shoddy.Result.unwrap({:error, :not_found}, 0)
       0
 
-      iex> Quicksand.Result.unwrap(:ok, 0)
+      iex> Shoddy.Result.unwrap(:ok, 0)
       nil
 
-      iex> Quicksand.Result.unwrap(:error, 0)
+      iex> Shoddy.Result.unwrap(:error, 0)
       0
   """
   @spec unwrap(t(a, any()), b) :: a | b when a: any(), b: any()
@@ -331,25 +331,25 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.flatten({:ok, {:ok, 42}})
+      iex> Shoddy.Result.flatten({:ok, {:ok, 42}})
       {:ok, 42}
 
-      iex> Quicksand.Result.flatten({:ok, {:error, :fail}})
+      iex> Shoddy.Result.flatten({:ok, {:error, :fail}})
       {:error, :fail}
 
-      iex> Quicksand.Result.flatten({:ok, 42})
+      iex> Shoddy.Result.flatten({:ok, 42})
       {:ok, 42}
 
-      iex> Quicksand.Result.flatten({:error, :fail})
+      iex> Shoddy.Result.flatten({:error, :fail})
       {:error, :fail}
 
-      iex> Quicksand.Result.flatten({:ok, :ok})
+      iex> Shoddy.Result.flatten({:ok, :ok})
       :ok
 
-      iex> Quicksand.Result.flatten({:ok, :error})
+      iex> Shoddy.Result.flatten({:ok, :error})
       :error
 
-      iex> Quicksand.Result.flatten({:ok, {:ok, {:ok, 42}}})
+      iex> Shoddy.Result.flatten({:ok, {:ok, {:ok, 42}}})
       {:ok, {:ok, 42}}
   """
   @spec flatten(t(t(a, e), e)) :: t(a, e) when a: any(), e: any()
@@ -364,18 +364,18 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.from_nil(42, :not_found)
+      iex> Shoddy.Result.from_nil(42, :not_found)
       {:ok, 42}
 
-      iex> Quicksand.Result.from_nil(nil, :not_found)
+      iex> Shoddy.Result.from_nil(nil, :not_found)
       {:error, :not_found}
 
-      iex> Quicksand.Result.from_nil(false, :not_found)
+      iex> Shoddy.Result.from_nil(false, :not_found)
       {:ok, false}
 
   Use the function in a pipeline:
 
-      iex> Map.get(%{a: 1}, :b) |> Quicksand.Result.from_nil(:key_missing)
+      iex> Map.get(%{a: 1}, :b) |> Shoddy.Result.from_nil(:key_missing)
       {:error, :key_missing}
   """
   @spec from_nil(a | nil, e) :: {:ok, a} | {:error, e} when a: any(), e: any()
@@ -389,16 +389,16 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.ignore({:ok, 42})
+      iex> Shoddy.Result.ignore({:ok, 42})
       :ok
 
-      iex> Quicksand.Result.ignore(:ok)
+      iex> Shoddy.Result.ignore(:ok)
       :ok
 
-      iex> Quicksand.Result.ignore({:error, :fail})
+      iex> Shoddy.Result.ignore({:error, :fail})
       {:error, :fail}
 
-      iex> Quicksand.Result.ignore(:error)
+      iex> Shoddy.Result.ignore(:error)
       :error
   """
   @spec ignore(t(any(), e)) :: :ok | :error | {:error, e} when e: any()
@@ -416,13 +416,13 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.tap_ok({:ok, 42}, fn val -> send(self(), {:got, val}) end)
+      iex> Shoddy.Result.tap_ok({:ok, 42}, fn val -> send(self(), {:got, val}) end)
       {:ok, 42}
 
-      iex> Quicksand.Result.tap_ok({:error, :fail}, fn val -> send(self(), {:got, val}) end)
+      iex> Shoddy.Result.tap_ok({:error, :fail}, fn val -> send(self(), {:got, val}) end)
       {:error, :fail}
 
-      iex> Quicksand.Result.tap_ok(:ok, fn val -> send(self(), {:got, val}) end)
+      iex> Shoddy.Result.tap_ok(:ok, fn val -> send(self(), {:got, val}) end)
       :ok
   """
   @spec tap_ok(t(a, e), (a -> any())) :: t(a, e) when a: any(), e: any()
@@ -445,13 +445,13 @@ defmodule Quicksand.Result do
 
   ## Examples
 
-      iex> Quicksand.Result.tap_error({:error, :fail}, fn reason -> send(self(), {:err, reason}) end)
+      iex> Shoddy.Result.tap_error({:error, :fail}, fn reason -> send(self(), {:err, reason}) end)
       {:error, :fail}
 
-      iex> Quicksand.Result.tap_error({:ok, 42}, fn reason -> send(self(), {:err, reason}) end)
+      iex> Shoddy.Result.tap_error({:ok, 42}, fn reason -> send(self(), {:err, reason}) end)
       {:ok, 42}
 
-      iex> Quicksand.Result.tap_error(:error, fn reason -> send(self(), {:err, reason}) end)
+      iex> Shoddy.Result.tap_error(:error, fn reason -> send(self(), {:err, reason}) end)
       :error
   """
   @spec tap_error(t(a, e), (e -> any())) :: t(a, e) when a: any(), e: any()

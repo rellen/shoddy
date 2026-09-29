@@ -1,8 +1,8 @@
-defmodule Quicksand.TaggingPropertyTest do
+defmodule Shoddy.TaggingPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Quicksand.Tagging
+  alias Shoddy.Tagging
 
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 
@@ -64,22 +64,22 @@ defmodule Quicksand.TaggingPropertyTest do
     end
   end
 
-  describe "agreement with Quicksand.Result" do
+  describe "agreement with Shoddy.Result" do
     property "Result.ok? is true for every tuple that ok/1 makes" do
       check all(value <- simple()) do
-        assert value |> Tagging.ok() |> Quicksand.Result.ok?()
+        assert value |> Tagging.ok() |> Shoddy.Result.ok?()
       end
     end
 
     property "Result.error? is true for every tuple that error/1 makes" do
       check all(value <- simple()) do
-        assert value |> Tagging.error() |> Quicksand.Result.error?()
+        assert value |> Tagging.error() |> Shoddy.Result.error?()
       end
     end
 
     property "Result.unwrap! returns the value that ok/1 received" do
       check all(value <- simple()) do
-        assert value |> Tagging.ok() |> Quicksand.Result.unwrap!() == value
+        assert value |> Tagging.ok() |> Shoddy.Result.unwrap!() == value
       end
     end
   end

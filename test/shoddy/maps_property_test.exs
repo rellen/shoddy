@@ -1,8 +1,8 @@
-defmodule Quicksand.MapsPropertyTest do
+defmodule Shoddy.MapsPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Quicksand.Maps
+  alias Shoddy.Maps
 
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
 

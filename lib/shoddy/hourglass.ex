@@ -1,4 +1,4 @@
-defmodule Quicksand.Hourglass do
+defmodule Shoddy.Hourglass do
   @moduledoc """
   Functions that change the precision of a time value.
 
@@ -74,39 +74,39 @@ defmodule Quicksand.Hourglass do
 
   The function extends a value that has no fractional part:
 
-      iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00Z])
+      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z])
       ~U[2024-01-01 00:00:00.000000Z]
 
-      iex> Quicksand.Hourglass.extend(~N[2024-01-01 00:00:00])
+      iex> Shoddy.Hourglass.extend(~N[2024-01-01 00:00:00])
       ~N[2024-01-01 00:00:00.000000]
 
-      iex> Quicksand.Hourglass.extend(~T[12:00:00])
+      iex> Shoddy.Hourglass.extend(~T[12:00:00])
       ~T[12:00:00.000000]
 
   The function keeps the value of the fractional part:
 
-      iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00.123Z])
+      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.123Z])
       ~U[2024-01-01 00:00:00.123000Z]
 
   The function returns a value with no change if the precision is already 6:
 
-      iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00.654321Z])
+      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.654321Z])
       ~U[2024-01-01 00:00:00.654321Z]
 
   The second argument selects the precision:
 
-      iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00Z], :millisecond)
+      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z], :millisecond)
       ~U[2024-01-01 00:00:00.000Z]
 
   The function never lowers the precision:
 
-      iex> Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00.123456Z], :millisecond)
+      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.123456Z], :millisecond)
       ~U[2024-01-01 00:00:00.123456Z]
 
   Two values that are the same point in time and have the same precision are
   equal:
 
-      iex> a = Quicksand.Hourglass.extend(~U[2024-01-01 00:00:00Z])
+      iex> a = Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z])
       iex> b = ~U[2024-01-01 00:00:00.000000Z]
       iex> a == b
       true
