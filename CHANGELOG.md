@@ -20,3 +20,5 @@ The first release also contains these changes:
   result.
 - Add `Shoddy.Maps.put_present/3`. It puts a value into a map if the value
   is not `nil`, so it keeps `false`.
+- Add `Shoddy.DateTimes.floor/2`. It rounds a time value down to the start
+  of a minute, an hour or a day.

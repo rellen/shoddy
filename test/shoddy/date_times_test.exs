@@ -90,4 +90,60 @@ defmodule Shoddy.DateTimesTest do
       assert_raise FunctionClauseError, fn -> extend_precision(42, :microsecond) end
     end
   end
+
+  describe "floor/2" do
+    test "rounds a DateTime down to the start of a minute, an hour and a day" do
+      value = ~U[2024-03-15 12:34:56.789012Z]
+
+      assert floor(value, :minute) == ~U[2024-03-15 12:34:00.000000Z]
+      assert floor(value, :hour) == ~U[2024-03-15 12:00:00.000000Z]
+      assert floor(value, :day) == ~U[2024-03-15 00:00:00.000000Z]
+    end
+
+    test "rounds a NaiveDateTime down to the start of a minute, an hour and a day" do
+      value = ~N[2024-03-15 12:34:56.789]
+
+      assert floor(value, :minute) == ~N[2024-03-15 12:34:00.000]
+      assert floor(value, :hour) == ~N[2024-03-15 12:00:00.000]
+      assert floor(value, :day) == ~N[2024-03-15 00:00:00.000]
+    end
+
+    test "rounds a Time down to the start of a minute and an hour" do
+      assert floor(~T[12:34:56], :minute) == ~T[12:34:00]
+      assert floor(~T[12:34:56], :hour) == ~T[12:00:00]
+    end
+
+    test "keeps the precision of the fractional second" do
+      assert floor(~U[2024-03-15 12:34:56.7Z], :hour).microsecond == {0, 1}
+      assert floor(~U[2024-03-15 12:34:56Z], :hour).microsecond == {0, 0}
+    end
+
+    test "returns a value at the start of the unit with no change" do
+      value = ~U[2024-03-15 00:00:00Z]
+      assert floor(value, :day) == value
+    end
+
+    test "raises FunctionClauseError for a DateTime in a time zone other than UTC" do
+      value = %{
+        ~U[2024-03-15 12:34:56Z]
+        | time_zone: "Europe/Paris",
+          zone_abbr: "CET",
+          utc_offset: 3600
+      }
+
+      assert_raise FunctionClauseError, fn -> floor(value, :hour) end
+    end
+
+    test "raises FunctionClauseError for a Time and the unit :day" do
+      assert_raise FunctionClauseError, fn -> apply(&floor/2, [~T[12:34:56], :day]) end
+    end
+
+    test "raises FunctionClauseError for a unit that is not known" do
+      assert_raise FunctionClauseError, fn -> apply(&floor/2, [~U[2024-03-15 12:34:56Z], :second]) end
+    end
+
+    test "raises FunctionClauseError for a Date" do
+      assert_raise FunctionClauseError, fn -> apply(&floor/2, [~D[2024-03-15], :day]) end
+    end
+  end
 end

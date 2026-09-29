@@ -158,3 +158,21 @@ the reader about the loss.
 The function refuses the precision `:second`. A precision of 0 digits is the
 lowest precision, so a call with `:second` can never change a value. Such a
 call is always a mistake.
+
+## Why floor accepts only UTC
+
+`Shoddy.DateTimes.floor/2` sets the fields below the unit to zero. For a
+`NaiveDateTime`, a `Time` and a `DateTime` in UTC, the result is always a
+correct value.
+
+A time zone with daylight saving time is different. On the day of a change,
+the clock skips some local times, or it shows some local times two times.
+In some zones, the change occurs at midnight, so the start of that day does
+not exist. The correct result then needs a time zone database, which tells
+the offset of each local time. Shoddy has no runtime dependencies, so it
+has no such database.
+
+Thus the function raises `FunctionClauseError` for a `DateTime` in another
+time zone, and it does not return a value that can be wrong. The caller
+selects the rule. A conversion to UTC rounds the moment in UTC. A
+conversion to a `NaiveDateTime` rounds the local wall time.

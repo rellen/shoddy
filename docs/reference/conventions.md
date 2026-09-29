@@ -12,7 +12,7 @@ of each module gives the full description of each function.
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
-| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2` |
+| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2` |
 
 The names `Maps`, `MapSets` and `DateTimes` are in the plural. Thus an alias
 of one of these modules does not hide the standard module `Map`, `MapSet` or
@@ -95,6 +95,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A function of the wrong arity. |
 | `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the list of `Shoddy.Result.collect/1` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1` and `Shoddy.Result.from_nil/2` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
+| `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 

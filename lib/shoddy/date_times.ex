@@ -6,6 +6,15 @@ defmodule Shoddy.DateTimes do
   The name of this module is `DateTimes`, in the plural. Thus the alias
   `DateTimes` does not hide the standard `DateTime` module.
 
+  The module contains these functions:
+
+  - `extend_precision/2` makes the precision of the fractional second
+    higher.
+  - `floor/2` rounds a value down to the start of a minute, an hour or a
+    day.
+
+  ## Precision
+
   A `DateTime`, a `NaiveDateTime`, and a `Time` each keep the fractional part
   of the second in a `:microsecond` field. That field is a tuple. The first
   element is the value. The second element is the precision, which is a count
@@ -42,7 +51,11 @@ defmodule Shoddy.DateTimes do
   @typedoc "A precision is a name for a count of digits after the decimal point."
   @type precision :: :millisecond | :microsecond
 
+  @typedoc "A unit is the length of time that `floor/2` rounds a value down to."
+  @type unit :: :minute | :hour | :day
+
   @precisions [:millisecond, :microsecond]
+  @units [:minute, :hour, :day]
 
   defguardp is_time_value(value)
             when is_struct(value, DateTime) or is_struct(value, NaiveDateTime) or
@@ -125,4 +138,63 @@ defmodule Shoddy.DateTimes do
 
   defp digits(:millisecond), do: 3
   defp digits(:microsecond), do: 6
+
+  @doc """
+  Rounds a time value down to the start of a unit.
+
+  The unit is `:minute`, `:hour` or `:day`. This function sets each field
+  below the unit to zero. For example, `:hour` sets the minute, the second
+  and the fractional second to zero. The precision of the fractional second
+  stays the same.
+
+  This function accepts a `NaiveDateTime`, a `Time`, and a `DateTime` in the
+  time zone `Etc/UTC`. A `Time` has no day, so it accepts only `:minute` and
+  `:hour`.
+
+  This function raises `FunctionClauseError` for a `DateTime` in another
+  time zone. In some time zones, the start of a unit does not exist on the
+  day of a change to daylight saving time. The correct result then needs a
+  time zone database, and this function does not use one. Convert the value
+  to UTC with `DateTime.shift_zone/2` first, or use a `NaiveDateTime`.
+
+  Use this function to put events into groups by the minute, the hour or the
+  day, or to find the start of the current day.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.floor(~U[2024-01-01 12:34:56.789Z], :hour)
+      ~U[2024-01-01 12:00:00.000Z]
+
+      iex> Shoddy.DateTimes.floor(~U[2024-01-01 12:34:56Z], :minute)
+      ~U[2024-01-01 12:34:00Z]
+
+      iex> Shoddy.DateTimes.floor(~N[2024-01-01 12:34:56], :day)
+      ~N[2024-01-01 00:00:00]
+
+      iex> Shoddy.DateTimes.floor(~T[12:34:56.789012], :hour)
+      ~T[12:00:00.000000]
+
+  A value at the start of the unit stays the same:
+
+      iex> Shoddy.DateTimes.floor(~U[2024-01-01 12:00:00Z], :hour)
+      ~U[2024-01-01 12:00:00Z]
+
+  This example puts events into groups by the hour:
+
+      iex> events = [~U[2024-01-01 09:15:00Z], ~U[2024-01-01 09:45:00Z], ~U[2024-01-01 10:05:00Z]]
+      iex> events
+      ...> |> Enum.group_by(&Shoddy.DateTimes.floor(&1, :hour))
+      ...> |> Map.new(fn {hour, group} -> {hour, length(group)} end)
+      %{~U[2024-01-01 09:00:00Z] => 2, ~U[2024-01-01 10:00:00Z] => 1}
+  """
+  @spec floor(t(), unit()) :: t()
+  def floor(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: floor_fields(value, unit)
+  def floor(%NaiveDateTime{} = value, unit) when unit in @units, do: floor_fields(value, unit)
+  def floor(%Time{} = value, unit) when unit in [:minute, :hour], do: floor_fields(value, unit)
+
+  defp floor_fields(%{microsecond: {_, precision}} = value, :minute),
+    do: %{value | second: 0, microsecond: {0, precision}}
+
+  defp floor_fields(value, :hour), do: %{floor_fields(value, :minute) | minute: 0}
+  defp floor_fields(value, :day), do: %{floor_fields(value, :hour) | hour: 0}
 end

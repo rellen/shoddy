@@ -59,6 +59,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/return-a-tagged-tuple-from-a-callback.md",
         "docs/how-to/toggle-elements-in-a-selection.md",
         "docs/how-to/compare-time-values-of-different-precision.md",
+        "docs/how-to/round-a-time-value-down.md",
         "docs/reference/conventions.md",
         "docs/explanation/design.md",
         "docs/development.md"
