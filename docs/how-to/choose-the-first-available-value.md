@@ -1,10 +1,9 @@
 # Choose the first available value
 
-This guide shows how to select one value from several sources.
-`Shoddy.coalesce/2` examines a list of values in order. It returns the
-first value that it does not reject.
-
-For each option, see the documentation of `Shoddy.coalesce/2`.
+This guide shows how to select one value from a list of sources, such as an
+option of the user, a configuration value and a fixed default.
+`Shoddy.coalesce/2` examines the list in order. It returns the first value
+that it does not reject.
 
 ## Use the first value that is not nil
 
@@ -13,59 +12,48 @@ Put the sources into a list, with the most important source first:
 ```elixir
 user = %{nickname: nil, name: "Ada Lovelace"}
 
-Shoddy.coalesce([user.nickname, user.name, "Anonymous"])
+Shoddy.coalesce([user.nickname, user.name])
 #=> "Ada Lovelace"
 ```
 
-The last element of the list is a fixed value. The function thus always
-finds a value.
+## Give a default value
+
+If `Shoddy.coalesce/2` rejects each value in the list, it returns the value
+of the option `:default`. Without the option, it returns `nil`.
+
+```elixir
+user = %{nickname: nil, name: nil}
+
+Shoddy.coalesce([user.nickname, user.name], default: "Anonymous")
+#=> "Anonymous"
+```
 
 ## Reject more values than nil
 
-By default, the function rejects only `nil`. An empty string is not `nil`,
-so the function returns it:
+By default, `Shoddy.coalesce/2` rejects only `nil`. An empty string is not
+`nil`, so the function returns it:
 
 ```elixir
 user = %{nickname: "", name: "Ada Lovelace"}
 
-Shoddy.coalesce([user.nickname, user.name, "Anonymous"])
+Shoddy.coalesce([user.nickname, user.name])
 #=> ""
 ```
 
-Give the option `:reject` to reject the empty string also:
+Give the option `:reject` with each value to reject:
 
 ```elixir
 Shoddy.coalesce([user.nickname, user.name], reject: [nil, ""])
 #=> "Ada Lovelace"
 ```
 
-To reject `false` also, add it to the list:
+The option replaces the default list `[nil]`. Thus, to reject `nil` also,
+keep `nil` in the list.
 
-```elixir
-Shoddy.coalesce([nil, false, true], reject: [nil, false])
-#=> true
-```
+## Delay an expensive source
 
-## Give a value for the case with no match
-
-Give the option `:default`. The function returns this value if it rejects
-each value in the list:
-
-```elixir
-user = %{nickname: "", name: nil}
-
-Shoddy.coalesce([user.nickname, user.name], reject: [nil, ""], default: "Anonymous")
-#=> "Anonymous"
-```
-
-The function does not compare the default with the `:reject` list. Thus, with
-`default: nil`, the function can return `nil`, although it rejects `nil` in
-the list.
-
-## Delay an expensive operation
-
-Put the operation into a function of arity 0. The function calls it only if
-it rejects each value before it:
+Put the source into a function of arity 0. `Shoddy.coalesce/2` calls that
+function only if it rejects each value before the function:
 
 ```elixir
 Shoddy.coalesce([
@@ -74,13 +62,14 @@ Shoddy.coalesce([
 ])
 ```
 
-If the variable `GREETING` has a value, the function does not read the file.
+If the environment variable `GREETING` has a value, `Shoddy.coalesce/2`
+does not read the file.
 
 ## Return a function as the value
 
-Sometimes the value that you want is a function of arity 0, such as a
-callback. Give `call_functions?: false`. The function then returns the
-function and does not call it:
+Sometimes the value that you want is a function of arity 0, such as an
+callback. Give `call_functions?: false`. `Shoddy.coalesce/2` then returns
+the function and does not call it:
 
 ```elixir
 opts = []
@@ -90,4 +79,5 @@ is_function(on_done, 0)
 #=> true
 ```
 
-Without this option, the function calls `fn -> :ok end` and returns `:ok`.
+Without this option, `Shoddy.coalesce/2` calls `fn -> :ok end` and returns
+`:ok`.

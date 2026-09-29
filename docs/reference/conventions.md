@@ -1,18 +1,18 @@
 # The conventions of the functions
 
-This page gives the rules that apply to each function of Shoddy. The page of
-each module gives the full description of each function.
+This page gives the rules that apply to all the functions of Shoddy. The page
+of each module gives the full description of each function.
 
 ## The modules
 
-| Module | Contents |
+| Module | Functions |
 | --- | --- |
-| `Shoddy` | Functions that operate on any value: `then_if/2`, `then_if/3`, `id/1` and `coalesce/2`. |
-| `Shoddy.Maps` | Functions that operate on maps: `put_if/3`. |
-| `Shoddy.MapSets` | Functions that operate on map sets: `toggle/2` and `toggle_all/2`. |
-| `Shoddy.Result` | Functions that operate on an ok tuple and on an error tuple. |
-| `Shoddy.Tagging` | Functions that put a value into a tagged tuple. |
-| `Shoddy.Hourglass` | Functions that change the precision of a time value: `extend/2`. |
+| `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3` |
+| `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
+| `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
+| `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
+| `Shoddy.Hourglass` | `Shoddy.Hourglass.extend/2` |
 
 The names `Maps` and `MapSets` are in the plural. Thus an alias of one of
 these modules does not hide the standard module `Map` or `MapSet`.
@@ -22,30 +22,43 @@ these modules does not hide the standard module `Map` or `MapSet`.
 The first argument is the value that the function operates on. Thus each
 function can be a step of a pipeline.
 
-| Module | First argument |
+| Module | The first argument |
 | --- | --- |
-| `Shoddy` | The value. For `coalesce/2`, the list of values. |
+| `Shoddy` | The value. For `Shoddy.coalesce/2`, the list of values. |
 | `Shoddy.Maps` | The map. |
 | `Shoddy.MapSets` | The map set. |
-| `Shoddy.Result` | The result. For `from_nil/2`, the value. |
-| `Shoddy.Tagging` | The value that goes into the tuple. The tag is the last argument of `tag/2` and `tag/3`. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2`, the value. |
+| `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.Hourglass` | The time value. |
+
+In `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3`, the tag is the last
+argument.
 
 ## Truthy and falsy values
 
 A truthy value is a value that is not `nil` and not `false`. A falsy value is
 `nil` or `false`. Zero, an empty string and an empty collection are truthy.
 
-These functions examine whether a value is truthy:
-
-| Function | The value that it examines |
+| Function | The value that must be truthy |
 | --- | --- |
 | `Shoddy.then_if/2` | The first argument. |
 | `Shoddy.then_if/3` | The return value of the predicate. |
 | `Shoddy.Maps.put_if/3` | The value to put into the map. |
 
-`Shoddy.coalesce/2` does not examine whether a value is truthy. It rejects
-only the values in its option `:reject`. The default is `[nil]`.
+`Shoddy.coalesce/2` does not use this rule. It rejects the values in its
+option `:reject`, and the default of that option is `[nil]`.
+
+## Functions as arguments
+
+| Function | Argument | Arity |
+| --- | --- | --- |
+| `Shoddy.then_if/2` | The function to apply. | 1 |
+| `Shoddy.then_if/3` | The predicate. | 0 or 1 |
+| `Shoddy.then_if/3` | The function to apply. | 1 |
+| `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
+
+`Shoddy.coalesce/2` does not call a function of arity 0 if the option
+`call_functions?` is `false`. It never calls a function of another arity.
 
 ## Results
 
@@ -58,8 +71,8 @@ only the values in its option `:reject`. The default is `[nil]`.
 | `{:error, reason}` | An error result with a reason. |
 | `:error` | An error result with no reason. |
 
-A function that returns the value of an ok result returns `nil` for a bare
-`:ok`.
+For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
+return `nil`.
 
 ## Equality
 
@@ -74,17 +87,17 @@ These functions compare two values with the strict equality operator
 
 | Exception | Cause |
 | --- | --- |
-| `FunctionClauseError` | An argument of the wrong type. For example, a list as the first argument of `Shoddy.Maps.put_if/3`, or a function of the wrong arity. |
-| `FunctionClauseError` | An input to `Shoddy.Result` that is not a result. `ok?/1`, `error?/1`, `flatten/1` and `from_nil/2` do not raise this error. |
+| `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
+| `FunctionClauseError` | A function of the wrong arity. |
+| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1` and `Shoddy.Result.from_nil/2` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.Hourglass.extend/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 
 ## Names
 
-- A name that ends in `?` is the name of a function that returns a boolean.
-  It never raises an exception for an input of the wrong type.
-- A name that ends in `!` is the name of a function that raises an exception
-  for an error result.
-- A name that starts with `is_` is the name of a guard. Require or import the
-  module before you use it.
+| Name | Rule |
+| --- | --- |
+| Ends in `?` | The function returns a boolean. It never raises an exception. |
+| Ends in `!` | The function raises an exception for an error result. |
+| Starts with `is_` | The name is a guard. Require or import the module before you use it. |

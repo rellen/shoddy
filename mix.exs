@@ -56,9 +56,9 @@ defmodule Shoddy.MixProject do
         "docs/how-to/build-a-map-from-optional-data.md",
         "docs/how-to/choose-the-first-available-value.md",
         "docs/how-to/chain-operations-that-can-fail.md",
-        "docs/how-to/return-values-from-callbacks.md",
+        "docs/how-to/return-a-tagged-tuple-from-a-callback.md",
         "docs/how-to/toggle-elements-in-a-selection.md",
-        "docs/how-to/compare-time-values.md",
+        "docs/how-to/compare-time-values-of-different-precision.md",
         "docs/reference/conventions.md",
         "docs/explanation/design.md",
         "docs/development.md"
@@ -68,7 +68,7 @@ defmodule Shoddy.MixProject do
         "How-to guides": ~r"docs/how-to/",
         Reference: ~r"docs/reference/",
         Explanation: ~r"docs/explanation/",
-        Contributing: ["docs/development.md"]
+        Development: ["docs/development.md"]
       ],
       groups_for_modules: [
         Values: [Shoddy],
