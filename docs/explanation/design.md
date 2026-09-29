@@ -136,7 +136,7 @@ toggled each element of a list, then no call could toggle a list that is an
 element. Thus `Shoddy.MapSets.toggle/2` always toggles one element, and
 `Shoddy.MapSets.toggle_all/2` toggles each element of a list.
 
-## Why Hourglass only extends
+## Why extend_precision never lowers the precision
 
 The precision of a time value is part of its struct, and `==` compares the
 structs. Thus two values of the same point in time are unequal if their
@@ -145,8 +145,8 @@ precision is different.
 Elixir can already make the precision higher. A call to `DateTime.add/4` with
 an amount of 0 returns a value with the precision of the unit. But the name
 `add` does not tell the reader the purpose of the call.
-`Shoddy.Hourglass.extend/2` returns the same value, and its name tells the
-purpose.
+`Shoddy.DateTimes.extend_precision/2` returns the same value, and its name
+tells the purpose.
 
 The function never lowers the precision, because a lower precision can
 discard digits. `DateTime.truncate/2` and the functions of the same name in

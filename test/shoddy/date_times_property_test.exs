@@ -1,8 +1,8 @@
-defmodule Shoddy.HourglassPropertyTest do
+defmodule Shoddy.DateTimesPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Shoddy.Hourglass
+  alias Shoddy.DateTimes
 
   @digits %{millisecond: 3, microsecond: 6}
 
@@ -34,11 +34,11 @@ defmodule Shoddy.HourglassPropertyTest do
 
   defp time_value, do: one_of([datetime(), naive_datetime(), time()])
 
-  describe "extend/2" do
+  describe "extend_precision/2" do
     property "never lowers the precision" do
       check all(value <- time_value(), name <- precision_name()) do
         {_, before} = value.microsecond
-        {_, result} = Hourglass.extend(value, name).microsecond
+        {_, result} = DateTimes.extend_precision(value, name).microsecond
         assert result >= before
       end
     end
@@ -46,7 +46,7 @@ defmodule Shoddy.HourglassPropertyTest do
     property "sets the precision to the higher of the current precision and the argument" do
       check all(value <- time_value(), name <- precision_name()) do
         {_, before} = value.microsecond
-        {_, result} = Hourglass.extend(value, name).microsecond
+        {_, result} = DateTimes.extend_precision(value, name).microsecond
         assert result == max(before, @digits[name])
       end
     end
@@ -54,36 +54,36 @@ defmodule Shoddy.HourglassPropertyTest do
     property "never changes the value of the fractional second" do
       check all(value <- time_value(), name <- precision_name()) do
         {before, _} = value.microsecond
-        {result, _} = Hourglass.extend(value, name).microsecond
+        {result, _} = DateTimes.extend_precision(value, name).microsecond
         assert result == before
       end
     end
 
     property "makes no further change on a second call" do
       check all(value <- time_value(), name <- precision_name()) do
-        once = Hourglass.extend(value, name)
-        assert Hourglass.extend(once, name) == once
+        once = DateTimes.extend_precision(value, name)
+        assert DateTimes.extend_precision(once, name) == once
       end
     end
 
     property "changes no field other than the precision" do
       check all(value <- time_value(), name <- precision_name()) do
-        result = Hourglass.extend(value, name)
+        result = DateTimes.extend_precision(value, name)
         assert %{result | microsecond: value.microsecond} == value
       end
     end
 
     property "keeps the struct type" do
       check all(value <- time_value(), name <- precision_name()) do
-        assert Hourglass.extend(value, name).__struct__ == value.__struct__
+        assert DateTimes.extend_precision(value, name).__struct__ == value.__struct__
       end
     end
   end
 
-  describe "extend/1" do
+  describe "extend_precision/1" do
     property "always sets the precision to 6" do
       check all(value <- time_value()) do
-        assert {_, 6} = Hourglass.extend(value).microsecond
+        assert {_, 6} = DateTimes.extend_precision(value).microsecond
       end
     end
 
@@ -91,26 +91,26 @@ defmodule Shoddy.HourglassPropertyTest do
       # The moduledoc states that the two results are the same. If they
       # differ, the moduledoc is wrong, and this property fails.
       check all(value <- datetime()) do
-        assert Hourglass.extend(value) == DateTime.add(value, 0, :microsecond)
+        assert DateTimes.extend_precision(value) == DateTime.add(value, 0, :microsecond)
       end
     end
 
     property "does not change the point in time" do
       check all(value <- datetime()) do
-        assert DateTime.compare(Hourglass.extend(value), value) == :eq
+        assert DateTime.compare(DateTimes.extend_precision(value), value) == :eq
       end
     end
 
     property "makes two equal points in time equal for the operator ==" do
       check all(value <- datetime()) do
         other = %{value | microsecond: {elem(value.microsecond, 0), 6}}
-        assert Hourglass.extend(value) == Hourglass.extend(other)
+        assert DateTimes.extend_precision(value) == DateTimes.extend_precision(other)
       end
     end
 
     property "returns a value that truncates to the same second as the argument" do
       check all(value <- datetime()) do
-        assert value |> Hourglass.extend() |> DateTime.truncate(:second) ==
+        assert value |> DateTimes.extend_precision() |> DateTime.truncate(:second) ==
                  DateTime.truncate(value, :second)
       end
     end
