@@ -27,8 +27,8 @@ params = %{"name" => "Ada", "email" => nil}
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
   value of a GenServer callback.
-- `Shoddy.Hourglass` extends the precision of a `DateTime`, a
-  `NaiveDateTime` or a `Time`.
+- `Shoddy.DateTimes` operates on dates and times. For example, it extends
+  the precision of a `DateTime`, a `NaiveDateTime` or a `Time`.
 
 ## Installation
 

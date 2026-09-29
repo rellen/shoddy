@@ -1,6 +1,10 @@
-defmodule Shoddy.Hourglass do
+defmodule Shoddy.DateTimes do
   @moduledoc """
-  Functions that change the precision of a time value.
+  Functions that operate on dates and times, and add to the standard modules
+  `DateTime`, `NaiveDateTime` and `Time`.
+
+  The name of this module is `DateTimes`, in the plural. Thus the alias
+  `DateTimes` does not hide the standard `DateTime` module.
 
   A `DateTime`, a `NaiveDateTime`, and a `Time` each keep the fractional part
   of the second in a `:microsecond` field. That field is a tuple. The first
@@ -14,8 +18,8 @@ defmodule Shoddy.Hourglass do
   an amount of 0 returns a value that has the precision of the unit.
   `NaiveDateTime.add/3` and `Time.add/3` do the same. These calls return the
   correct result, but the name `add` does not tell the reader the purpose of
-  the call. `extend/2` returns the same result, and its name tells the
-  purpose. It also accepts all three struct types.
+  the call. `extend_precision/2` returns the same result, and its name
+  tells the purpose. It also accepts all three struct types.
 
   Two values that show the same point in time are not equal if the precision
   of each value is different. The operator `==` compares the two structs, and
@@ -74,47 +78,47 @@ defmodule Shoddy.Hourglass do
 
   The function extends a value that has no fractional part:
 
-      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z])
+      iex> Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00Z])
       ~U[2024-01-01 00:00:00.000000Z]
 
-      iex> Shoddy.Hourglass.extend(~N[2024-01-01 00:00:00])
+      iex> Shoddy.DateTimes.extend_precision(~N[2024-01-01 00:00:00])
       ~N[2024-01-01 00:00:00.000000]
 
-      iex> Shoddy.Hourglass.extend(~T[12:00:00])
+      iex> Shoddy.DateTimes.extend_precision(~T[12:00:00])
       ~T[12:00:00.000000]
 
   The function keeps the value of the fractional part:
 
-      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.123Z])
+      iex> Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00.123Z])
       ~U[2024-01-01 00:00:00.123000Z]
 
   The function returns a value with no change if the precision is already 6:
 
-      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.654321Z])
+      iex> Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00.654321Z])
       ~U[2024-01-01 00:00:00.654321Z]
 
   The second argument selects the precision:
 
-      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z], :millisecond)
+      iex> Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00Z], :millisecond)
       ~U[2024-01-01 00:00:00.000Z]
 
   The function never lowers the precision:
 
-      iex> Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00.123456Z], :millisecond)
+      iex> Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00.123456Z], :millisecond)
       ~U[2024-01-01 00:00:00.123456Z]
 
   Two values that are the same point in time and have the same precision are
   equal:
 
-      iex> a = Shoddy.Hourglass.extend(~U[2024-01-01 00:00:00Z])
+      iex> a = Shoddy.DateTimes.extend_precision(~U[2024-01-01 00:00:00Z])
       iex> b = ~U[2024-01-01 00:00:00.000000Z]
       iex> a == b
       true
   """
-  @spec extend(t(), precision()) :: t()
-  def extend(time_value, precision \\ :microsecond)
+  @spec extend_precision(t(), precision()) :: t()
+  def extend_precision(time_value, precision \\ :microsecond)
 
-  def extend(time_value, precision) when is_time_value(time_value) and precision in @precisions do
+  def extend_precision(time_value, precision) when is_time_value(time_value) and precision in @precisions do
     {value, current} = time_value.microsecond
     %{time_value | microsecond: {value, max(current, digits(precision))}}
   end
