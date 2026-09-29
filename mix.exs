@@ -10,6 +10,10 @@ defmodule Shoddy.MixProject do
       deps: deps(),
       aliases: aliases(),
       description: "Small functions for tasks that occur frequently in Elixir code.",
+      name: "Shoddy",
+      source_url: "https://github.com/rellen/shoddy",
+      homepage_url: "https://rellen.github.io/shoddy/",
+      docs: docs(),
       dialyzer: [plt_local_path: "priv/plts"]
     ]
   end
@@ -35,6 +39,42 @@ defmodule Shoddy.MixProject do
       # --no-filter is necessary.
       "test.mutation": [
         "muex --no-filter --fail-at 0 --timeout 30000"
+      ]
+    ]
+  end
+
+  # The pages of `mix docs`. The groups follow Diátaxis. A tutorial is a
+  # lesson, a how-to guide gives the steps of one task, a reference page gives
+  # the facts, and an explanation gives the design and its reasons. The page of
+  # each module is also a reference. See `docs/development.md`.
+  defp docs do
+    [
+      main: "readme",
+      extras: [
+        "README.md",
+        "docs/tutorials/get-started.md",
+        "docs/how-to/build-a-map-from-optional-data.md",
+        "docs/how-to/choose-the-first-available-value.md",
+        "docs/how-to/chain-operations-that-can-fail.md",
+        "docs/how-to/return-values-from-callbacks.md",
+        "docs/how-to/toggle-elements-in-a-selection.md",
+        "docs/how-to/compare-time-values.md",
+        "docs/reference/conventions.md",
+        "docs/explanation/design.md",
+        "docs/development.md"
+      ],
+      groups_for_extras: [
+        Tutorials: ~r"docs/tutorials/",
+        "How-to guides": ~r"docs/how-to/",
+        Reference: ~r"docs/reference/",
+        Explanation: ~r"docs/explanation/",
+        Contributing: ["docs/development.md"]
+      ],
+      groups_for_modules: [
+        Values: [Shoddy],
+        Collections: [Shoddy.Maps, Shoddy.MapSets],
+        "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
+        Time: [Shoddy.Hourglass]
       ]
     ]
   end
