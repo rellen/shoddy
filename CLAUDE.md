@@ -98,6 +98,13 @@ above. A change that adds documentation in another style is not complete.
   text. The comment names the commit that it describes.
 - The workflow has its own copy of the versions of `.tool-versions`. Change
   the versions in `.tool-versions`, `devenv.nix` and the workflow together.
+- After a push to `main`, the job `pages` of that workflow puts the site of
+  `mix docs` on GitHub Pages. The job runs only when each check succeeded.
+- The documents in `docs` follow Diátaxis. Put a new document into the
+  directory of its type, and add it to `mix.exs` and `README.md`.
+  `docs/development.md` gives the four types.
+- Run each example of a new document before you commit it. No test runs
+  the examples of a document in `docs`.
 
 ## Code Style
 
