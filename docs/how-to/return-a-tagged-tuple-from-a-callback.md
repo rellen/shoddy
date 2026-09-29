@@ -1,11 +1,13 @@
-# Return values from callbacks
+# Return a tagged tuple from a callback
 
 This guide shows how to make the tagged tuples that a GenServer callback and
 `Enum.reduce_while/3` must return. A tagged tuple is a tuple with an atom as
 the first element. The functions of `Shoddy.Tagging` take the value first,
-so each one can be the last step of a pipeline.
+so each function can be the last step of a pipeline.
 
-## Return a new state from a GenServer callback
+The examples use a state of `%{count: 1}`.
+
+## Return a new state
 
 Use `Shoddy.Tagging.noreply/1` as the last step:
 
@@ -17,8 +19,7 @@ def handle_cast({:add, amount}, state) do
 end
 ```
 
-For a state of `%{count: 1}` and an amount of 2, the callback returns
-`{:noreply, %{count: 3}}`.
+For an amount of 2, the callback returns `{:noreply, %{count: 3}}`.
 
 ## Give a timeout or a continue instruction
 
@@ -40,12 +41,11 @@ second argument is the state:
 
 ```elixir
 def handle_call(:count, _from, state) do
-  state.count |> Shoddy.Tagging.reply(state)
+  Shoddy.Tagging.reply(state.count, state)
 end
 ```
 
-For a state of `%{count: 1}`, the callback returns
-`{:reply, 1, %{count: 1}}`.
+The callback returns `{:reply, 1, %{count: 1}}`.
 
 ## Stop the process
 
@@ -60,13 +60,16 @@ Shoddy.Tagging.stop(:normal, state)
 ## Continue or halt a reduction
 
 `Enum.reduce_while/3` requires a `:cont` tuple or a `:halt` tuple. Use
-`Shoddy.Tagging.cont/1` and `Shoddy.Tagging.halt/1`:
+`Shoddy.Tagging.cont/1` and `Shoddy.Tagging.halt/1`. This example adds
+the numbers while the sum stays at 10 or less:
 
 ```elixir
 Enum.reduce_while([4, 5, 6, 7], 0, fn number, sum ->
-  if sum + number > 10,
-    do: Shoddy.Tagging.halt(sum),
-    else: Shoddy.Tagging.cont(sum + number)
+  if sum + number > 10 do
+    Shoddy.Tagging.halt(sum)
+  else
+    Shoddy.Tagging.cont(sum + number)
+  end
 end)
 #=> 9
 ```
@@ -76,17 +79,20 @@ end)
 Use `Shoddy.Tagging.ok/1` or `Shoddy.Tagging.error/1` as the last step:
 
 ```elixir
-"ada" |> String.upcase() |> Shoddy.Tagging.ok()
+"ada"
+|> String.upcase()
+|> Shoddy.Tagging.ok()
 #=> {:ok, "ADA"}
 ```
 
 ## Use a different tag
 
-Use `Shoddy.Tagging.tag/2` for an atom that has no function of its own.
-The tag is the last argument:
+Use `Shoddy.Tagging.tag/2` for a tag that has no function of its own. The
+tag is the last argument:
 
 ```elixir
-42 |> Shoddy.Tagging.tag(:found)
+42
+|> Shoddy.Tagging.tag(:found)
 #=> {:found, 42}
 ```
 

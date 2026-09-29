@@ -1,7 +1,11 @@
 # Shoddy
 
-Shoddy is an Elixir library. It contains small functions for tasks that
-occur frequently in Elixir code.
+Shoddy is an Elixir library of small functions for tasks that occur
+frequently in Elixir code. Each function takes the value first, so it can be
+a step of a pipeline. The library has no runtime dependencies.
+
+This example builds a map from the parameters of a web form. The map gets
+no entry for an absent email address, and it gets a default language:
 
 ```elixir
 params = %{"name" => "Ada", "email" => nil}
@@ -9,16 +13,27 @@ params = %{"name" => "Ada", "email" => nil}
 %{}
 |> Shoddy.Maps.put_if(:name, params["name"])
 |> Shoddy.Maps.put_if(:email, params["email"])
-|> Map.put(:language, Shoddy.coalesce([params["language"], "en"]))
+|> Map.put(:language, Shoddy.coalesce([params["language"]], default: "en"))
 #=> %{name: "Ada", language: "en"}
 ```
 
-The library has no runtime dependencies.
+## The modules
+
+- `Shoddy` applies a function to a value only if a condition is true, and
+  selects the first value from a list of sources.
+- `Shoddy.Maps` puts a value into a map only if the value is truthy.
+- `Shoddy.MapSets` toggles the membership of an element in a map set.
+- `Shoddy.Result` operates on an ok tuple and on an error tuple in a
+  pipeline.
+- `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
+  value of a GenServer callback.
+- `Shoddy.Hourglass` extends the precision of a `DateTime`, a
+  `NaiveDateTime` or a `Time`.
 
 ## Installation
 
-Hex is the package manager of Elixir. Shoddy is not on Hex. Add Shoddy from
-GitHub to the list of dependencies in `mix.exs`:
+Shoddy is not on Hex. Add Shoddy from GitHub to the list of dependencies in
+`mix.exs`:
 
 ```elixir
 defp deps do
@@ -28,39 +43,37 @@ defp deps do
 end
 ```
 
-## Documents
+## Documentation
 
-https://rellen.github.io/shoddy/ shows the documentation of the last push to
-`main`. The documents follow Diátaxis. Diátaxis is a method that puts each
-document into one of four types.
+The site https://rellen.github.io/shoddy/ has the documentation of each
+module and each document below.
 
-A tutorial is a lesson for a new user:
+To learn the library, start with the tutorial:
 
 - [Get started with Shoddy](docs/tutorials/get-started.md)
 
-A how-to guide gives the steps of one task:
+For one task, use a how-to guide:
 
 - [Build a map from optional data](docs/how-to/build-a-map-from-optional-data.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
-- [Return values from callbacks](docs/how-to/return-values-from-callbacks.md)
+- [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
-- [Compare time values of different precision](docs/how-to/compare-time-values.md)
+- [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 
-A reference page gives the facts. The page of each module on the site is
-also a reference.
+For the rules that apply to each function, read the reference:
 
 - [The conventions of the functions](docs/reference/conventions.md)
 
-An explanation gives the design and its reasons:
+For the reasons behind the design, read the explanation:
 
 - [The design of Shoddy](docs/explanation/design.md)
 
-For a contributor:
+## Development
 
-- [Development](docs/development.md) tells how to get the tools, run the
-  checks and add a document.
-- `CLAUDE.md` gives the rules for a commit message and for prose.
+[Development](docs/development.md) tells how to get the tools, run the
+checks and add a document. `CLAUDE.md` gives the rules for a commit message
+and for prose.
 
 ## License
 
