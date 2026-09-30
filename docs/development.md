@@ -5,23 +5,14 @@ document. `CLAUDE.md` gives the rules for a commit message and for prose.
 
 ## Get the tools
 
-The project uses Erlang 28.3.3 and Elixir 1.19.5. Four files give these
-versions. Change the four files together:
-
-| File | Use |
-| --- | --- |
-| `.tool-versions` | mise reads this file. |
-| `devenv.nix` | devenv gives the versions in a Nix shell. |
-| `.claude/hooks/session-start.sh` | The hook reads `.tool-versions`, and it installs the versions with mise in a remote session of Claude Code. |
-| `.github/workflows/check.yml` | The `env` block gives the versions to each job. |
-
-With Nix, start a shell that has the tools:
+The project uses Erlang 28.3.3 and Elixir 1.19.5. With Nix, start a shell
+that has Erlang 28 and Elixir 1.19:
 
 ```sh
 devenv shell
 ```
 
-With mise, install the tools:
+With mise, install the exact versions:
 
 ```sh
 mise install
@@ -60,23 +51,24 @@ mix format && mix check --no-retry
 
 ## Write tests
 
-The project has three kinds of tests:
+Each module has these tests:
 
-- A doctest is an example in a `@doc`. `mix test` runs each example and
-  compares the result with the text of the example.
-- A property test uses StreamData to make many random inputs. It examines a
-  rule that must be true for each input. Each module has a file with the
-  suffix `_property_test.exs` in `test/`.
-- Mutation testing finds a gap in the tests. Muex makes many copies of the
-  code, and each copy has one small change. If no test fails for a copy, the
-  tests have a gap. Run it with this command:
+- A doctest for each example in its `@doc`.
+- A file with the suffix `_test.exs` in `test/`, with the usual ExUnit
+  tests.
+- A file with the suffix `_property_test.exs` in `test/`, with property
+  tests. A property test uses StreamData to make many random inputs. It
+  examines a rule that must be true for each input.
 
-  ```sh
-  mix test.mutation
-  ```
+To find a gap in the tests, run mutation testing:
 
-  `mix check` does not run this command, and a low score does not make the
-  command fail.
+```sh
+mix test.mutation
+```
+
+Muex makes many copies of the code, and each copy has one small change. If no
+test fails for a copy, the tests have a gap. `mix check` does not run this
+command, and a low score does not make the command fail.
 
 ## Add a document
 
@@ -128,3 +120,13 @@ The repository must have Pages on, with GitHub Actions as the source. A
 person must turn it on in the settings of the repository, under "Pages",
 because the token of a workflow cannot turn it on. A run of `pages` without
 the site fails at the step `configure-pages`.
+
+## Change the versions of Erlang and Elixir
+
+Three files give the versions. Change the three files together:
+
+| File | Content |
+| --- | --- |
+| `.tool-versions` | The exact versions. mise reads this file, and the session hook of Claude Code reads it too. |
+| `.github/workflows/check.yml` | The exact versions, in the `env` block. |
+| `devenv.nix` | The major and the minor version, in the names of the Nix packages. |
