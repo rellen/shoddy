@@ -8,6 +8,9 @@ Most functions in this guide examine whether a value is truthy. A truthy
 value is a value that is not `nil` and not `false`. The last section shows a
 function that ignores only `nil`.
 
+To build a keyword list, such as the options of a function call, see
+[Build a keyword list of options](build-a-keyword-list-of-options.md).
+
 ## Put each field that has a value
 
 Start with an empty map, and call `Shoddy.Maps.put_if/3` one time for each
