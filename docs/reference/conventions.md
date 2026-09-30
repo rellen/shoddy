@@ -30,7 +30,7 @@ function can be a step of a pipeline.
 | `Shoddy.Maps` | The map. |
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2`, the value. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
 
@@ -48,6 +48,7 @@ A truthy value is a value that is not `nil` and not `false`. A falsy value is
 | `Shoddy.then_if/3` | The return value of the predicate. |
 | `Shoddy.Maps.put_if/3` | The value to put into the map. |
 | `Shoddy.Keywords.put_if/3` | The value to put into the keyword list. |
+| `Shoddy.Result.ensure/3` | The return value of the predicate. |
 
 These functions do not use this rule:
 
@@ -66,6 +67,7 @@ These functions do not use this rule:
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
+| `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -103,7 +105,7 @@ These functions compare two values with the strict equality operator
 | --- | --- |
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
-| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the list of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1` and `Shoddy.Result.from_nil/2` accept each value. |
+| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the list of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |

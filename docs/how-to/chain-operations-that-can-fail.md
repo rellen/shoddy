@@ -76,6 +76,25 @@ code gives you such a value, use `Shoddy.Result.flatten/1`:
 #=> {:ok, 36}
 ```
 
+## Check a condition
+
+Use `Shoddy.Result.ensure/3` with `Shoddy.Result.then_ok/2`. It returns an
+ok tuple if the predicate returns a truthy value, and an error tuple with
+the reason that you give otherwise:
+
+```elixir
+params
+|> Map.get("age")
+|> Shoddy.Result.from_nil(:no_age)
+|> Shoddy.Result.then_ok(&parse_age/1)
+|> Shoddy.Result.then_ok(&Shoddy.Result.ensure(&1, fn age -> age >= 18 end, :too_young))
+```
+
+| `params` | Result |
+| --- | --- |
+| `%{"age" => "41"}` | `{:ok, 41}` |
+| `%{"age" => "12"}` | `{:error, :too_young}` |
+
 ## Change the reason of an error
 
 Use `Shoddy.Result.map_error/2`. For example, change each reason to a

@@ -383,6 +383,32 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "ensure/3" do
+    test "returns an ok tuple if the predicate returns a truthy value" do
+      assert ensure(36, &(&1 >= 18), :too_young) == {:ok, 36}
+      assert ensure(36, fn _ -> :yes end, :too_young) == {:ok, 36}
+    end
+
+    test "returns an error tuple if the predicate returns nil or false" do
+      assert ensure(12, &(&1 >= 18), :too_young) == {:error, :too_young}
+      assert ensure(12, fn _ -> nil end, :too_young) == {:error, :too_young}
+    end
+
+    test "accepts a predicate of arity 0" do
+      assert ensure(:delete, fn -> true end, :forbidden) == {:ok, :delete}
+      assert ensure(:delete, fn -> false end, :forbidden) == {:error, :forbidden}
+    end
+
+    test "accepts nil and a result as the value" do
+      assert ensure(nil, &is_nil/1, :present) == {:ok, nil}
+      assert ensure({:error, :x}, fn _ -> true end, :unused) == {:ok, {:error, :x}}
+    end
+
+    test "raises FunctionClauseError for a predicate of another arity" do
+      assert_raise FunctionClauseError, fn -> apply(&ensure/3, [1, fn _, _ -> true end, :r]) end
+    end
+  end
+
   describe "ignore/1" do
     test "discards the value from an ok tuple" do
       assert ignore({:ok, 42}) == :ok
