@@ -6,13 +6,14 @@ to the next operation. They pass an error tuple to the end of the pipeline
 with no change.
 
 The examples read an age from the parameters of a web form. They use this
-function, which returns an error tuple for text that is not a correct age:
+function. For text that is not a correct age, it returns an error tuple.
+The reason contains the text, so the caller can tell which input failed:
 
 ```elixir
 def parse_age(text) do
   case Integer.parse(text) do
     {age, ""} when age >= 0 -> {:ok, age}
-    _other -> {:error, :invalid_age}
+    _other -> {:error, {text, :invalid_age}}
   end
 end
 ```
@@ -47,7 +48,7 @@ params
 | `params` | Result |
 | --- | --- |
 | `%{"age" => "36"}` | `{:ok, 36}` |
-| `%{"age" => "old"}` | `{:error, :invalid_age}` |
+| `%{"age" => "old"}` | `{:error, {"old", :invalid_age}}` |
 | `%{}` | `{:error, :no_age}` |
 
 ## Call an operation that cannot fail
@@ -81,12 +82,12 @@ Use `Shoddy.Result.map_error/2`. For example, change each reason to a
 message for the user:
 
 ```elixir
-{:error, :invalid_age}
+{:error, {"old", :invalid_age}}
 |> Shoddy.Result.map_error(fn
   :no_age -> "Enter your age."
-  :invalid_age -> "Enter your age as a number."
+  {text, :invalid_age} -> "The age #{inspect(text)} is not a number."
 end)
-#=> {:error, "Enter your age as a number."}
+#=> {:error, "The age \"old\" is not a number."}
 ```
 
 ## Write a log message for an error
@@ -97,11 +98,11 @@ it returns the result with no change:
 ```elixir
 require Logger
 
-{:error, :invalid_age}
+{:error, {"old", :invalid_age}}
 |> Shoddy.Result.tap_error(fn reason ->
   Logger.warning("cannot read the age: #{inspect(reason)}")
 end)
-#=> {:error, :invalid_age}
+#=> {:error, {"old", :invalid_age}}
 ```
 
 `Shoddy.Result.tap_ok/2` does the same for the value of an ok tuple.
@@ -115,7 +116,7 @@ default that you give for an error:
 Shoddy.Result.unwrap({:ok, 37}, 0)
 #=> 37
 
-Shoddy.Result.unwrap({:error, :invalid_age}, 0)
+Shoddy.Result.unwrap({:error, {"old", :invalid_age}}, 0)
 #=> 0
 ```
 
@@ -146,7 +147,7 @@ Enum.count(results, &Shoddy.Result.ok?/1)
 #=> 2
 
 Enum.filter(results, &Shoddy.Result.error?/1)
-#=> [error: :invalid_age]
+#=> [error: {"old", :invalid_age}]
 ```
 
 ## Combine the results of a list
@@ -163,7 +164,7 @@ in an ok tuple, or the first error:
 ["41", "old", "5", "-1"]
 |> Enum.map(&parse_age/1)
 |> Shoddy.Result.collect()
-#=> {:error, :invalid_age}
+#=> {:error, {"old", :invalid_age}}
 ```
 
 The option `:on_error` changes what the function does for an error. The
@@ -189,7 +190,7 @@ returns the reason of each error:
 ["41", "old", "5", "-1"]
 |> Enum.map(&parse_age/1)
 |> Shoddy.Result.collect(on_error: :accumulate)
-#=> {:error, [:invalid_age, :invalid_age]}
+#=> {:error, [{"old", :invalid_age}, {"-1", :invalid_age}]}
 ```
 
 ## Decide what to do for each error
