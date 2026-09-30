@@ -131,6 +131,19 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
+## Structs in Shoddy.Maps
+
+A struct is a map, so `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3`
+accept it. But `Map.put/3` can add a key that is not a field of the struct.
+The result then is not a correct struct. For example, a wrong key such as
+`:emial` makes a `%User{}` with an extra key, and no error occurs.
+
+Thus the functions accept only a field of the struct as the key. They raise
+`KeyError` for another key, as the update syntax `%{struct | key: value}`
+does. They raise this error also if they do not put the value. A wrong key
+then causes an error at the first call, and not only when the value is
+present.
+
 ## One element for each call of toggle
 
 A map set can contain a list as an element. If `Shoddy.MapSets.toggle/2`

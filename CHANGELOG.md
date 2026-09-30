@@ -23,3 +23,6 @@ The first release also contains these changes:
   is not `nil`, so it keeps `false`.
 - Add `Shoddy.DateTimes.floor/2`. It rounds a time value down to the start
   of a minute, an hour or a day.
+- Breaking: `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise
+  `KeyError` for a struct and a key that is not a field of the struct. They
+  raise this error also if they do not put the value.

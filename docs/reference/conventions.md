@@ -100,6 +100,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
+| `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` with a struct. The function raises this error also if it does not put the value. |
 
 ## Names
 

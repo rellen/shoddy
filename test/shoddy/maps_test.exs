@@ -93,4 +93,36 @@ defmodule Shoddy.MapsTest do
       assert_raise FunctionClauseError, fn -> apply(&put_present/3, [[a: 1], :b, 2]) end
     end
   end
+
+  describe "a struct as the first argument" do
+    for function <- [:put_if, :put_present] do
+      test "#{function}/3 puts a value into a field of the struct" do
+        uri = %URI{host: "example.com"}
+        assert apply(Shoddy.Maps, unquote(function), [uri, :port, 443]) == %{uri | port: 443}
+      end
+
+      test "#{function}/3 raises KeyError for a key that is not a field" do
+        assert_raise KeyError, ~r/key :hots not found/, fn ->
+          apply(Shoddy.Maps, unquote(function), [%URI{}, :hots, "example.com"])
+        end
+      end
+
+      test "#{function}/3 raises KeyError for a key that is not a field, also for nil" do
+        assert_raise KeyError, fn -> apply(Shoddy.Maps, unquote(function), [%URI{}, :hots, nil]) end
+      end
+    end
+
+    test "put_if/3 raises KeyError for a key that is not a field, also for false" do
+      assert_raise KeyError, fn -> put_if(%URI{}, :hots, false) end
+    end
+
+    test "put_if/3 does not change a field for a falsy value" do
+      uri = %URI{host: "example.com"}
+      assert put_if(uri, :host, nil) == uri
+    end
+
+    test "put_present/3 puts false into a field" do
+      assert put_present(%URI{}, :port, false).port == false
+    end
+  end
 end
