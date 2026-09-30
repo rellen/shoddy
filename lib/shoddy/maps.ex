@@ -12,11 +12,11 @@ defmodule Shoddy.Maps do
   The name of this module is `Maps`, in the plural. Thus the alias `Maps`
   does not hide the standard `Map` module.
 
-  A struct is also a map, but it has a fixed set of fields. For a struct, each
-  function accepts only a key that is a field of the struct. It raises
-  `KeyError` for another key, as the update syntax `%{struct | key: value}`
-  does. It raises this error also if it does not put the value. Thus a wrong key
-  always causes an error.
+  A struct is also a map, but it has a fixed set of fields. For a struct,
+  `put_if/3` and `put_present/3` accept only a key that is a field of the
+  struct. They raise `KeyError` for another key, as the update syntax
+  `%{struct | key: value}` does. They raise this error also if they do not put
+  the value. Thus a wrong key always causes an error.
   """
 
   @doc """
@@ -138,6 +138,91 @@ defmodule Shoddy.Maps do
   """
   @spec put_present(map(), key, value) :: map() when key: any(), value: any()
   def put_present(map, key, value) when is_map(map), do: put_when(map, key, value, not is_nil(value))
+
+  @doc """
+  Takes keys from a map, and gives each key a new name.
+
+  `mapping` is a map from each key to take to its new name. The result
+  contains only the keys of `mapping`. A key that is not in `map` does not
+  get an entry. A key with the value `nil` gets an entry with `nil`.
+
+  Use this function to convert the parameters of a web form, which have
+  string keys, into a map with atom keys. Only the new names in `mapping`
+  become keys, so the input cannot make new atoms.
+
+  The result is always a plain map, also if `map` is a struct.
+
+  This function raises `ArgumentError` if more than one key of `mapping` has
+  the same new name. The result would then depend on the order of the keys.
+  This function also raises `ArgumentError` if a new name is `:__struct__`.
+  The result would then be a struct.
+
+  `mapping` cannot be a struct. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> params = %{"name" => "Ada", "email" => "ada@example.com", "admin" => "true"}
+      iex> Shoddy.Maps.take_as(params, %{"name" => :name, "email" => :email})
+      %{name: "Ada", email: "ada@example.com"}
+
+  A key that is not in the map does not get an entry:
+
+      iex> Shoddy.Maps.take_as(%{"name" => "Ada"}, %{"name" => :name, "email" => :email})
+      %{name: "Ada"}
+
+  A key with the value `nil` gets an entry:
+
+      iex> Shoddy.Maps.take_as(%{"email" => nil}, %{"email" => :email})
+      %{email: nil}
+
+  Use the function with `put_if/3` in a pipeline:
+
+      iex> params = %{"name" => "Ada", "age" => "36"}
+      iex> params
+      ...> |> Shoddy.Maps.take_as(%{"name" => :name})
+      ...> |> Shoddy.Maps.put_if(:age, Shoddy.then_if(params["age"], &String.to_integer/1))
+      %{name: "Ada", age: 36}
+  """
+  @spec take_as(map(), %{optional(key) => new_key}) :: %{optional(new_key) => any()}
+        when key: any(), new_key: any()
+  def take_as(map, mapping) when is_map(map) and is_map(mapping) and not is_struct(mapping) do
+    ensure_no_struct_name!(mapping)
+    ensure_unique_names!(mapping)
+
+    for {key, new_key} <- mapping, {:ok, value} <- [Map.fetch(map, key)], into: %{} do
+      {new_key, value}
+    end
+  end
+
+  defp ensure_no_struct_name!(mapping) do
+    mapping
+    |> Map.values()
+    |> Enum.member?(:__struct__)
+    |> Shoddy.then_if(fn true ->
+      raise ArgumentError, "a new name of the mapping cannot be :__struct__, because the result would then be a struct"
+    end)
+  end
+
+  defp ensure_unique_names!(mapping) do
+    mapping
+    |> Map.values()
+    |> Shoddy.Lists.has_duplicates?()
+    |> Shoddy.then_if(fn true ->
+      raise ArgumentError,
+            "more than one key of the mapping has the same new name: " <> describe_collisions(mapping)
+    end)
+  end
+
+  defp describe_collisions(mapping) do
+    mapping
+    |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
+    |> Enum.filter(&match?({_new_key, [_, _ | _]}, &1))
+    |> Enum.sort()
+    |> Enum.map_join("; ", fn {new_key, keys} ->
+      "#{inspect(new_key)} for the keys #{inspect(Enum.sort(keys))}"
+    end)
+  end
 
   defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
     raise KeyError, key: key, term: struct

@@ -75,4 +75,17 @@ defmodule Shoddy.MapsPropertyTest do
       end
     end
   end
+
+  describe "take_as/2" do
+    property "returns the value of each key of the mapping that is in the map, under the new name" do
+      check all(map <- any_map(), mapping <- map_of(simple(), integer())) do
+        mapping = mapping |> Enum.uniq_by(&elem(&1, 1)) |> Map.new()
+
+        expected =
+          for {key, new_key} <- mapping, Map.has_key?(map, key), into: %{}, do: {new_key, map[key]}
+
+        assert Maps.take_as(map, mapping) == expected
+      end
+    end
+  end
 end

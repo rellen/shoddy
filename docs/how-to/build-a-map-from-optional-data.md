@@ -28,6 +28,24 @@ params = %{"name" => "Ada", "email" => nil}
 For `nil` or `false`, `Shoddy.Maps.put_if/3` returns the map with no change.
 An entry that is already in the map stays.
 
+## Take the fields of the parameters with new names
+
+The parameters of a web form have string keys. Use `Shoddy.Maps.take_as/2`
+to take the fields that you need and give them atom keys:
+
+```elixir
+params = %{"name" => "Ada", "email" => "ada@example.com", "admin" => "true"}
+
+Shoddy.Maps.take_as(params, %{"name" => :name, "email" => :email})
+#=> %{name: "Ada", email: "ada@example.com"}
+```
+
+The second argument gives the new name of each key. The result contains only
+the keys of the second argument, so the field `"admin"` does not go into the
+map. A key that is not in the parameters does not get an entry. A key with
+the value `nil` gets an entry with `nil`. To remove it, use
+`Shoddy.Maps.put_present/3` for that field instead.
+
 ## Change a value before you put it into the map
 
 A function such as `String.trim/1` raises `FunctionClauseError` for `nil`.
