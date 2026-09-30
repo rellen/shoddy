@@ -60,4 +60,19 @@ defmodule Shoddy.MapsPropertyTest do
       end
     end
   end
+
+  describe "a struct as the first argument" do
+    @fields URI.__struct__() |> Map.keys()
+
+    for function <- [:put_if, :put_present] do
+      property "#{function}/3 raises KeyError for each key that is not a field of the struct, for any value" do
+        check all(
+                key <- filter(simple(), &(&1 not in @fields)),
+                value <- one_of([constant(nil), simple()])
+              ) do
+          assert_raise KeyError, fn -> apply(Maps, unquote(function), [%URI{}, key, value]) end
+        end
+      end
+    end
+  end
 end

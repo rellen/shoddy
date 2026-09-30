@@ -11,6 +11,12 @@ defmodule Shoddy.Maps do
 
   The name of this module is `Maps`, in the plural. Thus the alias `Maps`
   does not hide the standard `Map` module.
+
+  A struct is also a map, but it has a fixed set of fields. For a struct, each
+  function accepts only a key that is a field of the struct. It raises
+  `KeyError` for another key, as the update syntax `%{struct | key: value}`
+  does. It raises this error also if it does not put the value. Thus a wrong key
+  always causes an error.
   """
 
   @doc """
@@ -26,6 +32,9 @@ defmodule Shoddy.Maps do
   Use this function to build a map from optional data. The map does not get
   an entry for a field that is absent, and it does not get a `nil` value for
   that field.
+
+  For a struct, `key` must be a field of the struct. This function raises
+  `KeyError` for another key, also if it does not put the value.
 
   ## Examples
 
@@ -72,11 +81,14 @@ defmodule Shoddy.Maps do
       ...> |> Shoddy.Maps.put_if(:name, params["name"])
       ...> |> Shoddy.Maps.put_if(:email, params["email"])
       %{name: "Ada"}
+
+  The function puts a value into a field of a struct:
+
+      iex> Shoddy.Maps.put_if(%URI{host: "example.com"}, :port, 443).port
+      443
   """
   @spec put_if(map(), key, value) :: map() when key: any(), value: any()
-  def put_if(map, key, value) when is_map(map) do
-    if value, do: Map.put(map, key, value), else: map
-  end
+  def put_if(map, key, value) when is_map(map), do: put_when(map, key, value, value not in [nil, false])
 
   @doc """
   Puts a value into a map if the value is not `nil`.
@@ -88,6 +100,9 @@ defmodule Shoddy.Maps do
   `put_if/3` ignores `false`, but this function puts `false` into the map.
   Use this function for a field that can be `false`, such as a boolean
   option.
+
+  For a struct, `key` must be a field of the struct. This function raises
+  `KeyError` for another key, also if it does not put the value.
 
   ## Examples
 
@@ -115,9 +130,19 @@ defmodule Shoddy.Maps do
       ...> |> Shoddy.Maps.put_present(:email, params["email"])
       ...> |> Shoddy.Maps.put_present(:subscribed, params["subscribed"])
       %{name: "Ada", subscribed: false}
+
+  The function puts a value into a field of a struct:
+
+      iex> Shoddy.Maps.put_present(%URI{host: "example.com"}, :port, 443).port
+      443
   """
   @spec put_present(map(), key, value) :: map() when key: any(), value: any()
-  def put_present(map, key, value) when is_map(map) do
-    if is_nil(value), do: map, else: Map.put(map, key, value)
+  def put_present(map, key, value) when is_map(map), do: put_when(map, key, value, not is_nil(value))
+
+  defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
+    raise KeyError, key: key, term: struct
   end
+
+  defp put_when(map, key, value, true), do: Map.put(map, key, value)
+  defp put_when(map, _key, _value, false), do: map
 end
