@@ -9,6 +9,7 @@ Shoddy has no release yet. The first release contains these modules:
 
 - `Shoddy`
 - `Shoddy.Maps`
+- `Shoddy.Keywords`
 - `Shoddy.MapSets`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
@@ -26,3 +27,6 @@ The first release also contains these changes:
 - Breaking: `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise
   `KeyError` for a struct and a key that is not a field of the struct. They
   raise this error also if they do not put the value.
+- Add `Shoddy.Keywords` with `put_if/3` and `put_present/3`. They put a
+  value into a keyword list with `Keyword.put/3`, which deletes each entry
+  for the key.

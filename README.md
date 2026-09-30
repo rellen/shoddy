@@ -23,6 +23,8 @@ params = %{"name" => "Ada", "email" => nil}
   selects the first value from a list of sources.
 - `Shoddy.Maps` puts a value into a map only if the value is truthy, or only
   if the value is not `nil`.
+- `Shoddy.Keywords` does the same for a keyword list, such as the options of
+  a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
@@ -57,6 +59,7 @@ To learn the library, start with the tutorial:
 For one task, use a how-to guide:
 
 - [Build a map from optional data](docs/how-to/build-a-map-from-optional-data.md)
+- [Build a keyword list of options](docs/how-to/build-a-keyword-list-of-options.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)

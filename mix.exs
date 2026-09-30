@@ -54,6 +54,7 @@ defmodule Shoddy.MixProject do
         "README.md",
         "docs/tutorials/get-started.md",
         "docs/how-to/build-a-map-from-optional-data.md",
+        "docs/how-to/build-a-keyword-list-of-options.md",
         "docs/how-to/choose-the-first-available-value.md",
         "docs/how-to/chain-operations-that-can-fail.md",
         "docs/how-to/return-a-tagged-tuple-from-a-callback.md",
@@ -73,7 +74,7 @@ defmodule Shoddy.MixProject do
       ],
       groups_for_modules: [
         Values: [Shoddy],
-        Collections: [Shoddy.Maps, Shoddy.MapSets],
+        Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
         "Dates and times": [Shoddy.DateTimes]
       ]
