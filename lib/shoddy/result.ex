@@ -258,6 +258,65 @@ defmodule Shoddy.Result do
   def then_ok(:error, fun) when is_function(fun, 1), do: :error
 
   @doc """
+  Calls a function that returns a result, for an error.
+
+  If the result is an error, this function calls `fun.(error)` with the error
+  as it is: `{:error, reason}` or a bare `:error`. The given function must
+  return a result, but this module does not enforce that at run time. This
+  function returns an ok result with no change, and it does not call the
+  function.
+
+  `then_ok/2` continues a pipeline after an ok result. This function continues
+  a pipeline after an error. Use it to try a second source for a value after
+  the first source fails, or to replace an error with a default value.
+
+  To recover from some errors only, return each other error with no change.
+  The function receives the error as it is, so a bare `:error` stays a bare
+  `:error`.
+
+  ## Examples
+
+      iex> Shoddy.Result.recover({:error, :not_found}, fn _error -> {:ok, :default} end)
+      {:ok, :default}
+
+      iex> Shoddy.Result.recover(:error, fn _error -> {:ok, :default} end)
+      {:ok, :default}
+
+      iex> Shoddy.Result.recover({:ok, 42}, fn _error -> {:ok, :default} end)
+      {:ok, 42}
+
+      iex> Shoddy.Result.recover(:ok, fn _error -> {:ok, :default} end)
+      :ok
+
+  The function can recover from some errors only:
+
+      iex> recover_not_found = fn
+      ...>   {:error, :not_found} -> {:ok, :default}
+      ...>   error -> error
+      ...> end
+      iex> Shoddy.Result.recover({:error, :not_found}, recover_not_found)
+      {:ok, :default}
+      iex> Shoddy.Result.recover({:error, :timeout}, recover_not_found)
+      {:error, :timeout}
+      iex> Shoddy.Result.recover(:error, recover_not_found)
+      :error
+
+  This example tries a second source if the first source fails:
+
+      iex> from_cache = fn _key -> {:error, :miss} end
+      iex> from_database = fn key -> {:ok, {:from_database, key}} end
+      iex> :user
+      ...> |> from_cache.()
+      ...> |> Shoddy.Result.recover(fn _error -> from_database.(:user) end)
+      {:ok, {:from_database, :user}}
+  """
+  @spec recover(t(a, e), (:error | {:error, e} -> t(a, f))) :: t(a, f)
+        when a: any(), e: any(), f: any()
+  def recover({:ok, _} = ok, fun) when is_function(fun, 1), do: ok
+  def recover(:ok, fun) when is_function(fun, 1), do: :ok
+  def recover(error, fun) when is_error(error) and is_function(fun, 1), do: fun.(error)
+
+  @doc """
   Extracts the value from an ok tuple, or raises if the result is an error.
 
   This function accepts a bare `:ok` as `{:ok, nil}` and returns `nil`.

@@ -90,6 +90,35 @@ end)
 #=> {:error, "The age \"old\" is not a number."}
 ```
 
+## Recover from an error
+
+Use `Shoddy.Result.recover/2`. It calls the function with the error as it
+is, and the function returns a new result. An ok result goes to the end of
+the pipeline with no change.
+
+This example uses a stored age if the form has no age. It returns each other
+error with no change, so a bad input still fails. A bare `:error` also stays
+a bare `:error`:
+
+```elixir
+stored_age = 36
+
+params
+|> Map.get("age")
+|> Shoddy.Result.from_nil(:no_age)
+|> Shoddy.Result.then_ok(&parse_age/1)
+|> Shoddy.Result.recover(fn
+  {:error, :no_age} -> {:ok, stored_age}
+  error -> error
+end)
+```
+
+| `params` | Result |
+| --- | --- |
+| `%{"age" => "41"}` | `{:ok, 41}` |
+| `%{}` | `{:ok, 36}` |
+| `%{"age" => "old"}` | `{:error, {"old", :invalid_age}}` |
+
 ## Write a log message for an error
 
 Use `Shoddy.Result.tap_error/2`. It calls the function with the reason, and

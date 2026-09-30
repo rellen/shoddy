@@ -89,12 +89,16 @@ function.
 
 `Shoddy.Result` gives a pipeline for a sequence of operations that can fail.
 Each step receives the value of the step before it. An error goes to the end
-with no change.
+with no change, unless a step recovers from it.
 
-The special form `with` does the same work. Use `with` if a step needs more
-than one earlier value, or if each error needs a different treatment in the
-`else` clause. Use a pipeline of `Shoddy.Result` if each step needs only the
-value of the step before it.
+`Shoddy.Result.then_ok/2` continues the pipeline after an ok result.
+`Shoddy.Result.recover/2` continues the pipeline after an error. It gives the
+error to the next step, and an ok result goes to the end with no change.
+
+The special form `with` does the same work as such a pipeline. Use `with` if
+a step needs more than one earlier value, or if each error needs a different
+treatment in the `else` clause. Use a pipeline of `Shoddy.Result` if each
+step needs only the value of the step before it.
 
 ```elixir
 with {:ok, text} <- Shoddy.Result.from_nil(params["age"], :no_age),
