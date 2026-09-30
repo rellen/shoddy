@@ -151,8 +151,8 @@ Enum.filter(results, &Shoddy.Result.error?/1)
 
 ## Combine the results of a list
 
-Use `Shoddy.Result.collect/1`. It returns the values of the list in an ok
-tuple, or the first error:
+Use `Shoddy.Result.collect/2`. By default, it returns the values of the list
+in an ok tuple, or the first error:
 
 ```elixir
 ["41", "5"]
@@ -160,12 +160,70 @@ tuple, or the first error:
 |> Shoddy.Result.collect()
 #=> {:ok, [41, 5]}
 
-["36", "old", "-1"]
+["41", "old", "5", "-1"]
 |> Enum.map(&parse_age/1)
 |> Shoddy.Result.collect()
 #=> {:error, :invalid_age}
 ```
 
-`Shoddy.Result.collect/1` stops at the first error. To report each error,
-use `Enum.filter/2` with `Shoddy.Result.error?/1`, as the section above
-shows.
+The option `:on_error` changes what the function does for an error. The
+sections below show each value.
+
+## Keep the values and skip the errors
+
+Give `on_error: :skip`. The function ignores each error:
+
+```elixir
+["41", "old", "5", "-1"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect(on_error: :skip)
+#=> {:ok, [41, 5]}
+```
+
+## Report each error of a list
+
+Give `on_error: :accumulate`. If the list contains an error, the function
+returns the reason of each error:
+
+```elixir
+["41", "old", "5", "-1"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect(on_error: :accumulate)
+#=> {:error, [:invalid_age, :invalid_age]}
+```
+
+## Decide what to do for each error
+
+Give a function of arity 1. The function receives each error with no
+change, and it returns one of these values:
+
+- `{:cont, value}` puts `value` into the list, and `Shoddy.Result.collect/2`
+  continues.
+- `:skip` ignores the error, and `Shoddy.Result.collect/2` continues.
+- `{:halt, error}` stops `Shoddy.Result.collect/2`, and the function returns
+  `error`. The value `error` must be an error result.
+
+This example writes a log message for each error and skips it:
+
+```elixir
+require Logger
+
+["41", "old", "5", "-1"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect(
+  on_error: fn error ->
+    Logger.warning("cannot read an age: #{inspect(error)}")
+    :skip
+  end
+)
+#=> {:ok, [41, 5]}
+```
+
+This example puts 0 into the list for each error:
+
+```elixir
+["41", "old", "5"]
+|> Enum.map(&parse_age/1)
+|> Shoddy.Result.collect(on_error: fn _error -> {:cont, 0} end)
+#=> {:ok, [41, 0, 5]}
+```

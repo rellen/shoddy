@@ -473,13 +473,44 @@ defmodule Shoddy.Result do
   `values` contains the value of each element, in the order of the input. A
   bare `:ok` has no value, so it puts `nil` into the list.
 
-  If an element is an error, this function returns the first error with no
-  change. It stops at that error, and it does not examine a later element.
+  The option `:on_error` tells the function what to do for an error. The
+  default is `:halt`, which returns the first error with no change.
 
   Use this function after `Enum.map/2` with an operation that can fail.
 
   This function raises `FunctionClauseError` for an element that is not a
   result, if it examines that element.
+
+  ## Options
+
+    * `:on_error` - This option tells the function what to do for an error
+      in the list. The value is one of these:
+
+      * `:halt` - The function stops at the first error and returns it with
+        no change. It does not examine a later element. This value is the
+        default.
+
+      * `:skip` - The function ignores each error. It returns the values of
+        the ok elements in an ok tuple.
+
+      * `:accumulate` - The function examines each element. If there is an
+        error, it returns `{:error, reasons}`. The list `reasons` contains
+        the reason of each error, in the order of the input. A bare `:error`
+        has no reason, so it puts `nil` into the list.
+
+      * A function of arity 1 - The function receives each error with no
+        change. It must return one of these values:
+
+          * `{:cont, value}` puts `value` into the list, and the function
+            continues.
+          * `:skip` ignores the error, and the function continues.
+          * `{:halt, error}` stops the function, and the function returns
+            `error`. The value `error` must be an error result.
+
+  This function raises `ArgumentError` for an option that is not in the list
+  above, and for an option value that is not in the list above. It also
+  raises `ArgumentError` if the function of `:on_error` returns another
+  value.
 
   ## Examples
 
@@ -492,13 +523,39 @@ defmodule Shoddy.Result do
       iex> Shoddy.Result.collect([{:ok, 1}, :ok])
       {:ok, [1, nil]}
 
-  The function returns the first error:
+  By default, the function returns the first error:
 
       iex> Shoddy.Result.collect([{:ok, 1}, {:error, :bad}, {:error, :worse}])
       {:error, :bad}
 
       iex> Shoddy.Result.collect([:error, {:ok, 1}])
       :error
+
+  With `on_error: :skip`, the function ignores each error:
+
+      iex> Shoddy.Result.collect([{:ok, 1}, {:error, :bad}, {:ok, 2}], on_error: :skip)
+      {:ok, [1, 2]}
+
+  With `on_error: :accumulate`, the function returns the reason of each
+  error:
+
+      iex> Shoddy.Result.collect([{:ok, 1}, {:error, :bad}, {:error, :worse}], on_error: :accumulate)
+      {:error, [:bad, :worse]}
+
+      iex> Shoddy.Result.collect([{:ok, 1}, {:ok, 2}], on_error: :accumulate)
+      {:ok, [1, 2]}
+
+  A function can put a value into the list for an error:
+
+      iex> results = [{:ok, 1}, {:error, :bad}, {:ok, 3}]
+      iex> Shoddy.Result.collect(results, on_error: fn _error -> {:cont, 0} end)
+      {:ok, [1, 0, 3]}
+
+  A function can change the error that stops the list:
+
+      iex> results = [{:ok, 1}, {:error, :bad}, {:ok, 3}]
+      iex> Shoddy.Result.collect(results, on_error: fn {:error, reason} -> {:halt, {:error, {:row, reason}}} end)
+      {:error, {:row, :bad}}
 
   Use the function after `Enum.map/2`:
 
@@ -512,17 +569,73 @@ defmodule Shoddy.Result do
       {:ok, [1, 2, 3]}
       iex> ["1", "x", "y"] |> Enum.map(parse) |> Shoddy.Result.collect()
       {:error, {:invalid, "x"}}
+      iex> ["1", "x", "y"] |> Enum.map(parse) |> Shoddy.Result.collect(on_error: :accumulate)
+      {:error, [{:invalid, "x"}, {:invalid, "y"}]}
   """
-  @spec collect([t(a, e)]) :: {:ok, [a | nil]} | :error | {:error, e} when a: any(), e: any()
-  def collect(results) when is_list(results) do
-    case Enum.reduce_while(results, [], &collect_value/2) do
-      values when is_list(values) -> {:ok, Enum.reverse(values)}
-      error -> error
+  @spec collect([t()], keyword()) :: {:ok, [any()]} | :error | {:error, any()}
+  def collect(results, opts \\ []) when is_list(results) and is_list(opts) do
+    opts = Keyword.validate!(opts, on_error: :halt)
+    collect_with(results, on_error!(opts))
+  end
+
+  defp on_error!(opts) do
+    case Keyword.fetch!(opts, :on_error) do
+      mode when mode in [:halt, :skip, :accumulate] ->
+        mode
+
+      fun when is_function(fun, 1) ->
+        fun
+
+      value ->
+        raise ArgumentError,
+              "invalid value for :on_error option: expected :halt, :skip, :accumulate " <>
+                "or a function of arity 1, got: #{inspect(value)}"
     end
   end
 
-  defp collect_value({:ok, value}, values), do: {:cont, [value | values]}
-  defp collect_value(:ok, values), do: {:cont, [nil | values]}
-  defp collect_value({:error, _} = error, _values), do: {:halt, error}
-  defp collect_value(:error, _values), do: {:halt, :error}
+  defp collect_with(results, :accumulate) do
+    case Enum.reduce(results, {[], []}, &accumulate/2) do
+      {values, []} -> {:ok, Enum.reverse(values)}
+      {_values, reasons} -> {:error, Enum.reverse(reasons)}
+    end
+  end
+
+  defp collect_with(results, on_error) do
+    handler = error_handler(on_error)
+
+    case Enum.reduce_while(results, [], &collect_value(&1, &2, handler)) do
+      values when is_list(values) -> {:ok, Enum.reverse(values)}
+      {:halted, error} -> error
+    end
+  end
+
+  defp error_handler(:halt), do: &{:halt, &1}
+  defp error_handler(:skip), do: fn _error -> :skip end
+  defp error_handler(fun), do: fun
+
+  defp collect_value({:ok, value}, values, _handler), do: {:cont, [value | values]}
+  defp collect_value(:ok, values, _handler), do: {:cont, [nil | values]}
+
+  defp collect_value(error, values, handler) when is_error(error) do
+    case handler.(error) do
+      {:cont, value} ->
+        {:cont, [value | values]}
+
+      :skip ->
+        {:cont, values}
+
+      {:halt, halt_error} when is_error(halt_error) ->
+        {:halt, {:halted, halt_error}}
+
+      other ->
+        raise ArgumentError,
+              "invalid return value of the :on_error function: expected {:cont, value}, " <>
+                ":skip or {:halt, error}, got: #{inspect(other)}"
+    end
+  end
+
+  defp accumulate({:ok, value}, {values, reasons}), do: {[value | values], reasons}
+  defp accumulate(:ok, {values, reasons}), do: {[nil | values], reasons}
+  defp accumulate({:error, reason}, {values, reasons}), do: {values, [reason | reasons]}
+  defp accumulate(:error, {values, reasons}), do: {values, [nil | reasons]}
 end

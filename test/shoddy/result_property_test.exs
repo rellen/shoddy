@@ -14,6 +14,27 @@ defmodule Shoddy.ResultPropertyTest do
 
   defp error_result, do: one_of([constant(:error), tuple({constant(:error), simple()})])
 
+  defp model_collect(results, mode) when mode in [:halt, :halt_function] do
+    case Enum.find(results, &Result.error?/1) do
+      nil -> {:ok, Enum.map(results, &Result.unwrap(&1, nil))}
+      error -> error
+    end
+  end
+
+  defp model_collect(results, mode) when mode in [:skip, :skip_function] do
+    {:ok, results |> Enum.filter(&Result.ok?/1) |> Enum.map(&Result.unwrap(&1, nil))}
+  end
+
+  defp model_collect(results, :accumulate) do
+    case Enum.filter(results, &Result.error?/1) do
+      [] -> {:ok, Enum.map(results, &Result.unwrap(&1, nil))}
+      errors -> {:error, Enum.map(errors, &reason/1)}
+    end
+  end
+
+  defp reason({:error, reason}), do: reason
+  defp reason(:error), do: nil
+
   defp not_a_result do
     one_of([
       filter(simple(), fn value -> value not in [:ok, :error] end),
@@ -246,7 +267,7 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
-  describe "collect/1" do
+  describe "collect/2" do
     property "returns the values of the ok results, or the first error with no change" do
       check all(results <- list_of(result())) do
         expected =
@@ -256,6 +277,22 @@ defmodule Shoddy.ResultPropertyTest do
           end
 
         assert Result.collect(results) == expected
+      end
+    end
+
+    property "the option :on_error gives the result of a simple model for each mode" do
+      check all(
+              results <- list_of(result()),
+              mode <- member_of([:halt, :skip, :accumulate, :halt_function, :skip_function])
+            ) do
+        on_error =
+          case mode do
+            :halt_function -> &{:halt, &1}
+            :skip_function -> fn _error -> :skip end
+            atom -> atom
+          end
+
+        assert Result.collect(results, on_error: on_error) == model_collect(results, mode)
       end
     end
   end

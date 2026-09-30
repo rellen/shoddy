@@ -446,6 +446,106 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "collect/2 with the option :on_error" do
+    @results [{:ok, 1}, {:error, :first}, :ok, :error, {:ok, 5}]
+
+    test ":halt returns the first error, as the default does" do
+      assert collect(@results, on_error: :halt) == {:error, :first}
+      assert collect(@results, on_error: :halt) == collect(@results)
+    end
+
+    test ":skip returns the values of the ok elements" do
+      assert collect(@results, on_error: :skip) == {:ok, [1, nil, 5]}
+    end
+
+    test ":skip returns an empty list in an ok tuple if each element is an error" do
+      assert collect([:error, {:error, :x}], on_error: :skip) == {:ok, []}
+    end
+
+    test ":accumulate returns the reason of each error, and nil for a bare :error" do
+      assert collect(@results, on_error: :accumulate) == {:error, [:first, nil]}
+    end
+
+    test ":accumulate returns the values if there is no error" do
+      assert collect([{:ok, 1}, :ok], on_error: :accumulate) == {:ok, [1, nil]}
+    end
+
+    test ":accumulate examines each element, also after an error" do
+      assert_raise FunctionClauseError, fn ->
+        apply(&collect/2, [[{:error, :first}, 42], [on_error: :accumulate]])
+      end
+    end
+
+    test "a function receives each error with no change" do
+      on_error = fn error ->
+        send(self(), {:received, error})
+        :skip
+      end
+
+      collect(@results, on_error: on_error)
+
+      assert_received {:received, {:error, :first}}
+      assert_received {:received, :error}
+    end
+
+    test "a function can put a value into the list for an error" do
+      assert collect(@results, on_error: fn _error -> {:cont, 0} end) == {:ok, [1, 0, nil, 0, 5]}
+    end
+
+    test "a function can skip an error" do
+      assert collect(@results, on_error: fn _error -> :skip end) == {:ok, [1, nil, 5]}
+    end
+
+    test "a function can stop the list with a different error" do
+      assert collect(@results, on_error: fn _error -> {:halt, {:error, :changed}} end) ==
+               {:error, :changed}
+    end
+
+    test "a function can stop the list with a bare :error" do
+      assert collect(@results, on_error: fn _error -> {:halt, :error} end) == :error
+    end
+
+    test "a function is not called after it stops the list" do
+      on_error = fn error ->
+        send(self(), {:received, error})
+        {:halt, error}
+      end
+
+      collect(@results, on_error: on_error)
+
+      assert_received {:received, {:error, :first}}
+      refute_received {:received, :error}
+    end
+
+    test "raises ArgumentError if the function stops the list with a value that is not an error" do
+      assert_raise ArgumentError, ~r/invalid return value of the :on_error function/, fn ->
+        collect(@results, on_error: fn _error -> {:halt, {:ok, 1}} end)
+      end
+    end
+
+    test "raises ArgumentError if the function returns an unknown value" do
+      assert_raise ArgumentError, ~r/invalid return value of the :on_error function/, fn ->
+        collect(@results, on_error: fn _error -> :ignore end)
+      end
+    end
+
+    test "raises ArgumentError for an unknown value of the option" do
+      assert_raise ArgumentError, ~r/invalid value for :on_error option/, fn ->
+        collect(@results, on_error: :continue)
+      end
+    end
+
+    test "raises ArgumentError for a function of the wrong arity" do
+      assert_raise ArgumentError, ~r/invalid value for :on_error option/, fn ->
+        collect(@results, on_error: fn -> :skip end)
+      end
+    end
+
+    test "raises ArgumentError for an unknown option" do
+      assert_raise ArgumentError, fn -> collect(@results, on_errors: :skip) end
+    end
+  end
+
   # The moduledoc states that most functions raise FunctionClauseError for an
   # input that is not a result. The tests below examine that rule. Without
   # them, no test fails if a change adds a clause that accepts every input.
