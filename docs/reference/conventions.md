@@ -9,14 +9,15 @@ of each module gives the full description of each function.
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` |
+| `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2` |
 
-The names `Maps`, `MapSets` and `DateTimes` are in the plural. Thus an alias
-of one of these modules does not hide the standard module `Map`, `MapSet` or
-`DateTime`.
+The names `Maps`, `Keywords`, `MapSets` and `DateTimes` are in the plural.
+Thus an alias of one of these modules does not hide the standard module
+`Map`, `Keyword`, `MapSet` or `DateTime`.
 
 ## The order of the arguments
 
@@ -27,6 +28,7 @@ function can be a step of a pipeline.
 | --- | --- |
 | `Shoddy` | The value. For `Shoddy.coalesce/2`, the list of values. |
 | `Shoddy.Maps` | The map. |
+| `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2`, the value. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
@@ -45,10 +47,12 @@ A truthy value is a value that is not `nil` and not `false`. A falsy value is
 | `Shoddy.then_if/2` | The first argument. |
 | `Shoddy.then_if/3` | The return value of the predicate. |
 | `Shoddy.Maps.put_if/3` | The value to put into the map. |
+| `Shoddy.Keywords.put_if/3` | The value to put into the keyword list. |
 
 These functions do not use this rule:
 
 - `Shoddy.Maps.put_present/3` ignores only `nil`.
+- `Shoddy.Keywords.put_present/3` ignores only `nil`.
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
   default of that option is `[nil]`.
 

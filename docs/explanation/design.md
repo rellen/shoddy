@@ -131,6 +131,19 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
+## Keyword lists in a separate module
+
+`Access` reads maps and keyword lists in the same way, but a put is different.
+`Keyword.put/3` deletes each entry for the key and puts the new entry at the
+start of the list. One function for the two types would hide that
+difference.
+
+Thus `Shoddy.Keywords` is a separate module with the same function names as
+`Shoddy.Maps`. The name of each module tells the type of its first argument,
+and the documentation of each function tells its effect on that type. The
+specifications stay exact: a map goes in and a map comes out, and a keyword
+list goes in and a keyword list comes out.
+
 ## Structs in Shoddy.Maps
 
 A struct is a map, so `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3`
