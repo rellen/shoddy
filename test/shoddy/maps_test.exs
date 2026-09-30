@@ -125,4 +125,69 @@ defmodule Shoddy.MapsTest do
       assert put_present(%URI{}, :port, false).port == false
     end
   end
+
+  describe "take_as/2" do
+    test "takes each key of the mapping and gives it the new name" do
+      assert take_as(%{"a" => 1, "b" => 2, "c" => 3}, %{"a" => :x, "b" => :y}) == %{x: 1, y: 2}
+    end
+
+    test "skips a key that is not in the map" do
+      assert take_as(%{"a" => 1}, %{"a" => :x, "b" => :y}) == %{x: 1}
+    end
+
+    test "keeps a key with the value nil or false" do
+      assert take_as(%{"a" => nil, "b" => false}, %{"a" => :x, "b" => :y}) == %{x: nil, y: false}
+    end
+
+    test "returns an empty map for an empty mapping" do
+      assert take_as(%{"a" => 1}, %{}) == %{}
+    end
+
+    test "accepts a new name that is the same as the key" do
+      assert take_as(%{a: 1, b: 2}, %{a: :a}) == %{a: 1}
+    end
+
+    test "returns a plain map for a struct" do
+      result = take_as(%URI{host: "example.com"}, %{host: :host})
+
+      assert result == %{host: "example.com"}
+      refute is_struct(result)
+    end
+
+    test "raises ArgumentError if two keys have the same new name" do
+      assert_raise ArgumentError, ~r/same new name: :x for the keys \["a", "b"\]$/, fn ->
+        take_as(%{"a" => 1}, %{"a" => :x, "b" => :x})
+      end
+    end
+
+    test "names each shared new name and all its keys in the error message" do
+      message = ~r/same new name: :x for the keys \["a", "b", "c"\]; :y for the keys \["d", "e"\]$/
+
+      assert_raise ArgumentError, message, fn ->
+        take_as(%{}, %{"e" => :y, "a" => :x, "b" => :x, "c" => :x, "d" => :y, "f" => :z})
+      end
+    end
+
+    test "raises ArgumentError for the new name :__struct__" do
+      assert_raise ArgumentError, ~r/cannot be :__struct__/, fn ->
+        take_as(%{"t" => Date, "y" => 2000}, %{"t" => :__struct__, "y" => :year})
+      end
+    end
+
+    test "raises FunctionClauseError for a mapping that is a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&take_as/2, [%{a: 1}, %URI{}]) end
+
+      assert_raise FunctionClauseError, fn ->
+        apply(&take_as/2, [%{host: "h"}, %{__struct__: :__struct__, host: :host}])
+      end
+    end
+
+    test "raises FunctionClauseError for a mapping that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&take_as/2, [%{"a" => 1}, [{"a", :x}]]) end
+    end
+
+    test "raises FunctionClauseError for a first argument that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&take_as/2, [[a: 1], %{a: :x}]) end
+    end
+  end
 end

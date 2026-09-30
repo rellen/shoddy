@@ -38,3 +38,5 @@ The first release also contains these changes:
 - Add `Shoddy.Lists` with `duplicates/1` and `has_duplicates?/1`.
   `duplicates/1` returns each element that occurs more than one time in a
   list. `has_duplicates?/1` returns `true` if such an element exists.
+- Add `Shoddy.Maps.take_as/2`. It takes keys from a map, and gives each key
+  a new name from its argument `mapping`.

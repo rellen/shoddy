@@ -22,7 +22,7 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy` applies a function to a value only if a condition is true, and
   selects the first value from a list of sources.
 - `Shoddy.Maps` puts a value into a map only if the value is truthy, or only
-  if the value is not `nil`.
+  if the value is not `nil`. It also takes keys from a map with new names.
 - `Shoddy.Keywords` does the same for a keyword list, such as the options of
   a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
