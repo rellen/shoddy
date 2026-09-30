@@ -31,9 +31,9 @@
 # job `all`, so a push to main with a failed check keeps the old site.
 #
 # The jobs run on the versions of `.tool-versions`. `devenv.nix` gives the same
-# versions, and `.claude/hooks/session-start.sh` reads `.tool-versions` for a
-# remote session. Keep `.tool-versions`, `devenv.nix` and this file in
-# agreement.
+# major and minor versions, and `.claude/hooks/session-start.sh` reads
+# `.tool-versions` for a remote session. Keep `.tool-versions`, `devenv.nix`
+# and this file in agreement.
 
 name: check
 
