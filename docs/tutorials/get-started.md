@@ -193,6 +193,9 @@ You made a project that uses five functions of Shoddy, and you tested it.
 - Each how-to guide gives the steps for one task.
   [Chain operations that can fail](../how-to/chain-operations-that-can-fail.md)
   shows more of `Shoddy.Result`.
+- [Build a map from optional data](../how-to/build-a-map-from-optional-data.md)
+  and [Build a keyword list of options](../how-to/build-a-keyword-list-of-options.md)
+  show more of `Shoddy.Maps` and `Shoddy.Keywords`.
 - [The conventions of the functions](../reference/conventions.md) gives the
   rules that apply to each function.
 - [The design of Shoddy](../explanation/design.md) tells why the functions
