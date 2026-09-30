@@ -30,3 +30,5 @@ The first release also contains these changes:
 - Add `Shoddy.Keywords` with `put_if/3` and `put_present/3`. They put a
   value into a keyword list with `Keyword.put/3`, which deletes each entry
   for the key.
+- Add `Shoddy.Result.recover/2`. It calls a function with an error as it is,
+  and the function returns a new result.

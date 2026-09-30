@@ -230,6 +230,43 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "recover/2" do
+    test "calls the function with an error tuple as it is" do
+      assert recover({:error, :miss}, fn error -> {:ok, error} end) == {:ok, {:error, :miss}}
+    end
+
+    test "calls the function with a bare :error as it is" do
+      assert recover(:error, fn error -> {:ok, error} end) == {:ok, :error}
+    end
+
+    test "keeps the shape of an error that the function returns with no change" do
+      pass_through = fn
+        {:error, :miss} -> {:ok, :default}
+        error -> error
+      end
+
+      assert recover(:error, pass_through) == :error
+      assert recover({:error, :other}, pass_through) == {:error, :other}
+    end
+
+    test "returns the result of the function with no change" do
+      assert recover({:error, :miss}, fn _error -> {:error, :other} end) == {:error, :other}
+      assert recover({:error, :miss}, fn _error -> :ok end) == :ok
+    end
+
+    test "returns an ok result with no change and does not call the function" do
+      on_error = fn _error -> send(self(), :called) end
+
+      assert recover({:ok, 1}, on_error) == {:ok, 1}
+      assert recover(:ok, on_error) == :ok
+      refute_received :called
+    end
+
+    test "raises FunctionClauseError for a function that is not of arity 1" do
+      assert_raise FunctionClauseError, fn -> apply(&recover/2, [{:error, :miss}, fn -> {:ok, 1} end]) end
+    end
+  end
+
   describe "unwrap!/1" do
     test "extracts the value from an ok tuple" do
       assert unwrap!({:ok, 42}) == 42
@@ -588,6 +625,10 @@ defmodule Shoddy.ResultTest do
 
     test "tap_error/2 raises FunctionClauseError" do
       assert_raise FunctionClauseError, fn -> apply(&tap_error/2, [42, &Function.identity/1]) end
+    end
+
+    test "recover/2 raises FunctionClauseError" do
+      assert_raise FunctionClauseError, fn -> apply(&recover/2, [42, &{:ok, &1}]) end
     end
   end
 end

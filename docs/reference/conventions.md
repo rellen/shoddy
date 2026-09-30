@@ -65,6 +65,7 @@ These functions do not use this rule:
 | `Shoddy.then_if/3` | The function to apply. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
+| `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -82,6 +83,10 @@ These functions do not use this rule:
 
 For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
 return `nil`, and `Shoddy.Result.collect/2` puts `nil` into its list.
+
+`Shoddy.Result.recover/2` and the function of the option `:on_error` of
+`Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
+bare `:error`.
 
 ## Equality
 

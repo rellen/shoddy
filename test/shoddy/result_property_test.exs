@@ -253,6 +253,17 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
+  describe "recover/2" do
+    property "returns an ok result with no change, and the result of the function for an error as it is" do
+      check all(value <- result()) do
+        fun = fn error -> {:ok, {:recovered, error}} end
+        expected = if Result.error?(value), do: {:ok, {:recovered, value}}, else: value
+
+        assert Result.recover(value, fun) == expected
+      end
+    end
+  end
+
   describe "unwrap!/1" do
     property "raises ArgumentError for every error result" do
       check all(value <- error_result()) do
@@ -308,7 +319,8 @@ defmodule Shoddy.ResultPropertyTest do
           unwrap: [:default],
           ignore: [],
           tap_ok: [&Function.identity/1],
-          tap_error: [&Function.identity/1]
+          tap_error: [&Function.identity/1],
+          recover: [&Function.identity/1]
         ] do
       property "#{name}/#{length(args) + 1} raises FunctionClauseError for any term that is not a result" do
         args = unquote(Macro.escape(args))
