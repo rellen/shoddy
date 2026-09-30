@@ -32,3 +32,5 @@ The first release also contains these changes:
   for the key.
 - Add `Shoddy.Result.recover/2`. It calls a function with an error as it is,
   and the function returns a new result.
+- Add `Shoddy.Result.ensure/3`. It returns an ok tuple if a predicate
+  returns a truthy value, and an error tuple with a given reason otherwise.

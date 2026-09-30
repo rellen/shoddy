@@ -18,18 +18,19 @@ defmodule Shoddy.Result do
   `nil`.
 
   Most of the functions raise `FunctionClauseError` if the input is not a
-  result. A plain integer or an unrelated atom causes this error. Three
+  result. A plain integer or an unrelated atom causes this error. These
   functions do not raise this error:
 
   - `ok?/1` and `error?/1` always return a boolean. For an input that is not
     a result, they return `false`.
   - `flatten/1` returns an input that is not a result with no change.
-  - `from_nil/2` is a constructor and accepts all values.
+  - `from_nil/2` and `ensure/3` are constructors and accept all values.
 
   ## Constructors
 
-  To construct result tuples, refer to `Shoddy.Tagging.ok/1` and
-  `Shoddy.Tagging.error/1`.
+  `from_nil/2` and `ensure/3` construct a result from a value and a check.
+  To put a value into a result tuple with no check, use `Shoddy.Tagging.ok/1`
+  and `Shoddy.Tagging.error/1`.
   """
 
   @typedoc "A result is an ok tuple, an error tuple, a bare `:ok`, or a bare `:error`."
@@ -440,6 +441,48 @@ defmodule Shoddy.Result do
   @spec from_nil(a | nil, e) :: {:ok, a} | {:error, e} when a: any(), e: any()
   def from_nil(nil, error), do: {:error, error}
   def from_nil(value, _error), do: {:ok, value}
+
+  @doc """
+  Converts a value into a result tuple with a check.
+
+  If the predicate returns a truthy value, this function returns
+  `{:ok, value}`. If the predicate returns a falsy value, this function
+  returns `{:error, reason}`. A truthy value is a value that is not `nil` and
+  not `false`.
+
+  A predicate of arity 1 receives the value. A predicate of arity 0 ignores
+  the value, as in `Shoddy.then_if/3`.
+
+  Use this function for a check in a pipeline, with `then_ok/2`.
+
+  ## Examples
+
+      iex> Shoddy.Result.ensure(36, &(&1 >= 18), :too_young)
+      {:ok, 36}
+
+      iex> Shoddy.Result.ensure(12, &(&1 >= 18), :too_young)
+      {:error, :too_young}
+
+  A predicate of arity 0 uses a condition that is external to the value:
+
+      iex> Shoddy.Result.ensure(:delete, fn -> false end, :forbidden)
+      {:error, :forbidden}
+
+  Use the function with `then_ok/2`:
+
+      iex> {:ok, "12"}
+      ...> |> Shoddy.Result.map_ok(&String.to_integer/1)
+      ...> |> Shoddy.Result.then_ok(&Shoddy.Result.ensure(&1, fn age -> age >= 18 end, :too_young))
+      {:error, :too_young}
+  """
+  @spec ensure(a, (a -> as_boolean(any())) | (-> as_boolean(any())), e) :: {:ok, a} | {:error, e}
+        when a: any(), e: any()
+  def ensure(value, predicate, reason) when is_function(predicate, 0),
+    do: ensure(value, fn _value -> predicate.() end, reason)
+
+  def ensure(value, predicate, reason) when is_function(predicate, 1) do
+    if predicate.(value), do: {:ok, value}, else: {:error, reason}
+  end
 
   @doc """
   Converts `{:ok, value}` to the bare atom `:ok` and discards the value.

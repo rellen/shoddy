@@ -168,6 +168,15 @@ defmodule Shoddy.ResultPropertyTest do
       end
     end
 
+    property "ensure/3 returns an ok tuple for a truthy predicate result, and an error tuple otherwise" do
+      check all(value <- simple(), outcome <- one_of([constant(nil), simple()]), reason <- simple()) do
+        expected = if outcome, do: {:ok, value}, else: {:error, reason}
+
+        assert Result.ensure(value, fn _ -> outcome end, reason) == expected
+        assert Result.ensure(value, fn -> outcome end, reason) == expected
+      end
+    end
+
     property "flatten/1 returns a value that is not a result with no change" do
       check all(value <- not_a_result()) do
         assert Result.flatten(value) == value
