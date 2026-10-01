@@ -68,6 +68,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/toggle-elements-in-a-selection.md",
         "docs/how-to/find-duplicates-in-a-list.md",
         "docs/how-to/index-a-list-by-a-key.md",
+        "docs/how-to/paginate-a-list.md",
         "docs/how-to/sort-and-group-records-for-display.md",
         "docs/how-to/update-a-list-of-records.md",
         "docs/how-to/get-the-only-element-of-a-list.md",
@@ -87,7 +88,7 @@ defmodule Shoddy.MixProject do
         Development: ["docs/development.md"]
       ],
       groups_for_modules: [
-        Values: [Shoddy, Shoddy.Strings, Shoddy.Parse],
+        Values: [Shoddy, Shoddy.Strings, Shoddy.Parse, Shoddy.Numbers],
         Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets, Shoddy.Lists],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
         Configuration: [Shoddy.Env],
