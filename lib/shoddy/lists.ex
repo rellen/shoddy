@@ -324,14 +324,8 @@ defmodule Shoddy.Lists do
   defp key_spec!(fun) when is_function(fun, 1), do: {:asc, fun, nil}
   defp key_spec!({direction, fun}) when direction in [:asc, :desc] and is_function(fun, 1), do: {direction, fun, nil}
 
-  defp key_spec!({direction, fun, module} = spec)
-       when direction in [:asc, :desc] and is_function(fun, 1) and is_atom(module) do
-    if Code.ensure_loaded?(module) and function_exported?(module, :compare, 2) do
-      spec
-    else
-      raise ArgumentError, "the module #{inspect(module)} does not export compare/2"
-    end
-  end
+  defp key_spec!({direction, fun, module}) when direction in [:asc, :desc] and is_function(fun, 1) and is_atom(module),
+    do: {direction, fun, compare_module!(module)}
 
   defp key_spec!(other) do
     raise ArgumentError,
@@ -354,6 +348,230 @@ defmodule Shoddy.Lists do
   defp compare(left, right, nil) when left > right, do: :gt
   defp compare(_left, _right, nil), do: :eq
   defp compare(left, right, module), do: module.compare(left, right)
+
+  defp compare_module!(module) do
+    if Code.ensure_loaded?(module) and function_exported?(module, :compare, 2) do
+      module
+    else
+      raise ArgumentError, "the module #{inspect(module)} does not export compare/2"
+    end
+  end
+
+  @doc """
+  Removes an element from a list if the list contains it, and adds it
+  otherwise.
+
+  If the list contains `element`, this function removes each occurrence. If
+  not, it adds `element` at the end. The other elements keep their order.
+
+  `Shoddy.MapSets.toggle/2` does the same for a map set, which has no order.
+  Use this function for a selection whose order is important, such as the
+  columns of a table in the order that the user selected them.
+
+  This function compares with the strict equality operator `===/2`.
+
+  ## Examples
+
+      iex> Shoddy.Lists.toggle([:name, :email], :email)
+      [:name]
+
+      iex> Shoddy.Lists.toggle([:name, :email], :age)
+      [:name, :email, :age]
+  """
+  @spec toggle([element], element) :: [element] when element: var
+  def toggle(list, element) when is_list(list) do
+    if Enum.any?(list, &(&1 === element)),
+      do: Enum.reject(list, &(&1 === element)),
+      else: list ++ [element]
+  end
+
+  @doc """
+  Moves the element at index `from` to index `to`.
+
+  The other elements keep their order. The indexes start at 0, and they
+  must be in the list. For an index that is not in the list, this function
+  raises `ArgumentError`. Use this function for an order that a user changes,
+  for example with drag and drop.
+
+  ## Examples
+
+      iex> Shoddy.Lists.move([:a, :b, :c, :d], 0, 2)
+      [:b, :c, :a, :d]
+
+      iex> Shoddy.Lists.move([:a, :b, :c, :d], 3, 0)
+      [:d, :a, :b, :c]
+
+      iex> Shoddy.Lists.move([:a, :b], 0, 5)
+      ** (ArgumentError) the index 5 is not in a list of 2 elements
+  """
+  @spec move([element], non_neg_integer(), non_neg_integer()) :: [element] when element: var
+  def move(list, from, to) when is_list(list) and is_integer(from) and from >= 0 and is_integer(to) and to >= 0 do
+    count = length(list)
+
+    case Enum.find([from, to], &(&1 >= count)) do
+      nil ->
+        {element, rest} = List.pop_at(list, from)
+        List.insert_at(rest, to, element)
+
+      index ->
+        raise ArgumentError, "the index #{index} is not in a list of #{count} elements"
+    end
+  end
+
+  @doc """
+  Returns `true` if a list is in order.
+
+  The sorter has the same forms as for `Enum.sort/2`:
+
+    * `:asc` or `:desc` - The function compares with `<=` or `>=`.
+    * `{:asc, module}` or `{:desc, module}` - The function compares with
+      `module.compare/2`, for example for `Date` or `DateTime`.
+    * A function of arity 2 - It returns `true` if its first argument can
+      come before its second argument.
+
+  This function reads each pair of neighbours one time, and it stops at the
+  first pair in the wrong order. `Enum.sort(list) == list` gives the same
+  answer for `:asc`, but it sorts the full list first.
+
+  This function raises `ArgumentError` for a sorter in another form, and for
+  a module that does not export `compare/2`.
+
+  ## Examples
+
+      iex> Shoddy.Lists.sorted?([1, 2, 2, 3])
+      true
+
+      iex> Shoddy.Lists.sorted?([3, 1, 2])
+      false
+
+      iex> Shoddy.Lists.sorted?([~D[2024-01-31], ~D[2024-02-01]], {:asc, Date})
+      true
+
+      iex> Shoddy.Lists.sorted?([], :desc)
+      true
+  """
+  @spec sorted?(list(), :asc | :desc | {:asc | :desc, module()} | (any(), any() -> boolean())) :: boolean()
+  def sorted?(list, sorter \\ :asc) when is_list(list), do: pairs_in_order?(list, in_order_fun!(sorter))
+
+  defp in_order_fun!(:asc), do: &<=/2
+  defp in_order_fun!(:desc), do: &>=/2
+
+  defp in_order_fun!({:asc, module}) when is_atom(module) do
+    module = compare_module!(module)
+    &(module.compare(&1, &2) != :gt)
+  end
+
+  defp in_order_fun!({:desc, module}) when is_atom(module) do
+    module = compare_module!(module)
+    &(module.compare(&1, &2) != :lt)
+  end
+
+  defp in_order_fun!(fun) when is_function(fun, 2), do: fun
+
+  defp in_order_fun!(other) do
+    raise ArgumentError,
+          "invalid sorter: expected :asc, :desc, {:asc, module}, {:desc, module} or a function of arity 2, " <>
+            "got: #{inspect(other)}"
+  end
+
+  defp pairs_in_order?([first, second | rest], in_order),
+    do: in_order.(first, second) and pairs_in_order?([second | rest], in_order)
+
+  defp pairs_in_order?(_short, _in_order), do: true
+
+  @doc """
+  Returns the element after `current`, and the first element after the last.
+
+  Use this function to step through a fixed list again and again, such as
+  the tabs of a page or a list of servers. The function finds the first
+  occurrence of `current` with the strict equality operator `===/2`.
+
+  The list must not be empty, and it must contain `current`. For an element
+  that is not in the list, this function raises `ArgumentError`. Such a
+  value is a defect, because the caller selected it from the list.
+
+  ## Examples
+
+      iex> Shoddy.Lists.cycle_next([:inbox, :sent, :drafts], :sent)
+      :drafts
+
+      iex> Shoddy.Lists.cycle_next([:inbox, :sent, :drafts], :drafts)
+      :inbox
+
+      iex> Shoddy.Lists.cycle_next([:inbox], :inbox)
+      :inbox
+  """
+  @spec cycle_next([element, ...], element) :: element when element: var
+  def cycle_next([_ | _] = list, current) do
+    case Enum.find_index(list, &(&1 === current)) do
+      nil -> raise ArgumentError, "the element #{inspect(current)} is not in the list"
+      index -> Enum.at(list, rem(index + 1, length(list)))
+    end
+  end
+
+  @doc """
+  Returns `true` if each element of a list has the same key.
+
+  `key_fun` returns the key of an element. The function compares two keys
+  with the strict equality operator `===/2`. It returns `true` for an empty
+  list and for a list of one element, because no two keys are different.
+
+  Use this function to check a rule for a group of records. An example is
+  the items of an order, which must all have the same currency.
+
+  ## Examples
+
+      iex> Shoddy.Lists.all_same_by?([%{currency: :eur}, %{currency: :eur}], & &1.currency)
+      true
+
+      iex> Shoddy.Lists.all_same_by?([%{currency: :eur}, %{currency: :usd}], & &1.currency)
+      false
+
+      iex> Shoddy.Lists.all_same_by?([], & &1.currency)
+      true
+  """
+  @spec all_same_by?([element], (element -> any())) :: boolean() when element: var
+  def all_same_by?(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
+    case list do
+      [] ->
+        true
+
+      [first | rest] ->
+        key = key_fun.(first)
+        Enum.all?(rest, &(key_fun.(&1) === key))
+    end
+  end
+
+  @doc """
+  Puts each element of `left` with the element of `right` that has the same
+  key.
+
+  `left_key` returns the key of an element of `left`, and `right_key`
+  returns the key of an element of `right`. The result is a list of tuples
+  `{left_element, right_element}`, in the order of `left`. If no element of
+  `right` has the key, the second element of the tuple is `nil`. An element
+  of `right` with no partner is not in the result.
+
+  The keys of `right` must be unique. This function makes a map of `right`
+  with `index_by/2`, so it raises `ArgumentError` for a key that is not
+  unique. Each key of `left` can occur more than one time.
+
+  This function compares two keys with the strict equality operator `===/2`.
+
+  ## Examples
+
+      iex> orders = [%{id: 10, user_id: 2}, %{id: 11, user_id: 3}]
+      iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+      iex> Shoddy.Lists.join_by(orders, users, & &1.user_id, & &1.id)
+      [{%{id: 10, user_id: 2}, %{id: 2, name: "Grace"}}, {%{id: 11, user_id: 3}, nil}]
+  """
+  @spec join_by([left], [right], (left -> key), (right -> key)) :: [{left, right | nil}]
+        when left: var, right: var, key: var
+  def join_by(left, right, left_key, right_key)
+      when is_list(left) and is_list(right) and is_function(left_key, 1) and is_function(right_key, 1) do
+    index = index_by(right, right_key)
+    Enum.map(left, &{&1, Map.get(index, left_key.(&1))})
+  end
 
   @doc """
   Returns `true` if an element occurs more than one time in a list.

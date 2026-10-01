@@ -200,6 +200,118 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "toggle/2" do
+    test "removes each occurrence, and keeps the order of the others" do
+      assert toggle([:a, :b, :a, :c], :a) == [:b, :c]
+    end
+
+    test "adds an absent element at the end" do
+      assert toggle([], :a) == [:a]
+      assert toggle([1], 1.0) == [1, 1.0]
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&toggle/2, [MapSet.new([1]), 1]) end
+    end
+  end
+
+  describe "move/3" do
+    test "moves an element forward, backward and to the same place" do
+      assert move([:a, :b, :c], 0, 2) == [:b, :c, :a]
+      assert move([:a, :b, :c], 2, 0) == [:c, :a, :b]
+      assert move([:a, :b, :c], 1, 1) == [:a, :b, :c]
+    end
+
+    test "raises ArgumentError for an index that is not in the list" do
+      assert_raise ArgumentError, "the index 3 is not in a list of 3 elements", fn -> move([:a, :b, :c], 3, 0) end
+      assert_raise ArgumentError, "the index 0 is not in a list of 0 elements", fn -> move([], 0, 0) end
+    end
+
+    test "raises FunctionClauseError from move/3 itself for a negative index or a value that is not a list" do
+      for args <- [[[:a], -1, 0], [[:a], 0, -1], [%{}, 0, 0], [[:a], 0.0, 0]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&move/3, args) end
+        assert {error.module, error.function} == {Shoddy.Lists, :move}
+      end
+    end
+  end
+
+  describe "sorted?/2" do
+    test "accepts equal neighbours in each direction" do
+      assert sorted?([1, 1, 2])
+      assert sorted?([2, 1, 1], :desc)
+      refute sorted?([1, 2], :desc)
+    end
+
+    test "uses compare/2 of a module" do
+      refute sorted?([~D[2024-02-01], ~D[2024-01-31]], {:asc, Date})
+      assert sorted?([~D[2024-02-01], ~D[2024-01-31]], {:desc, Date})
+    end
+
+    test "accepts a function of arity 2" do
+      assert sorted?(["bb", "a", "ccc"], &(byte_size(&1) <= byte_size(&2))) == false
+      assert sorted?(["a", "bb", "ccc"], &(byte_size(&1) <= byte_size(&2)))
+    end
+
+    test "stops at the first pair in the wrong order" do
+      refute sorted?([2, 1, :never_compared], fn a, b -> if is_atom(b), do: raise("read"), else: a <= b end)
+    end
+
+    test "raises ArgumentError for a sorter in another form or a module without compare/2" do
+      assert_raise ArgumentError, ~r/invalid sorter/, fn -> sorted?([1], :up) end
+      assert_raise ArgumentError, ~r/invalid sorter/, fn -> sorted?([1], {:up, Date}) end
+      assert_raise ArgumentError, ~r/does not export compare\/2/, fn -> sorted?([1], {:asc, Enum}) end
+    end
+  end
+
+  describe "cycle_next/2" do
+    test "uses the first occurrence of the current element" do
+      assert cycle_next([:a, :b, :a, :c], :a) == :b
+    end
+
+    test "compares with the strict equality operator" do
+      assert_raise ArgumentError, "the element 1.0 is not in the list", fn -> cycle_next([1, 2], 1.0) end
+    end
+
+    test "raises FunctionClauseError for an empty list" do
+      assert_raise FunctionClauseError, fn -> apply(&cycle_next/2, [[], :a]) end
+    end
+  end
+
+  describe "all_same_by?/2" do
+    test "returns true for one element" do
+      assert all_same_by?([:a], & &1)
+    end
+
+    test "compares the keys with the strict equality operator" do
+      refute all_same_by?([1, 1.0], & &1)
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&all_same_by?/2, [%{a: 1}, & &1]) end
+    end
+  end
+
+  describe "join_by/4" do
+    test "keeps the order of the left list and a left key that occurs more than one time" do
+      assert join_by([2, 1, 2], [1, 2], & &1, & &1) == [{2, 2}, {1, 1}, {2, 2}]
+    end
+
+    test "returns nil for no partner, and ignores an element of the right list with no partner" do
+      assert join_by([1], [2, 3], & &1, & &1) == [{1, nil}]
+      assert join_by([], [1], & &1, & &1) == []
+    end
+
+    test "raises ArgumentError for a key of the right list that is not unique" do
+      assert_raise ArgumentError, "more than one element has the same key: [1]", fn ->
+        join_by([1], [1, 1], & &1, & &1)
+      end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&join_by/4, [%{}, [], & &1, & &1]) end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])

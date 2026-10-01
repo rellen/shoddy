@@ -11,7 +11,7 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
-| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` |
@@ -89,6 +89,9 @@ These functions do not use this rule:
 | `Shoddy.Lists.group_by_in_order/2` | The function that returns the key of an element. | 1 |
 | `Shoddy.Lists.upsert_by/4` | The function that returns the key of an element. | 1 |
 | `Shoddy.Lists.sort_by_keys/2` | Each function in the list of keys. It returns the value to compare. | 1 |
+| `Shoddy.Lists.sorted?/2` | A sorter function. It returns `true` if its first argument can come before its second argument. | 2 |
+| `Shoddy.Lists.all_same_by?/2` | The function that returns the key of an element. | 1 |
+| `Shoddy.Lists.join_by/4` | The two functions that return the key of an element of each list. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
@@ -137,6 +140,8 @@ These functions compare two values with the strict equality operator
 - `Shoddy.Lists.index_by/2`, for the keys of the elements.
 - `Shoddy.Lists.group_by_in_order/2` and `Shoddy.Lists.upsert_by/4`, for the
   keys of the elements.
+- `Shoddy.Lists.toggle/2` and `Shoddy.Lists.cycle_next/2`, for the elements.
+- `Shoddy.Lists.all_same_by?/2` and `Shoddy.Lists.join_by/4`, for the keys.
 - `Shoddy.Maps.map_keys/2`, for the new keys.
 - `Shoddy.Maps.fetch_keys/2`, for the keys to take.
 - `Shoddy.Maps.diff/2`, for the values.
@@ -153,6 +158,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |
 | `FunctionClauseError` | An empty path for `Shoddy.Maps.put_path/3`. |
 | `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2`. |
+| `FunctionClauseError` | An empty list for `Shoddy.Lists.cycle_next/2`, or a negative index for `Shoddy.Lists.move/3`. |
 | `FunctionClauseError` | A value that is not `nil` or a string, for `Shoddy.Strings.blank?/1`. |
 | `FunctionClauseError` | An empty separator for `Shoddy.Strings.split_trim/2`. |
 | `FunctionClauseError` | A struct, or a value that is not a result, for `Shoddy.Result.collect_map/1`. |
@@ -185,6 +191,10 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |
 | `ArgumentError` | A key in a wrong form, or a module that does not export `compare/2`, for `Shoddy.Lists.sort_by_keys/2`. |
+| `ArgumentError` | A sorter in a wrong form, or a module that does not export `compare/2`, for `Shoddy.Lists.sorted?/2`. |
+| `ArgumentError` | An index that is not in the list, for `Shoddy.Lists.move/3`. |
+| `ArgumentError` | An element that is not in the list, for `Shoddy.Lists.cycle_next/2`. |
+| `ArgumentError` | More than one element of the second list with the same key, for `Shoddy.Lists.join_by/4`. |
 | `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
 | `ArgumentError` | A value of the variable that is not correct, or an unknown option, for `Shoddy.Env.integer/2` and `Shoddy.Env.boolean/2`. |
 | `System.EnvError` | An absent or empty variable without the option `:default`, for `Shoddy.Env.integer/2` and `Shoddy.Env.boolean/2`. |

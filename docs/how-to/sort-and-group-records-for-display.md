@@ -73,3 +73,17 @@ messages
 
 `Enum.group_by/2` returns a map. A map has no order that you can use, so
 the headings could change their order.
+
+## Check that a list is in order
+
+Use `Shoddy.Lists.sorted?/2`, for example for data that must arrive in order.
+It takes the same sorters as `Enum.sort/2`, and it stops at the first pair
+in the wrong order:
+
+```elixir
+Lists.sorted?([~D[2024-01-31], ~D[2024-02-01]], {:asc, Date})
+#=> true
+
+Lists.sorted?([3, 1, 2])
+#=> false
+```

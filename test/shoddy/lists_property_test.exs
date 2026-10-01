@@ -87,6 +87,77 @@ defmodule Shoddy.ListsPropertyTest do
     end
   end
 
+  describe "toggle/2" do
+    property "removes each occurrence of a member, and adds a non-member at the end" do
+      check all(list <- list_of(element(), max_length: 10), x <- element()) do
+        expected = if x in list, do: Enum.reject(list, &(&1 === x)), else: list ++ [x]
+
+        assert Lists.toggle(list, x) == expected
+      end
+    end
+  end
+
+  describe "move/3" do
+    property "keeps the elements, and puts the moved element at the new index" do
+      check all(
+              list <- list_of(element(), min_length: 1, max_length: 10),
+              from <- integer(0..9),
+              to <- integer(0..9)
+            ) do
+        count = length(list)
+
+        if from < count and to < count do
+          result = Lists.move(list, from, to)
+
+          assert Enum.at(result, to) === Enum.at(list, from)
+          assert List.delete_at(result, to) == List.delete_at(list, from)
+        else
+          assert_raise ArgumentError, fn -> Lists.move(list, from, to) end
+        end
+      end
+    end
+  end
+
+  describe "sorted?/2" do
+    property "returns the same answer as a comparison with Enum.sort/2" do
+      check all(list <- list_of(integer(0..5), max_length: 10), sorter <- member_of([:asc, :desc])) do
+        assert Lists.sorted?(list, sorter) == (Enum.sort(list, sorter) == list)
+      end
+    end
+  end
+
+  describe "cycle_next/2" do
+    property "steps through the list in order, and returns to the first element" do
+      check all(list <- uniq_list_of(integer(), min_length: 1, max_length: 8)) do
+        cycle = hd(list) |> Stream.iterate(&Lists.cycle_next(list, &1)) |> Enum.take(length(list) + 1)
+
+        assert Enum.drop(cycle, -1) == list
+        assert List.last(cycle) == hd(list)
+      end
+    end
+  end
+
+  describe "all_same_by?/2" do
+    property "returns true only if the keys have at most one value" do
+      check all(list <- list_of(tuple({element(), integer()}), max_length: 10)) do
+        keys = list |> MapSet.new(&elem(&1, 0))
+
+        assert Lists.all_same_by?(list, &elem(&1, 0)) == MapSet.size(keys) <= 1
+      end
+    end
+  end
+
+  describe "join_by/4" do
+    property "puts each left element with the right element of its key, or nil" do
+      check all(
+              left <- list_of(integer(0..5), max_length: 10),
+              right <- map(list_of(integer(0..7), max_length: 8), &Enum.uniq/1)
+            ) do
+        assert Lists.join_by(left, right, & &1, & &1) == Enum.map(left, &{&1, if(&1 in right, do: &1)})
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     property "returns true only if an element occurs more than one time" do
       check all(

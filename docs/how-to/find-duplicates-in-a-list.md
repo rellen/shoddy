@@ -112,6 +112,20 @@ end
 #=> {:error, {:duplicate_emails, ["ada@example.com"]}}
 ```
 
+## Check that each record has the same value in a field
+
+Use `Shoddy.Lists.all_same_by?/2`, for example for the items of an order,
+which must have one currency:
+
+```elixir
+items = [%{price: 5, currency: :eur}, %{price: 7, currency: :usd}]
+
+Lists.all_same_by?(items, & &1.currency)
+#=> false
+```
+
+The function returns `true` for an empty list.
+
 ## Find time values that are equal but have a different precision
 
 The functions compare elements and keys with the strict equality operator
