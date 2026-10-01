@@ -840,4 +840,22 @@ defmodule Shoddy.ResultTest do
       end
     end
   end
+
+  describe "unwrap_lazy/2" do
+    test "does not call the function for an ok result" do
+      assert unwrap_lazy(:ok, fn -> send(self(), :called) end) == nil
+      refute_received :called
+    end
+
+    test "calls the function one time for an error result" do
+      assert unwrap_lazy({:error, :x}, fn -> send(self(), :called) end) == :called
+      assert_received :called
+      refute_received :called
+    end
+
+    test "raises FunctionClauseError for a value that is not a result or a function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&unwrap_lazy/2, [42, fn -> 0 end]) end
+      assert_raise FunctionClauseError, fn -> apply(&unwrap_lazy/2, [:error, fn _reason -> 0 end]) end
+    end
+  end
 end

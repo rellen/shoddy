@@ -375,6 +375,33 @@ defmodule Shoddy.Result do
   def unwrap({:error, _}, default), do: default
   def unwrap(:error, default), do: default
 
+  @doc """
+  Returns the value of an ok result, or calls a function for an error.
+
+  `unwrap/2` evaluates its default before the call, also for an ok result.
+  This function calls `fun` only for an error result. Use it if the default
+  is expensive, such as a query of a database.
+
+  `fun` has arity 0, as for `Map.get_lazy/3`. To use the reason of the error,
+  call `recover/2` first. For a bare `:ok`, this function returns `nil`.
+
+  ## Examples
+
+      iex> Shoddy.Result.unwrap_lazy({:ok, 42}, fn -> raise "not called" end)
+      42
+
+      iex> Shoddy.Result.unwrap_lazy({:error, :not_found}, fn -> 0 end)
+      0
+
+      iex> Shoddy.Result.unwrap_lazy(:error, fn -> :default end)
+      :default
+  """
+  @spec unwrap_lazy(t(), (-> default)) :: any() | default when default: any()
+  def unwrap_lazy({:ok, value}, fun) when is_function(fun, 0), do: value
+  def unwrap_lazy(:ok, fun) when is_function(fun, 0), do: nil
+  def unwrap_lazy({:error, _reason}, fun) when is_function(fun, 0), do: fun.()
+  def unwrap_lazy(:error, fun) when is_function(fun, 0), do: fun.()
+
   # Conversion helpers
 
   @doc """

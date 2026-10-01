@@ -341,4 +341,59 @@ defmodule Shoddy.DateTimesTest do
       end
     end
   end
+
+  describe "stream/3" do
+    test "steps by minutes and days, and keeps the precision" do
+      assert stream(~N[2024-01-01 10:00:00.0], ~N[2024-01-01 10:02:00.0], :minute) |> Enum.to_list() ==
+               [~N[2024-01-01 10:00:00.0], ~N[2024-01-01 10:01:00.0]]
+
+      assert stream(~U[2024-02-28 00:00:00Z], ~U[2024-03-01 00:00:00Z], :day) |> Enum.to_list() ==
+               [~U[2024-02-28 00:00:00Z], ~U[2024-02-29 00:00:00Z]]
+    end
+
+    test "stops before a last value that is not at a step" do
+      assert stream(~N[2024-01-01 10:00:00], ~N[2024-01-01 11:30:00], :hour) |> Enum.to_list() ==
+               [~N[2024-01-01 10:00:00], ~N[2024-01-01 11:00:00]]
+    end
+
+    test "returns an empty stream for a period in the wrong order" do
+      assert stream(~N[2024-01-02 00:00:00], ~N[2024-01-01 00:00:00], :day) |> Enum.to_list() == []
+    end
+
+    test "raises FunctionClauseError from stream/3 itself for wrong values" do
+      paris = %{~U[2024-01-01 00:00:00Z] | time_zone: "Europe/Paris", zone_abbr: "CET", utc_offset: 3600}
+
+      for args <- [
+            [~N[2024-01-01 00:00:00], ~U[2024-01-02 00:00:00Z], :day],
+            [paris, ~U[2024-01-02 00:00:00Z], :day],
+            [~D[2024-01-01], ~D[2024-01-02], :day],
+            [~N[2024-01-01 00:00:00], ~N[2024-01-02 00:00:00], :second]
+          ] do
+        error = assert_raise FunctionClauseError, fn -> apply(&stream/3, args) end
+        assert {error.module, error.function} == {Shoddy.DateTimes, :stream}
+      end
+    end
+  end
+
+  describe "round/2" do
+    test "rounds down before the middle, and up at the middle" do
+      assert round(~N[2024-01-01 10:00:29.999999], :minute) == ~N[2024-01-01 10:00:00.000000]
+      assert round(~N[2024-01-01 10:00:30.000000], :minute) == ~N[2024-01-01 10:01:00.000000]
+      assert round(~N[2024-01-01 11:59:59], :day) == ~N[2024-01-01 00:00:00]
+      assert round(~N[2024-01-01 12:00:00], :day) == ~N[2024-01-02 00:00:00]
+    end
+
+    test "returns a value at the start of a unit with no change" do
+      assert round(~U[2024-01-01 10:00:00Z], :hour) == ~U[2024-01-01 10:00:00Z]
+    end
+
+    test "raises FunctionClauseError from round/2 itself for a Time, another time zone or an unknown unit" do
+      paris = %{~U[2024-01-01 00:00:00Z] | time_zone: "Europe/Paris", zone_abbr: "CET", utc_offset: 3600}
+
+      for args <- [[~T[10:00:00], :hour], [paris, :hour], [~N[2024-01-01 00:00:00], :second]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&round/2, args) end
+        assert {error.module, error.function} == {Shoddy.DateTimes, :round}
+      end
+    end
+  end
 end

@@ -372,6 +372,14 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
+  describe "unwrap_lazy/2" do
+    property "returns the same value as unwrap/2 with the result of the function" do
+      check all(result <- result()) do
+        assert Result.unwrap_lazy(result, fn -> :default end) == Result.unwrap(result, :default)
+      end
+    end
+  end
+
   describe "the contract for an input that is not a result" do
     # Each function raises before it calls its function argument. Thus the
     # value of that argument does not change the result of these properties.

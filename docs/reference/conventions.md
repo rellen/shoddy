@@ -18,7 +18,7 @@ of each module gives the full description of each function.
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3`, `Shoddy.Numbers.mean/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
-| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.next_start/2`, `Shoddy.DateTimes.between?/3`, `Shoddy.DateTimes.overlap?/2` |
+| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.next_start/2`, `Shoddy.DateTimes.between?/3`, `Shoddy.DateTimes.overlap?/2`, `Shoddy.DateTimes.stream/3`, `Shoddy.DateTimes.round/2` |
 
 The names `Maps`, `Keywords`, `MapSets`, `Lists`, `Strings` and `DateTimes`
 are in the plural. Thus an alias of one of these modules does not hide the
@@ -98,6 +98,7 @@ These functions do not use this rule:
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 | `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
 | `Shoddy.Result.attempt/2` | The function to call. | 0 |
+| `Shoddy.Result.unwrap_lazy/2` | The function that returns the default for an error. | 0 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -113,10 +114,15 @@ These functions do not use this rule:
 | `{:error, reason}` | An error result with a reason. |
 | `:error` | An error result with no reason. |
 
-For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
-return `nil`, `Shoddy.Result.collect/2` puts `nil` into its list, and
-`Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator. `Shoddy.Result.collect_map/1` gives `nil`
-for a bare `:ok`, and the reason `nil` for a bare `:error`.
+A bare `:ok` has the value `nil`, and a bare `:error` has the reason `nil`:
+
+- `Shoddy.Result.unwrap/2`, `Shoddy.Result.unwrap_lazy/2` and
+  `Shoddy.Result.unwrap!/1` return `nil` for a bare `:ok`.
+- `Shoddy.Result.collect/2` puts `nil` into its list for a bare `:ok`.
+- `Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator for a bare
+  `:ok`.
+- `Shoddy.Result.collect_map/1` gives the value `nil` for a bare `:ok`, and
+  the reason `nil` for a bare `:error`.
 
 `Shoddy.Result.recover/2` and the function of the option `:on_error` of
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
@@ -170,6 +176,8 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time`, for `Shoddy.DateTimes.ceil/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, a `Time` or a `Date`, for `Shoddy.DateTimes.next_start/2`. |
 | `FunctionClauseError` | A period that is not a tuple of two values, or four values that do not have the same type, for `Shoddy.DateTimes.overlap?/2`. |
+| `FunctionClauseError` | Two values that are not both a `NaiveDateTime` or both a `DateTime` in UTC, for `Shoddy.DateTimes.stream/3`. |
+| `FunctionClauseError` | A `DateTime` in a time zone other than UTC, a `Time` or a `Date`, for `Shoddy.DateTimes.round/2`. |
 | `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |

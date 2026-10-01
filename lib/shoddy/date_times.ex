@@ -17,6 +17,8 @@ defmodule Shoddy.DateTimes do
     result is always after the value.
   - `between?/3` tells if a value is in a period. It also accepts a `Date`.
   - `overlap?/2` tells if two periods have a value in common.
+  - `stream/3` makes a stream of values, one unit apart, in a period.
+  - `round/2` rounds a value to the nearest start of a unit.
 
   ## Precision
 
@@ -403,4 +405,84 @@ defmodule Shoddy.DateTimes do
   end
 
   defp before?(module, left, right), do: module.compare(left, right) == :lt
+
+  @doc """
+  Returns a stream of values from `first`, one unit apart, before `last`.
+
+  The unit is `:minute`, `:hour` or `:day`. The stream starts at `first`,
+  and each next value is one unit later. It stops before `last`, as the
+  periods of `between?/3` do. If `last` is not after `first`, the stream is
+  empty.
+
+  Use this function to make each slot of a period, for example each hour of
+  a day. A count of events by hour has no entry for an hour with no event.
+  The stream gives each hour, so you can add a count of 0.
+
+  The two values must be `NaiveDateTime` values, or `DateTime` values in the
+  time zone `Etc/UTC`, as for `floor/2`. `Date.range/2` makes a range of
+  dates.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.stream(~N[2024-01-01 09:00:00], ~N[2024-01-01 12:00:00], :hour) |> Enum.to_list()
+      [~N[2024-01-01 09:00:00], ~N[2024-01-01 10:00:00], ~N[2024-01-01 11:00:00]]
+
+      iex> Shoddy.DateTimes.stream(~U[2024-01-01 00:00:00Z], ~U[2024-01-01 00:00:00Z], :day) |> Enum.to_list()
+      []
+
+  This example adds a count of 0 for each hour with no event:
+
+      iex> counts = %{~N[2024-01-01 10:00:00] => 4}
+      iex> ~N[2024-01-01 09:00:00]
+      ...> |> Shoddy.DateTimes.stream(~N[2024-01-01 12:00:00], :hour)
+      ...> |> Enum.map(&{&1.hour, Map.get(counts, &1, 0)})
+      [{9, 0}, {10, 4}, {11, 0}]
+  """
+  @spec stream(value, value, unit()) :: Enumerable.t(value) when value: DateTime.t() | NaiveDateTime.t()
+  def stream(%DateTime{time_zone: "Etc/UTC"} = first, %DateTime{time_zone: "Etc/UTC"} = last, unit) when unit in @units,
+    do: stream_with(first, last, unit, DateTime)
+
+  def stream(%NaiveDateTime{} = first, %NaiveDateTime{} = last, unit) when unit in @units,
+    do: stream_with(first, last, unit, NaiveDateTime)
+
+  defp stream_with(first, last, unit, module) do
+    first
+    |> Stream.iterate(&module.add(&1, 1, unit))
+    |> Stream.take_while(&before?(module, &1, last))
+  end
+
+  @doc """
+  Rounds a time value to the nearest start of a unit.
+
+  The unit is `:minute`, `:hour` or `:day`. A value at the middle of a unit
+  rounds up. Thus 12:30:00 rounds to 13:00:00 for `:hour`, and 12:29:59
+  rounds to 12:00:00. The precision of the fractional second stays the same.
+
+  This function accepts a `NaiveDateTime` and a `DateTime` in the time zone
+  `Etc/UTC`, as `ceil/2` does. A `Time` can round up to the next day, so the
+  function does not accept it.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.round(~U[2024-01-01 12:29:59Z], :hour)
+      ~U[2024-01-01 12:00:00Z]
+
+      iex> Shoddy.DateTimes.round(~U[2024-01-01 12:30:00Z], :hour)
+      ~U[2024-01-01 13:00:00Z]
+
+      iex> Shoddy.DateTimes.round(~N[2024-12-31 18:00:00], :day)
+      ~N[2025-01-01 00:00:00]
+  """
+  @spec round(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
+  def round(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: round_with(value, unit, DateTime)
+  def round(%NaiveDateTime{} = value, unit) when unit in @units, do: round_with(value, unit, NaiveDateTime)
+
+  defp round_with(value, unit, module) do
+    start = floor(value, unit)
+    next = next_start(value, unit)
+
+    if module.diff(value, start, :microsecond) * 2 >= module.diff(next, start, :microsecond),
+      do: next,
+      else: start
+  end
 end

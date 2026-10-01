@@ -171,6 +171,14 @@ Shoddy.Result.unwrap({:error, {"old", :invalid_age}}, 0)
 If an error is a defect in the program, use `Shoddy.Result.unwrap!/1`. It
 raises `ArgumentError` for an error.
 
+If the default is expensive, use `Shoddy.Result.unwrap_lazy/2`. It calls the
+function only for an error:
+
+```elixir
+Shoddy.Result.unwrap_lazy({:ok, 37}, fn -> expensive_default() end)
+#=> 37
+```
+
 ## Select a result in a function head
 
 Require the module, and use the guards `Shoddy.Result.is_ok/1` and

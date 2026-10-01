@@ -69,6 +69,18 @@ value, so the start and the end would be equal.
 Use the start and the end as a range that includes the start and excludes
 the end. Each value of that day is in the range.
 
+## Round to the nearest unit
+
+Use `Shoddy.DateTimes.round/2`. A value at the middle of a unit rounds up:
+
+```elixir
+DateTimes.round(~U[2024-01-01 12:29:59Z], :hour)
+#=> ~U[2024-01-01 12:00:00Z]
+
+DateTimes.round(~U[2024-01-01 12:30:00Z], :hour)
+#=> ~U[2024-01-01 13:00:00Z]
+```
+
 ## Round a value in a local time zone
 
 `Shoddy.DateTimes.ceil/2` accepts a `DateTime` only in UTC, as
