@@ -439,9 +439,9 @@ The two tools then agree: `presence/1` returns `nil` for a binary only if
 
 `Integer.parse/1` returns the start of the text as an integer, and it also
 returns the remaining text. The caller must check that the remaining text is
-empty. Code often omits this check, and then `"25 items"` becomes `25`. The
-functions of `Shoddy.Parse` do the check, so an incorrect value never
-becomes a correct one.
+empty. Code often omits this check, and then `"25 items"` becomes `25`.
+`Shoddy.Parse.integer/2` does the check, so an incorrect value never becomes
+a correct one.
 
 The functions do not trim the text. A trim is a decision about the input,
 and different inputs need different rules. The caller makes this decision

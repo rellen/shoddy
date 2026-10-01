@@ -133,6 +133,9 @@ above. A change that adds documentation in another style is not complete.
 - The documents in `docs` follow Diátaxis. Put a new document into the
   directory of its type, and add it to `mix.exs` and `README.md`.
   `docs/development.md` gives the four types.
+- Each new public function needs a reference, a how-to guide and, for an
+  unusual decision, an explanation. The section "Document a new function"
+  of `docs/development.md` gives the steps.
 - Run each example of a new document before you commit it. No test runs
   the examples of a document in `docs`.
 
