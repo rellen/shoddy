@@ -53,6 +53,7 @@ defmodule Shoddy.MixProject do
       extras: [
         "README.md",
         "docs/tutorials/get-started.md",
+        "docs/how-to/transform-an-optional-value.md",
         "docs/how-to/build-a-map-from-optional-data.md",
         "docs/how-to/build-a-keyword-list-of-options.md",
         "docs/how-to/choose-the-first-available-value.md",

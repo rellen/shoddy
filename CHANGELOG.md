@@ -47,3 +47,5 @@ The first release also contains these changes:
   one time, also if the list contains the element more than one time. The
   result is equal to the result of `MapSet.symmetric_difference/2` with a map
   set of the list.
+- Add `Shoddy.then_present/3`. It applies a function to a value that is not
+  `nil`, and it returns the option `:default` for `nil`.

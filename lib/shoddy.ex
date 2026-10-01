@@ -129,6 +129,63 @@ defmodule Shoddy do
   end
 
   @doc """
+  Applies a function to a value if the value is not `nil`.
+
+  If `value` is `nil`, this function returns the value of the option
+  `:default`, and it does not call `fun`. For each other value, this function
+  returns `fun.(value)`.
+
+  This function is different from `then_if/2` for two values. `then_if/2`
+  does not call the function for `false`, but this function calls it. And
+  `then_if/2` returns `nil` with no change, but this function returns the
+  default.
+
+  ## Options
+
+    * `:default` - The value that this function returns for `nil`. The
+      default is `nil`.
+
+  This function raises `ArgumentError` for an option that is not in the list
+  above.
+
+  ## Examples
+
+  The function transforms a value that is not `nil`:
+
+      iex> Shoddy.then_present(" Ada ", &String.trim/1)
+      "Ada"
+
+      iex> Shoddy.then_present(false, &(not &1))
+      true
+
+  The function returns the default for `nil`:
+
+      iex> Shoddy.then_present(nil, &String.trim/1)
+      nil
+
+      iex> Shoddy.then_present(nil, &[{"data-el", &1}], default: [])
+      []
+
+  The function ignores the default for a value that is not `nil`:
+
+      iex> Shoddy.then_present("intro", &[{"data-el", &1}], default: [])
+      [{"data-el", "intro"}]
+
+  Use the function in a pipeline:
+
+      iex> %{steps: [2, 3]}
+      ...> |> Map.get(:steps)
+      ...> |> Shoddy.then_present(&Enum.join(&1, " "), default: "all")
+      "2 3"
+  """
+  @spec then_present(value, (value -> result), keyword()) :: result | default
+        when value: any(), result: any(), default: any()
+  def then_present(value, fun, opts \\ []) when is_function(fun, 1) and is_list(opts) do
+    opts = Keyword.validate!(opts, default: nil)
+    if is_nil(value), do: opts[:default], else: fun.(value)
+  end
+
+  @doc """
   Returns the value with no change.
 
   This function is the identity function. Use it where the code requires a
