@@ -1,6 +1,6 @@
 defmodule Shoddy.Strings do
   @moduledoc """
-  A guard and a function that operate on strings, and add to the standard
+  A guard and functions that operate on strings, and add to the standard
   `String` module.
 
   The name of this module is `Strings`, in the plural. Thus the alias
@@ -19,6 +19,9 @@ defmodule Shoddy.Strings do
   tab or a newline. A string that contains only whitespace, such as `" "`, is
   not empty, so the two tools keep it. To treat such a string as empty, call
   `String.trim/1` first.
+
+  `truncate/3` shortens a string for display. It counts graphemes, which are
+  the characters that a reader sees.
   """
 
   @doc """
@@ -116,4 +119,71 @@ defmodule Shoddy.Strings do
   @spec presence(value) :: value | nil when value: any()
   def presence(""), do: nil
   def presence(value), do: value
+
+  @doc """
+  Shortens a string to a maximum number of graphemes.
+
+  A grapheme is a character that a reader sees. It can contain more than one
+  code point, such as a letter and an accent. This function counts
+  graphemes, as `String.length/1` does. Thus it never cuts a character in
+  half.
+
+  If the string has `max` graphemes or fewer, this function returns it with
+  no change. Otherwise, it returns the start of the string followed by the
+  omission. The omission is part of the length, so the result never has more
+  than `max` graphemes.
+
+  ## Options
+
+    * `:omission` - The string at the end of a shortened result. The default
+      is `"…"`, which is one grapheme.
+
+  This function raises `ArgumentError` for an unknown option, for an
+  omission that is not a string, and for an omission that is longer than
+  `max`.
+
+  ## Examples
+
+      iex> Shoddy.Strings.truncate("Hello, world", 8)
+      "Hello, …"
+
+      iex> Shoddy.Strings.truncate("Hello", 8)
+      "Hello"
+
+      iex> Shoddy.Strings.truncate("Hello, world", 8, omission: "...")
+      "Hello..."
+
+      iex> Shoddy.Strings.truncate("Hello, world", 5, omission: "")
+      "Hello"
+
+  The function counts graphemes, not bytes:
+
+      iex> Shoddy.Strings.truncate("Größenänderung", 6)
+      "Größe…"
+  """
+  @spec truncate(String.t(), non_neg_integer(), keyword()) :: String.t()
+  def truncate(string, max, opts \\ []) when is_binary(string) and is_integer(max) and max >= 0 and is_list(opts) do
+    omission = omission!(opts, max)
+
+    if String.length(string) <= max do
+      string
+    else
+      String.slice(string, 0, max - String.length(omission)) <> omission
+    end
+  end
+
+  defp omission!(opts, max) do
+    omission = opts |> Keyword.validate!(omission: "…") |> Keyword.fetch!(:omission)
+
+    cond do
+      not is_binary(omission) ->
+        raise ArgumentError, "invalid value for :omission option: expected a string, got: #{inspect(omission)}"
+
+      String.length(omission) > max ->
+        raise ArgumentError, "the :omission option #{inspect(omission)} is longer than the maximum length #{max}"
+
+      true ->
+        omission
+    end
+  end
 end

@@ -79,3 +79,6 @@ The first release also contains these changes:
   They return `false` with no change.
 - Add `Shoddy.Result.reduce_ok/3`. It reduces an enumerable with a function
   that returns a result. It stops at the first error, also for a stream.
+- Add `Shoddy.Strings.truncate/3`. It shortens a string to a maximum number
+  of graphemes, and it puts the option `:omission` at the end. The omission
+  is part of the maximum length.

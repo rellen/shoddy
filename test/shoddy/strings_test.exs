@@ -78,4 +78,50 @@ defmodule Shoddy.StringsTest do
       assert presence(%{}) == %{}
     end
   end
+
+  describe "truncate/3" do
+    test "returns a string of max graphemes or fewer with no change" do
+      assert truncate("abc", 3) == "abc"
+      assert truncate("", 0, omission: "") == ""
+      assert truncate("abc", 3, omission: "...") == "abc"
+    end
+
+    test "puts the omission at the end, and keeps the length at max" do
+      assert truncate("abcdef", 4) == "abc…"
+      assert truncate("abcdef", 5, omission: "..") == "abc.."
+      assert String.length(truncate("abcdef", 4)) == 4
+    end
+
+    test "returns only the omission if it has max graphemes" do
+      assert truncate("abcdef", 3, omission: "...") == "..."
+    end
+
+    test "returns an empty string for max 0 and an empty omission" do
+      assert truncate("abc", 0, omission: "") == ""
+    end
+
+    test "never cuts a grapheme of more than one code point" do
+      family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}"
+      accent = "e\u0301"
+
+      assert truncate(family <> family <> family, 2) == family <> "…"
+      assert truncate(accent <> accent <> accent, 2) == accent <> "…"
+    end
+
+    test "raises ArgumentError for an omission that is longer than max" do
+      assert_raise ArgumentError, ~r/longer than the maximum length 2/, fn -> truncate("a", 2, omission: "...") end
+      assert_raise ArgumentError, fn -> truncate("abc", 0) end
+    end
+
+    test "raises ArgumentError for an unknown option and for an omission that is not a string" do
+      assert_raise ArgumentError, fn -> truncate("abc", 2, ellipsis: "") end
+      assert_raise ArgumentError, ~r/expected a string/, fn -> truncate("abc", 2, omission: nil) end
+    end
+
+    test "raises FunctionClauseError for a negative max and for a value that is not a string" do
+      assert_raise FunctionClauseError, fn -> apply(&truncate/2, ["abc", -1]) end
+      assert_raise FunctionClauseError, fn -> apply(&truncate/2, [nil, 3]) end
+      assert_raise FunctionClauseError, fn -> apply(&truncate/2, ["abc", 2.0]) end
+    end
+  end
 end
