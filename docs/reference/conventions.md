@@ -12,7 +12,7 @@ of each module gives the full description of each function.
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.single/1` |
-| `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1` |
+| `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, and `Shoddy.Strings.presence/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2` |
@@ -46,7 +46,8 @@ argument.
 A truthy value is a value that is not `nil` and not `false`. A falsy value is
 `nil` or `false`. Zero, an empty string and an empty collection are truthy.
 To reject `nil` and an empty string together, use the guard
-`Shoddy.Strings.is_non_empty_string/1`.
+`Shoddy.Strings.is_non_empty_string/1`. To change an empty string to `nil`,
+use `Shoddy.Strings.presence/1`.
 
 | Function | The value that must be truthy |
 | --- | --- |

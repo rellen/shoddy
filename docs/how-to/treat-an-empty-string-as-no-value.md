@@ -1,17 +1,24 @@
 # Treat an empty string as no value
 
 This guide shows how to treat `nil` and `""` as the same thing: no value. A
-web form sends `""` for a field that the user did not fill in. Use the guard
-`Shoddy.Strings.is_non_empty_string/1`. It rejects `nil`, `""` and each
-value that is not a binary. The examples import the guard:
+web form sends `""` for a field that the user did not fill in. `Shoddy.Strings`
+has two tools for this case:
+
+- The guard `Shoddy.Strings.is_non_empty_string/1` rejects `nil`, `""` and
+  each value that is not a binary.
+- The function `Shoddy.Strings.presence/1` changes `""` to `nil`. It returns
+  each other value with no change.
+
+The examples use an alias:
 
 ```elixir
-import Shoddy.Strings, only: [is_non_empty_string: 1]
+alias Shoddy.Strings
 ```
 
 ## Accept only a string with content in a function clause
 
-Put the guard in the clause. A second clause handles the other values:
+Import the guard, and put it in the clause. A second clause handles the
+other values:
 
 ```elixir
 defmodule Greeting do
@@ -30,25 +37,49 @@ Greeting.greet("")
 
 ## Ignore an empty field when you build a map
 
-`Shoddy.Maps.put_if/3` ignores `nil` and `false`, but it puts `""` into the
-map, because `""` is truthy. Give it `is_non_empty_string(value) && value`.
-For `nil` and `""`, this expression is `false`:
+`Shoddy.Maps.put_present/3` ignores `nil`, but it puts `""` into the map.
+Give it the result of `Shoddy.Strings.presence/1`:
 
 ```elixir
-params = %{"name" => "Ada", "email" => ""}
+params = %{"name" => "Ada", "email" => "", "subscribed" => false}
 
 %{}
-|> Shoddy.Maps.put_if(:name, is_non_empty_string(params["name"]) && params["name"])
-|> Shoddy.Maps.put_if(:email, is_non_empty_string(params["email"]) && params["email"])
-#=> %{name: "Ada"}
+|> Shoddy.Maps.put_present(:name, Strings.presence(params["name"]))
+|> Shoddy.Maps.put_present(:email, Strings.presence(params["email"]))
+|> Shoddy.Maps.put_present(:subscribed, Strings.presence(params["subscribed"]))
+#=> %{name: "Ada", subscribed: false}
+```
+
+`Shoddy.Strings.presence/1` does not change `false` or a number. Thus the
+map keeps a value that is not a string.
+
+## Transform a field only if it has content
+
+Give the result of `Shoddy.Strings.presence/1` to `Shoddy.then_present/3`.
+The function then ignores `""`, and `String.to_integer/1` does not raise an
+exception for it:
+
+```elixir
+""
+|> Strings.presence()
+|> Shoddy.then_present(&String.to_integer/1)
+#=> nil
+
+"36"
+|> Strings.presence()
+|> Shoddy.then_present(&String.to_integer/1)
+#=> 36
 ```
 
 ## Remove the empty values from a list
 
-Give the guard to `Enum.filter/2`:
+Give the guard to `Enum.filter/2`. It also removes each value that is not a
+string:
 
 ```elixir
-Enum.filter(["Ada", "", nil, "Grace"], &is_non_empty_string/1)
+require Shoddy.Strings
+
+Enum.filter(["Ada", "", nil, "Grace"], &Strings.is_non_empty_string/1)
 #=> ["Ada", "Grace"]
 ```
 
@@ -64,17 +95,17 @@ Shoddy.coalesce([params["nickname"], "", "Ada"], reject: [nil, ""])
 [Choose the first available value](choose-the-first-available-value.md)
 tells more about `Shoddy.coalesce/2`.
 
-## Treat a string of spaces as empty
+## Treat a string that contains only whitespace as empty
 
-The guard does not trim the string, so it accepts `" "`. Trim the value
-first with `Shoddy.then_if/2`, which ignores `nil`:
+Whitespace is a character such as a space, a tab or a newline. The two
+tools do not trim the string, so they keep `" "`. Call `String.trim/1`
+first. `Shoddy.then_if/2` returns `nil` with no change:
 
 ```elixir
-name = Shoddy.then_if("  ", &String.trim/1)
-#=> ""
-
-is_non_empty_string(name)
-#=> false
+"  "
+|> Shoddy.then_if(&String.trim/1)
+|> Strings.presence()
+#=> nil
 ```
 
 [The design of Shoddy](../explanation/design.md#what-is_non_empty_string-accepts)

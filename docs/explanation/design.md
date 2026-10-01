@@ -377,17 +377,37 @@ can select a function clause, so the code needs no `if` expression in the
 body. But a guard can use only a small set of operations. These limits
 decide what the guard accepts.
 
-A guard cannot call `String.trim/1`, so it cannot find a string of spaces.
-Thus the guard accepts `" "`. A test of the first byte would reject `" "`,
-but it would accept `"  a"` and `" \n"` in different ways. A rule that is
-correct for some whitespace only is more difficult to know than no rule.
-Thus the caller trims the string first, if spaces must count as empty.
+Whitespace is a character such as a space, a tab or a newline. A guard can
+examine only a fixed number of bytes. It cannot examine each byte of a
+string of any length. Thus the guard cannot tell `" "`, which contains only
+whitespace, from `" a"`, which has content after the whitespace. A guard
+that rejects each string that starts with a space would reject `" a"` also.
+Thus the guard accepts each string that is not empty. If whitespace must
+count as empty, the caller trims the string first.
 
-A guard also cannot call `String.valid?/1`. Thus the guard accepts each
-binary that is not empty, also a binary that is not valid UTF-8. This is the
-same rule as `is_binary/1`, which Elixir uses for strings.
+UTF-8 is the encoding that Elixir uses for the characters of a string. A
+guard cannot call `String.valid?/1`. Thus the guard accepts each binary that
+is not empty, also a binary that is not valid UTF-8. This is the same rule
+as `is_binary/1`, which Elixir uses for strings.
 
 The name does not end in `_present`. In Shoddy, `_present` means "not
 `nil`", and `""` is not `nil`. The name `is_non_empty_string` tells the two
 conditions: the value is a string, and it is not empty. The form follows
 `is_non_struct_map/1` of `Kernel`.
+
+## Why presence changes only the empty string
+
+`Shoddy.Strings.presence/1` changes `""` to `nil`, and it returns each other
+value with no change. Thus its result goes to the functions that ignore
+`nil`, such as `Shoddy.Maps.put_present/3` and `Shoddy.then_present/3`.
+Shoddy has no second set of functions that also ignore `""`.
+
+The function does not change `false`, a number or a list. A form field
+that a program converts to a boolean or to a number keeps its value. The
+guard is different: it rejects each value that is not a binary. Thus
+`is_non_empty_string(value) && value` would lose such a value, and
+`presence/1` does not.
+
+The function does not trim the string, for the same reason as the guard.
+The two tools then agree: `presence/1` returns `nil` for a binary only if
+`is_non_empty_string/1` rejects it.

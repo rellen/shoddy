@@ -31,7 +31,7 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.Lists` finds the elements that occur more than one time in a list,
   or that have the same key. It also gets the only element of a list.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
-  together.
+  together. It also changes an empty string to `nil`.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
