@@ -343,6 +343,35 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
+  describe "collect_map/1" do
+    property "returns the values if each result is ok, and the reason of each error otherwise" do
+      check all(results <- map_of(atom(:alphanumeric), result(), max_length: 8)) do
+        errors =
+          for {key, result} <- results, Result.error?(result), into: %{} do
+            {key, if(result != :error, do: elem(result, 1))}
+          end
+
+        expected =
+          if errors == %{},
+            do: {:ok, Map.new(results, fn {key, result} -> {key, Result.unwrap(result, nil)} end)},
+            else: {:error, errors}
+
+        assert Result.collect_map(results) == expected
+      end
+    end
+  end
+
+  describe "attempt/2" do
+    property "returns the value in an ok tuple, or the listed exception as the reason" do
+      check all(value <- simple(), raise? <- boolean()) do
+        result =
+          Result.attempt(fn -> if raise?, do: raise(ArgumentError, "x"), else: value end, rescue: [ArgumentError])
+
+        if raise?, do: assert({:error, %ArgumentError{message: "x"}} = result), else: assert(result == {:ok, value})
+      end
+    end
+  end
+
   describe "the contract for an input that is not a result" do
     # Each function raises before it calls its function argument. Thus the
     # value of that argument does not change the result of these properties.

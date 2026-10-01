@@ -180,6 +180,24 @@ input to the function, so a key-value tuple is a correct element.
 For a bare `:ok`, the new accumulator is `nil`. This follows the rule of the
 other functions of `Shoddy.Result`: a bare `:ok` has the value `nil`.
 
+## Each error of a map
+
+`Shoddy.Result.collect_map/1` returns each error, but `Shoddy.Result.collect/2`
+stops at the first error by default. A list has an order, so its first
+error has a meaning. A map has no order that a program can use, so a
+"first" error would depend on the way that the runtime stores the map.
+The usual map of results is a form, and a form shows each error at one
+time. Thus the function returns a map of reasons with the same keys.
+
+## Why attempt needs a list of exceptions
+
+`Shoddy.Result.attempt/2` rescues only the exceptions in its option
+`:rescue`. A function that rescued each exception would also convert a
+defect, such as a `FunctionClauseError` from a wrong call, into an error
+result. The program would then continue with a wrong assumption, and the
+defect would be difficult to find. The list states which failures are
+expected. Each other exception continues with its stacktrace.
+
 ## Keyword lists in a separate module
 
 `Access` reads maps and keyword lists in the same way, but a put is different.

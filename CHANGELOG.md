@@ -121,3 +121,7 @@ The first release also contains these changes:
   minute, hour or day. The result is always after the value.
 - Add `Shoddy.DateTimes.overlap?/2`. It returns `true` if two periods have a
   value in common. Two periods that only touch do not overlap.
+- Add `Shoddy.Result.collect_map/1`. It converts a map of results into one
+  result. For errors, it returns a map of each reason, with the same keys.
+- Add `Shoddy.Result.attempt/2`. It calls a function, and it converts the
+  exceptions of the option `:rescue` into an error result.

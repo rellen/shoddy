@@ -293,6 +293,38 @@ This example puts 0 into the list for each error:
 #=> {:ok, [41, 0, 5]}
 ```
 
+## Check each field of a form
+
+Put the result of each field into a map, and give the map to
+`Shoddy.Result.collect_map/1`. It returns each error, not only the first:
+
+```elixir
+%{name: {:ok, "Ada"}, age: parse_age("old"), email: {:error, :missing}}
+|> Shoddy.Result.collect_map()
+#=> {:error, %{age: {"old", :invalid_age}, email: :missing}}
+
+%{name: {:ok, "Ada"}, age: parse_age("36")}
+|> Shoddy.Result.collect_map()
+#=> {:ok, %{name: "Ada", age: 36}}
+```
+
+The map of errors has the same keys as the fields, so you can show each
+error next to its field.
+
+## Turn an exception into an error
+
+Some functions raise an exception for a wrong input, such as
+`String.to_existing_atom/1`. Use `Shoddy.Result.attempt/2`, and give the
+exceptions to rescue:
+
+```elixir
+Shoddy.Result.attempt(fn -> String.to_existing_atom("no_such_atom_xyz") end, rescue: [ArgumentError])
+|> Shoddy.Result.map_error(fn _exception -> :unknown_name end)
+#=> {:error, :unknown_name}
+```
+
+An exception that is not in the list continues, so a defect stays visible.
+
 ## Accumulate a value with an operation that can fail
 
 If each step needs the result of the step before it, use

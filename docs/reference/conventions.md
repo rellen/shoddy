@@ -40,7 +40,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
@@ -94,6 +94,7 @@ These functions do not use this rule:
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 | `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
+| `Shoddy.Result.attempt/2` | The function to call. | 0 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -111,7 +112,8 @@ These functions do not use this rule:
 
 For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
 return `nil`, `Shoddy.Result.collect/2` puts `nil` into its list, and
-`Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator.
+`Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator. `Shoddy.Result.collect_map/1` gives `nil`
+for a bare `:ok`, and the reason `nil` for a bare `:error`.
 
 `Shoddy.Result.recover/2` and the function of the option `:on_error` of
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
@@ -151,6 +153,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2`. |
 | `FunctionClauseError` | A value that is not `nil` or a string, for `Shoddy.Strings.blank?/1`. |
 | `FunctionClauseError` | An empty separator for `Shoddy.Strings.split_trim/2`. |
+| `FunctionClauseError` | A struct, or a value that is not a result, for `Shoddy.Result.collect_map/1`. |
 | `FunctionClauseError` | A divisor of zero, or a value that is not an integer, for `Shoddy.Numbers.ceil_div/2`. |
 | `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
 | `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
@@ -170,6 +173,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
+| `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
