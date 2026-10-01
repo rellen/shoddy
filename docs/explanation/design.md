@@ -472,6 +472,13 @@ but it accepts the name of each atom in the system, not only the atoms that
 the code expects. The list of allowed atoms is thus also a list of the
 correct values.
 
+`Shoddy.Parse.boolean/2` accepts only `"true"` and `"false"` by default.
+Other programs use many other texts, such as `"1"`, `"on"`, `"yes"` and
+`"Y"`. A long default list would accept a text that the caller did not
+expect. A text that is not in the list is often a mistake, for example a
+variable that a person set to `"ture"`. Thus the caller gives the other
+texts with the options `:true_values` and `:false_values`.
+
 ## Why index_by raises for a key that is not unique
 
 `Shoddy.Lists.index_by/2` makes a map, and a map has one value for each key.

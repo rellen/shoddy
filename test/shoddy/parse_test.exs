@@ -75,6 +75,80 @@ defmodule Shoddy.ParseTest do
     end
   end
 
+  describe "float/2" do
+    test "accepts a sign, a fractional part, an exponent and an integer" do
+      assert float("-1.25") == {:ok, -1.25}
+      assert float("1.0e-2") == {:ok, 0.01}
+      assert float("7") == {:ok, 7.0}
+    end
+
+    test "returns :not_a_float for text that is not only a number" do
+      for text <- ["", "1.5 kg", " 1.5", ".5", "1.", "abc", "1,5"] do
+        assert float(text) == {:error, :not_a_float}, "for #{inspect(text)}"
+      end
+    end
+
+    test "checks the limits, which can be integers or floats" do
+      assert float("0.5", min: 1) == {:error, :too_small}
+      assert float("1.5", max: 1.25) == {:error, :too_large}
+      assert float("1.0", min: 1, max: 1.0) == {:ok, 1.0}
+    end
+
+    test "raises ArgumentError for a wrong option" do
+      assert_raise ArgumentError, fn -> float("1", minimum: 0) end
+      assert_raise ArgumentError, ~r/expected a number or nil/, fn -> float("1", min: "0") end
+      assert_raise ArgumentError, ~r/higher than/, fn -> float("1", min: 2.0, max: 1) end
+    end
+
+    test "raises FunctionClauseError from float/2 itself for an argument of the wrong type" do
+      for args <- [[1.5, []], [nil, []], ["1", :min]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&float/2, args) end
+        assert {error.module, error.function} == {Shoddy.Parse, :float}
+      end
+    end
+  end
+
+  describe "boolean/2" do
+    test "accepts only true and false by default" do
+      assert boolean("true") == {:ok, true}
+      assert boolean("false") == {:ok, false}
+
+      for text <- ["TRUE", "1", "on", "yes", "", " true"] do
+        assert boolean(text) == {:error, :not_a_boolean}, "for #{inspect(text)}"
+      end
+    end
+
+    test "accepts the texts of the options, and only those" do
+      opts = [true_values: ["1", "on"], false_values: ["0"]]
+
+      assert boolean("on", opts) == {:ok, true}
+      assert boolean("0", opts) == {:ok, false}
+      assert boolean("true", opts) == {:error, :not_a_boolean}
+    end
+
+    test "accepts an empty list for one option" do
+      assert boolean("false", true_values: []) == {:ok, false}
+      assert boolean("true", true_values: []) == {:error, :not_a_boolean}
+    end
+
+    test "raises ArgumentError for a wrong option" do
+      assert_raise ArgumentError, fn -> boolean("true", truthy: ["1"]) end
+      assert_raise ArgumentError, ~r/expected a list of strings/, fn -> boolean("true", true_values: "1") end
+      assert_raise ArgumentError, ~r/expected a list of strings/, fn -> boolean("true", false_values: [0]) end
+
+      assert_raise ArgumentError, ~r/"x" is in :true_values and in :false_values/, fn ->
+        boolean("true", true_values: ["x"], false_values: ["x"])
+      end
+    end
+
+    test "raises FunctionClauseError from boolean/2 itself for an argument of the wrong type" do
+      for args <- [[true, []], [nil, []], ["true", :opts]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, args) end
+        assert {error.module, error.function} == {Shoddy.Parse, :boolean}
+      end
+    end
+  end
+
   describe "one_of/2" do
     test "returns the atom that has the text as its name" do
       assert one_of("b", [:a, :b, :c]) == {:ok, :b}

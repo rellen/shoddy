@@ -53,6 +53,41 @@ params
 #=> 1
 ```
 
+## Read a number with a fractional part
+
+Use `Shoddy.Parse.float/2`. It takes the options `:min` and `:max` too:
+
+```elixir
+Parse.float("2.5", min: 0, max: 5)
+#=> {:ok, 2.5}
+
+Parse.float("2.5 kg")
+#=> {:error, :not_a_float}
+```
+
+For money, do not use a float, because a float cannot store each decimal
+fraction exactly. Use a library for decimal numbers.
+
+## Read a yes-or-no value
+
+Use `Shoddy.Parse.boolean/2`. By default, it accepts only `"true"` and
+`"false"`:
+
+```elixir
+Parse.boolean("true")
+#=> {:ok, true}
+
+Parse.boolean("yes")
+#=> {:error, :not_a_boolean}
+```
+
+Give the options `:true_values` and `:false_values` for other texts:
+
+```elixir
+Parse.boolean("on", true_values: ["on"], false_values: ["off"])
+#=> {:ok, true}
+```
+
 ## Accept only a list of words
 
 Use `Shoddy.Parse.one_of/2` for a value such as a sort direction. It

@@ -13,7 +13,7 @@ of each module gives the full description of each function.
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2` |
-| `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.one_of/2` |
+| `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.between?/3` |
@@ -157,6 +157,8 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |
 | `ArgumentError` | An unknown option, an omission that is not a string, or an omission that is longer than the maximum, for `Shoddy.Strings.truncate/3`. |
 | `ArgumentError` | An unknown option, a limit that is not an integer or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.integer/2`. |
+| `ArgumentError` | An unknown option, a limit that is not a number or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.float/2`. |
+| `ArgumentError` | An unknown option, a value that is not a list of strings, or a text in the two lists, for `Shoddy.Parse.boolean/2`. |
 | `ArgumentError` | An element of the allowed list that is not an atom, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
