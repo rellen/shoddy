@@ -118,5 +118,12 @@ defmodule Shoddy.EnvTest do
     test "raises ArgumentError for an unknown option", %{name: name} do
       assert_raise ArgumentError, fn -> list(name, sep: ";") end
     end
+
+    test "raises FunctionClauseError from list/2 itself for a name that is not a string" do
+      for args <- [[:hosts, []], ["HOSTS", :default]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&list/2, args) end
+        assert {error.module, error.function} == {Shoddy.Env, :list}
+      end
+    end
   end
 end
