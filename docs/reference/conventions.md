@@ -11,13 +11,14 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.has_duplicates?/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2` |
 
-The names `Maps`, `Keywords`, `MapSets` and `DateTimes` are in the plural.
-Thus an alias of one of these modules does not hide the standard module
-`Map`, `Keyword`, `MapSet` or `DateTime`.
+The names `Maps`, `Keywords`, `MapSets`, `Lists` and `DateTimes` are in the
+plural. Thus an alias of one of these modules does not hide the standard
+module `Map`, `Keyword`, `MapSet`, `List` or `DateTime`.
 
 ## The order of the arguments
 
@@ -30,6 +31,7 @@ function can be a step of a pipeline.
 | `Shoddy.Maps` | The map. |
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
+| `Shoddy.Lists` | The list. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
@@ -98,6 +100,8 @@ These functions compare two values with the strict equality operator
 - `Shoddy.coalesce/2`, for the values in its option `:reject`.
 - `Shoddy.MapSets.toggle/2` and `Shoddy.MapSets.toggle_all/2`, for the
   elements of the map set.
+- `Shoddy.Lists.duplicates/1` and `Shoddy.Lists.has_duplicates?/1`, for the
+  elements of the list.
 
 ## Errors
 
@@ -117,6 +121,6 @@ These functions compare two values with the strict equality operator
 
 | Name | Rule |
 | --- | --- |
-| Ends in `?` | The function returns a boolean. It never raises an exception. |
+| Ends in `?` | The function returns a boolean. It raises an exception only for an argument of the wrong type. |
 | Ends in `!` | The function raises an exception for an error result. |
 | Starts with `is_` | The name is a guard. Require or import the module before you use it. |

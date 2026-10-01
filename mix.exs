@@ -74,7 +74,7 @@ defmodule Shoddy.MixProject do
       ],
       groups_for_modules: [
         Values: [Shoddy],
-        Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets],
+        Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets, Shoddy.Lists],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
         "Dates and times": [Shoddy.DateTimes]
       ]
