@@ -195,4 +195,72 @@ defmodule Shoddy.StringsTest do
       end
     end
   end
+
+  describe "mask/2" do
+    test "keeps the length in graphemes" do
+      assert mask("héllo wörld", keep_last: 2) == "*********ld"
+    end
+
+    test "shows the start and the end" do
+      assert mask("abcdefgh", keep_first: 2, keep_last: 2) == "ab****gh"
+      assert mask("abcdefgh", keep_last: 0) == "********"
+    end
+
+    test "hides each grapheme if the visible parts are as long as the string" do
+      assert mask("abcd", keep_first: 2, keep_last: 2) == "****"
+      assert mask("ab", keep_first: 5) == "**"
+      assert mask("") == ""
+    end
+
+    test "uses another string for each hidden grapheme" do
+      assert mask("abcdef", keep_last: 2, char: "•") == "••••ef"
+      assert mask("abcdef", keep_last: 2, char: "") == "ef"
+    end
+
+    test "raises ArgumentError for a wrong option" do
+      assert_raise ArgumentError, fn -> mask("a", show: 1) end
+      assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_last: -1) end
+      assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_first: 1.0) end
+      assert_raise ArgumentError, ~r/expected a string/, fn -> mask("a", char: ?*) end
+    end
+
+    test "raises FunctionClauseError from mask/2 itself for an argument of the wrong type" do
+      for args <- [[nil, []], ["a", :keep_last]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&mask/2, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :mask}
+      end
+    end
+  end
+
+  describe "ensure_prefix/2" do
+    test "adds the prefix only if it is absent, and accepts an empty prefix" do
+      assert ensure_prefix("a", "#") == "#a"
+      assert ensure_prefix("#a", "#") == "#a"
+      assert ensure_prefix("a", "") == "a"
+      assert ensure_prefix("", "#") == "#"
+    end
+
+    test "raises FunctionClauseError from ensure_prefix/2 itself for a value that is not a string" do
+      for args <- [[nil, "#"], ["a", nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&ensure_prefix/2, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :ensure_prefix}
+      end
+    end
+  end
+
+  describe "ensure_suffix/2" do
+    test "adds the suffix only if it is absent, and accepts an empty suffix" do
+      assert ensure_suffix("a", "/") == "a/"
+      assert ensure_suffix("a/", "/") == "a/"
+      assert ensure_suffix("a", "") == "a"
+      assert ensure_suffix("", "/") == "/"
+    end
+
+    test "raises FunctionClauseError from ensure_suffix/2 itself for a value that is not a string" do
+      for args <- [[nil, "/"], ["a", nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&ensure_suffix/2, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :ensure_suffix}
+      end
+    end
+  end
 end

@@ -29,4 +29,14 @@ defmodule Shoddy.EnvPropertyTest do
       end
     end
   end
+
+  describe "list/2" do
+    property "returns the values of a joined list again", %{name: name} do
+      check all(values <- list_of(string(:alphanumeric, min_length: 1), min_length: 1, max_length: 5)) do
+        System.put_env(name, Enum.join(values, ", "))
+
+        assert Env.list(name) == values
+      end
+    end
+  end
 end

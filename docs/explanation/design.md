@@ -688,3 +688,23 @@ element with no partner. A report about orders must show each order, also
 an order whose user is gone. The keys of the second list must be unique.
 Otherwise one order would have more than one partner, and the function
 would have to select one of them.
+
+## What mask shows
+
+`Shoddy.Strings.mask/2` shows some characters of a secret, so that a person
+can tell two secrets apart in a log. The function never shows the full
+string. If the visible parts are as long as the string, it hides each
+character. A rule that showed a short secret completely would put that
+secret into the log.
+
+The result has the same length as the input, so a reader can see where a
+value is shorter than expected. Thus the result also tells the length of
+the secret. For a secret whose length must stay hidden, such as a password,
+do not log the value at all.
+
+## A result for an empty list in mean
+
+`Shoddy.Numbers.mean/1` returns `{:error, :empty}` for an empty list. The
+mean of no numbers is not defined, and 0 would be a wrong answer. An
+average rating of 0 is a different fact from no ratings. A result makes the
+caller decide, for example with `Shoddy.Result.unwrap/2`.

@@ -106,4 +106,45 @@ defmodule Shoddy.StringsPropertyTest do
       end
     end
   end
+
+  describe "mask/2" do
+    property "keeps the length, and shows at most the given graphemes of a longer string" do
+      check all(string <- string(:printable, max_length: 12), first <- integer(0..4), last <- integer(0..4)) do
+        result = Shoddy.Strings.mask(string, keep_first: first, keep_last: last, char: "*")
+        graphemes = String.graphemes(string)
+        count = length(graphemes)
+
+        assert String.length(result) == count
+
+        if first + last >= count do
+          assert result == String.duplicate("*", count)
+        else
+          assert String.starts_with?(result, Enum.join(Enum.take(graphemes, first)))
+          assert String.ends_with?(result, Enum.join(Enum.take(graphemes, -last)))
+        end
+      end
+    end
+  end
+
+  describe "ensure_prefix/2" do
+    property "returns a string that starts with the prefix, and adds it only if it is absent" do
+      check all(string <- string(:alphanumeric, max_length: 5), prefix <- string(:alphanumeric, max_length: 3)) do
+        result = Shoddy.Strings.ensure_prefix(string, prefix)
+
+        assert String.starts_with?(result, prefix)
+        assert result == if(String.starts_with?(string, prefix), do: string, else: prefix <> string)
+      end
+    end
+  end
+
+  describe "ensure_suffix/2" do
+    property "returns a string that ends with the suffix, and adds it only if it is absent" do
+      check all(string <- string(:alphanumeric, max_length: 5), suffix <- string(:alphanumeric, max_length: 3)) do
+        result = Shoddy.Strings.ensure_suffix(string, suffix)
+
+        assert String.ends_with?(result, suffix)
+        assert result == if(String.ends_with?(string, suffix), do: string, else: string <> suffix)
+      end
+    end
+  end
 end

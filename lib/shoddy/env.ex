@@ -11,6 +11,8 @@ defmodule Shoddy.Env do
 
       config :my_app, :signups?, Shoddy.Env.boolean("SIGNUPS", default: true)
 
+      config :my_app, :hosts, Shoddy.Env.list("HOSTS", default: ["localhost"])
+
   Each function raises an exception for a value that is not correct. The
   application then does not start with a wrong configuration, and the
   message tells the name of the variable.
@@ -116,5 +118,36 @@ defmodule Shoddy.Env do
   defp value!({:error, reason}, name, text) do
     raise ArgumentError,
           "invalid value for the environment variable #{inspect(name)}: #{inspect(text)} (#{inspect(reason)})"
+  end
+
+  @doc """
+  Reads a list of strings from an environment variable.
+
+  The function splits the value at the separator, trims each value, and
+  removes each empty value, as `Shoddy.Strings.split_trim/2` does.
+
+  ## Options
+
+    * `:default` - The value for an absent or empty variable. Without this
+      option, the function raises `System.EnvError` for such a variable.
+
+    * `:separator` - The string between two values. The default is `","`.
+
+  This function raises `ArgumentError` for an unknown option.
+
+  ## Examples
+
+      iex> System.put_env("SHODDY_DOC_HOSTS", "a.example.com, b.example.com")
+      iex> Shoddy.Env.list("SHODDY_DOC_HOSTS")
+      ["a.example.com", "b.example.com"]
+
+      iex> System.delete_env("SHODDY_DOC_HOSTS")
+      iex> Shoddy.Env.list("SHODDY_DOC_HOSTS", default: ["localhost"])
+      ["localhost"]
+  """
+  @spec list(String.t(), keyword()) :: [String.t()] | default when default: any()
+  def list(name, opts \\ []) when is_binary(name) and is_list(opts) do
+    opts = Keyword.validate!(opts, [:default, separator: ","])
+    read(name, opts, &{:ok, Shoddy.Strings.split_trim(&1, Keyword.fetch!(opts, :separator))})
   end
 end

@@ -29,4 +29,14 @@ defmodule Shoddy.NumbersPropertyTest do
       end
     end
   end
+
+  describe "mean/1" do
+    property "returns the sum divided by the count, or :empty" do
+      check all(list <- list_of(integer(-100..100), max_length: 10)) do
+        expected = if list == [], do: {:error, :empty}, else: {:ok, Enum.sum(list) / length(list)}
+
+        assert Numbers.mean(list) == expected
+      end
+    end
+  end
 end

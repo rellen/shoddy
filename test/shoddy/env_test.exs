@@ -96,4 +96,27 @@ defmodule Shoddy.EnvTest do
       end
     end
   end
+
+  describe "list/2" do
+    test "splits at the separator, trims each value and removes each empty value", %{name: name} do
+      System.put_env(name, " a ; b ;; ")
+      assert list(name, separator: ";") == ["a", "b"]
+    end
+
+    test "returns an empty list for a value with no value between the separators", %{name: name} do
+      System.put_env(name, " , ")
+      assert list(name, default: ["x"]) == []
+    end
+
+    test "returns the default for an absent or empty variable, and raises without a default", %{name: name} do
+      assert list(name, default: []) == []
+      System.put_env(name, "")
+      assert list(name, default: nil) == nil
+      assert_raise System.EnvError, fn -> list(name) end
+    end
+
+    test "raises ArgumentError for an unknown option", %{name: name} do
+      assert_raise ArgumentError, fn -> list(name, sep: ";") end
+    end
+  end
 end
