@@ -186,7 +186,7 @@ defmodule Shoddy.Maps do
   """
   @spec take_as(map(), %{optional(key) => new_key}) :: %{optional(new_key) => any()}
         when key: any(), new_key: any()
-  def take_as(map, mapping) when is_map(map) and is_map(mapping) and not is_struct(mapping) do
+  def take_as(map, mapping) when is_map(map) and is_non_struct_map(mapping) do
     ensure_no_struct_name!(mapping)
     ensure_unique_names!(mapping)
 
