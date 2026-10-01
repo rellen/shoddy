@@ -1,0 +1,106 @@
+defmodule Shoddy.Lists do
+  @moduledoc """
+  Functions that operate on lists and add to the standard `List` module.
+
+  Each function takes the list as the first argument. Thus you can use these
+  functions in a pipeline.
+
+  The name of this module is `Lists`, in the plural. Thus the alias `Lists`
+  does not hide the standard `List` module.
+  """
+
+  @scan_length 1024
+
+  @doc """
+  Returns each element that occurs more than one time in a list.
+
+  The result contains each such element one time, in the order of its first
+  occurrence in the list. If no element occurs more than one time, the result
+  is an empty list.
+
+  This function compares two elements with the strict equality operator
+  `===/2`, as `Enum.uniq/1` does. Thus the integer `1` and the float `1.0` are
+  two different elements.
+
+  `list -- Enum.uniq(list)` is different. It contains an element one time
+  for each extra occurrence, so an element that occurs three times occurs two
+  times in its result.
+
+  ## Examples
+
+      iex> Shoddy.Lists.duplicates([:a, :b, :a, :c, :b, :a])
+      [:a, :b]
+
+      iex> Shoddy.Lists.duplicates([:a, :b, :c])
+      []
+
+      iex> Shoddy.Lists.duplicates([])
+      []
+
+  The function compares with `===/2`:
+
+      iex> Shoddy.Lists.duplicates([1, 1.0, 2, 2])
+      [2]
+
+  Use the function to check a list for duplicates:
+
+      iex> ["ada@example.com", "grace@example.com", "ada@example.com"]
+      ...> |> Shoddy.Lists.duplicates()
+      ...> |> Shoddy.then_if(&match?([_ | _], &1), &{:error, {:duplicate_emails, &1}})
+      {:error, {:duplicate_emails, ["ada@example.com"]}}
+  """
+  @spec duplicates([element]) :: [element] when element: var
+  def duplicates(list) when is_list(list) do
+    {_seen, repeated} =
+      Enum.reduce(list, {MapSet.new(), MapSet.new()}, fn element, {seen, repeated} ->
+        if MapSet.member?(seen, element),
+          do: {seen, MapSet.put(repeated, element)},
+          else: {MapSet.put(seen, element), repeated}
+      end)
+
+    {result, _pending} =
+      Enum.reduce(list, {[], repeated}, fn element, {result, pending} ->
+        if MapSet.member?(pending, element),
+          do: {[element | result], MapSet.delete(pending, element)},
+          else: {result, pending}
+      end)
+
+    Enum.reverse(result)
+  end
+
+  @doc """
+  Returns `true` if an element occurs more than one time in a list.
+
+  This function compares two elements with the strict equality operator
+  `===/2`, as `duplicates/1` does. Thus the integer `1` and the float `1.0`
+  are two different elements.
+
+  This function is faster than `duplicates(list) != []`. If the second
+  occurrence of an element is in the first 1024 elements, the function stops
+  at that occurrence.
+
+  ## Examples
+
+      iex> Shoddy.Lists.has_duplicates?([:a, :b, :a])
+      true
+
+      iex> Shoddy.Lists.has_duplicates?([:a, :b, :c])
+      false
+
+      iex> Shoddy.Lists.has_duplicates?([])
+      false
+
+  The function compares with `===/2`:
+
+      iex> Shoddy.Lists.has_duplicates?([1, 1.0])
+      false
+  """
+  @spec has_duplicates?(list()) :: boolean()
+  def has_duplicates?(list) when is_list(list), do: scan(list, %{}, @scan_length, list)
+
+  defp scan([], _seen, _remaining, _list), do: false
+  defp scan(_rest, _seen, 0, list), do: map_size(:maps.from_keys(list, [])) != length(list)
+  defp scan([element | _rest], seen, _remaining, _list) when is_map_key(seen, element), do: true
+
+  defp scan([element | rest], seen, remaining, list), do: scan(rest, Map.put(seen, element, []), remaining - 1, list)
+end

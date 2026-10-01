@@ -11,6 +11,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Maps`
 - `Shoddy.Keywords`
 - `Shoddy.MapSets`
+- `Shoddy.Lists`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
@@ -34,3 +35,6 @@ The first release also contains these changes:
   and the function returns a new result.
 - Add `Shoddy.Result.ensure/3`. It returns an ok tuple if a predicate
   returns a truthy value, and an error tuple with a given reason otherwise.
+- Add `Shoddy.Lists` with `duplicates/1` and `has_duplicates?/1`.
+  `duplicates/1` returns each element that occurs more than one time in a
+  list. `has_duplicates?/1` returns `true` if such an element exists.
