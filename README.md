@@ -38,8 +38,8 @@ params = %{"name" => "Ada", "email" => nil}
   together, and a predicate that also treats whitespace as empty. It changes
   an empty string to `nil`. It shortens a string for display or to a number
   of bytes, and it splits a list of values.
-- `Shoddy.Parse` converts text, such as user input, into an integer or into
-  an allowed atom. It returns a result.
+- `Shoddy.Parse` converts text, such as user input, into an integer, a
+  float, a boolean or an allowed atom. It returns a result.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return

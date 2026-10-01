@@ -104,3 +104,8 @@ The first release also contains these changes:
   and removes each empty value.
 - Add `Shoddy.Strings.truncate_bytes/2`. It shortens a string to a maximum
   number of bytes, and it never cuts a grapheme.
+- Add `Shoddy.Parse.float/2`. It converts text into a float only if the
+  text contains only the number. It takes `:min` and `:max`, as
+  `integer/2` does.
+- Add `Shoddy.Parse.boolean/2`. It accepts `"true"` and `"false"` by
+  default. The options `:true_values` and `:false_values` change the lists.
