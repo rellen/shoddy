@@ -1,16 +1,16 @@
 # Round a time value up
 
-This guide shows how to round a time value up to the start of the next
-minute, hour or day. Use `Shoddy.DateTimes.ceil/2`. The examples use an
-alias:
+This guide shows how to round a time value up to the start of a minute, an
+hour or a day. Use `Shoddy.DateTimes.ceil/2`. A value at the start of a unit
+stays the same. The examples use an alias:
 
 ```elixir
 alias Shoddy.DateTimes
 ```
 
-## Find the next start of an hour
+## Round up to the start of an hour
 
-Give the current time and the unit:
+Give the time value and the unit:
 
 ```elixir
 DateTimes.ceil(~U[2024-01-01 12:34:56Z], :hour)
@@ -24,10 +24,6 @@ DateTimes.ceil(~U[2024-01-01 13:00:00Z], :hour)
 #=> ~U[2024-01-01 13:00:00Z]
 ```
 
-Thus a job that runs each hour can get its next run time from
-`DateTimes.ceil(DateTime.utc_now(), :hour)`. At the start of an hour, the
-next run time is the current time.
-
 ## Set an expiry time at the start of an hour
 
 Add the minimum life first, and then round up. The value expires at the
@@ -40,26 +36,37 @@ start of an hour, and never before the minimum life ends:
 #=> ~U[2024-01-01 14:00:00Z]
 ```
 
+## Find the start of the next unit
+
+Do not use `Shoddy.DateTimes.ceil/2` for the next run of a job each hour.
+For a value at the start of a unit, it returns the value. A job that runs at
+13:00:00 then gets 13:00:00 as its next run, and it runs again at once.
+
+Add one unit to the result of `Shoddy.DateTimes.floor/2` instead. This
+result is always after the value:
+
+```elixir
+~U[2024-01-01 13:00:00Z]
+|> DateTimes.floor(:hour)
+|> DateTime.add(1, :hour)
+#=> ~U[2024-01-01 14:00:00Z]
+```
+
 ## Find the end of the unit that contains a value
 
-Do not use `Shoddy.DateTimes.ceil/2` for the end of a period. For a value
-at the start of a unit, it returns the value, so the start and the end of
-the period are equal:
+Use the same method for the end of a period. The result of
+`Shoddy.DateTimes.floor/2` is the start:
 
 ```elixir
 start = DateTimes.floor(~U[2024-01-01 00:00:00Z], :day)
 #=> ~U[2024-01-01 00:00:00Z]
 
-DateTimes.ceil(~U[2024-01-01 00:00:00Z], :day)
-#=> ~U[2024-01-01 00:00:00Z]
-```
-
-Add one unit to the start instead:
-
-```elixir
 DateTime.add(start, 1, :day)
 #=> ~U[2024-01-02 00:00:00Z]
 ```
+
+`Shoddy.DateTimes.ceil/2` would return `~U[2024-01-01 00:00:00Z]` for this
+value, so the start and the end would be equal.
 
 Use the start and the end as a range that includes the start and excludes
 the end. Each value of that day is in the range.

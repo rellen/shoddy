@@ -20,8 +20,8 @@ params = %{"name" => "Ada", "email" => nil}
 ## The modules
 
 - `Shoddy` applies a function to a value only if a condition is true or
-  only if the value is not `nil`, and selects the first value from a list of
-  sources.
+  only if the value is not `nil`. It also selects the first value from a
+  list of sources.
 - `Shoddy.Maps` puts a value into a map only if the value is truthy, or only
   if the value is not `nil`. It also takes keys from a map with new names,
   and it merges nested maps.
@@ -35,7 +35,7 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
   value of a GenServer callback.
 - `Shoddy.DateTimes` operates on dates and times. It extends the precision
-  of a time value, and it rounds a time value down or up to a minute, an
+  of a time value. It also rounds a time value down or up to a minute, an
   hour or a day.
 
 ## Installation
