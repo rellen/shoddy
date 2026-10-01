@@ -77,3 +77,5 @@ The first release also contains these changes:
 - Add `Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3`. They
   return the value of a key, or a default for an absent key and for `nil`.
   They return `false` with no change.
+- Add `Shoddy.Result.reduce_ok/3`. It reduces an enumerable with a function
+  that returns a result. It stops at the first error, also for a stream.

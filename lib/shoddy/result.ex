@@ -700,6 +700,70 @@ defmodule Shoddy.Result do
     collect_with(results, on_error!(opts))
   end
 
+  @doc """
+  Reduces an enumerable with a function that can fail.
+
+  This function calls `fun` with each element and the accumulator, in order.
+  `fun` must return a result:
+
+  - `{:ok, acc}` gives the new accumulator to the next element.
+  - A bare `:ok` gives `nil` as the new accumulator, as `unwrap/2` does.
+  - An error result stops the reduction. This function returns the error
+    with no change, and it reads no further element.
+
+  If `fun` returns an ok result for each element, this function returns
+  `{:ok, acc}` with the last accumulator. For an empty enumerable, it returns
+  `{:ok, acc}` with the initial accumulator.
+
+  `collect/2` is different. It makes a list of the values, and the elements
+  do not depend on each other. Use this function if each step needs the
+  result of the step before it.
+
+  This function accepts each enumerable, also a map and a stream. It stops
+  a stream at the first error. It raises `ArgumentError` if `fun` returns a
+  value that is not a result.
+
+  ## Examples
+
+      iex> Shoddy.Result.reduce_ok([1, 2, 3], 0, fn x, sum -> {:ok, sum + x} end)
+      {:ok, 6}
+
+      iex> Shoddy.Result.reduce_ok([], 0, fn x, sum -> {:ok, sum + x} end)
+      {:ok, 0}
+
+  The function stops at the first error:
+
+      iex> Shoddy.Result.reduce_ok(["1", "x", "y"], 0, fn text, sum ->
+      ...>   text |> Shoddy.Parse.integer() |> Shoddy.Result.map_ok(&(sum + &1))
+      ...> end)
+      {:error, :not_an_integer}
+
+  This example takes items from a stock. Each step needs the stock that the
+  step before it left:
+
+      iex> take = fn {item, count}, stock ->
+      ...>   if Map.get(stock, item, 0) >= count,
+      ...>     do: {:ok, Map.update!(stock, item, &(&1 - count))},
+      ...>     else: {:error, {:not_enough, item}}
+      ...> end
+      iex> Shoddy.Result.reduce_ok([apple: 2, pear: 1], %{apple: 5, pear: 1}, take)
+      {:ok, %{apple: 3, pear: 0}}
+      iex> Shoddy.Result.reduce_ok([apple: 2, pear: 3], %{apple: 5, pear: 1}, take)
+      {:error, {:not_enough, :pear}}
+  """
+  @spec reduce_ok(Enumerable.t(), acc, (any(), acc -> t())) :: {:ok, any()} | :error | {:error, any()}
+        when acc: any()
+  def reduce_ok(enumerable, acc, fun) when is_function(fun, 2) do
+    Enum.reduce_while(enumerable, {:ok, acc}, fn element, {:ok, acc} ->
+      case fun.(element, acc) do
+        {:ok, new_acc} -> {:cont, {:ok, new_acc}}
+        :ok -> {:cont, {:ok, nil}}
+        error when is_error(error) -> {:halt, error}
+        other -> raise ArgumentError, "invalid return value of the function: expected a result, got: #{inspect(other)}"
+      end
+    end)
+  end
+
   defp on_error!(opts) do
     case Keyword.fetch!(opts, :on_error) do
       mode when mode in [:halt, :skip, :accumulate] ->

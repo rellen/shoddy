@@ -700,4 +700,64 @@ defmodule Shoddy.ResultTest do
       assert_raise FunctionClauseError, fn -> apply(&recover/2, [42, &{:ok, &1}]) end
     end
   end
+
+  describe "reduce_ok/3" do
+    test "gives the new accumulator of each step to the next step" do
+      assert reduce_ok([:a, :b, :c], [], fn x, acc -> {:ok, [x | acc]} end) == {:ok, [:c, :b, :a]}
+    end
+
+    test "uses nil as the new accumulator for a bare :ok" do
+      assert reduce_ok([1], :start, fn _x, _acc -> :ok end) == {:ok, nil}
+      assert reduce_ok([1, 2], :start, fn _x, acc -> {:ok, {acc}} end) == {:ok, {{:start}}}
+
+      assert reduce_ok([1, 2], :start, fn
+               1, _acc -> :ok
+               2, acc -> {:ok, acc}
+             end) == {:ok, nil}
+    end
+
+    test "returns the error with no change, also a bare :error" do
+      assert reduce_ok([1], 0, fn _x, _acc -> {:error, :bad} end) == {:error, :bad}
+      assert reduce_ok([1], 0, fn _x, _acc -> :error end) == :error
+    end
+
+    test "calls the function for no element after the first error" do
+      result =
+        reduce_ok([1, 2, 3], 0, fn x, acc ->
+          send(self(), {:called, x})
+          if x == 2, do: {:error, :two}, else: {:ok, acc + x}
+        end)
+
+      assert result == {:error, :two}
+      assert_received {:called, 1}
+      assert_received {:called, 2}
+      refute_received {:called, 3}
+    end
+
+    test "stops an infinite stream at the first error" do
+      stream = Stream.iterate(1, &(&1 + 1))
+
+      assert reduce_ok(stream, 0, fn x, acc -> if x > 3, do: {:error, acc}, else: {:ok, acc + x} end) ==
+               {:error, 6}
+    end
+
+    test "accepts a map and a range" do
+      assert reduce_ok(%{a: 1}, [], fn pair, acc -> {:ok, [pair | acc]} end) == {:ok, [a: 1]}
+      assert reduce_ok(1..4, 0, fn x, acc -> {:ok, acc + x} end) == {:ok, 10}
+    end
+
+    test "raises ArgumentError if the function returns a value that is not a result" do
+      assert_raise ArgumentError, ~r/expected a result, got: 1/, fn ->
+        reduce_ok([1], 0, fn x, acc -> x + acc end)
+      end
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&reduce_ok/3, [[1], 0, fn x -> {:ok, x} end]) end
+    end
+
+    test "raises Protocol.UndefinedError for a value that is not enumerable" do
+      assert_raise Protocol.UndefinedError, fn -> apply(&reduce_ok/3, [42, 0, fn x, _ -> {:ok, x} end]) end
+    end
+  end
 end

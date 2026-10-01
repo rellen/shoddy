@@ -327,6 +327,22 @@ defmodule Shoddy.ResultPropertyTest do
     end
   end
 
+  describe "reduce_ok/3" do
+    property "returns the reduction of the values up to the first error, or that error" do
+      check all(results <- list_of(result(), max_length: 10)) do
+        step = fn result, acc -> Result.map_ok(result, &[&1 | acc]) end
+
+        expected =
+          case Enum.find(results, &Result.error?/1) do
+            nil -> {:ok, Enum.reduce(results, [], fn r, acc -> if r != :ok, do: [elem(r, 1) | acc] end)}
+            error -> error
+          end
+
+        assert Result.reduce_ok(results, [], step) == expected
+      end
+    end
+  end
+
   describe "the contract for an input that is not a result" do
     # Each function raises before it calls its function argument. Thus the
     # value of that argument does not change the result of these properties.
