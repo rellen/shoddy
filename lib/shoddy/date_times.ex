@@ -12,8 +12,7 @@ defmodule Shoddy.DateTimes do
     higher.
   - `floor/2` rounds a value down to the start of a minute, an hour or a
     day.
-  - `ceil/2` rounds a value up to the start of the next minute, hour or
-    day.
+  - `ceil/2` rounds a value up to the start of a minute, an hour or a day.
 
   ## Precision
 
@@ -208,16 +207,24 @@ defmodule Shoddy.DateTimes do
   returns the start of the next unit. The precision of the fractional second
   stays the same.
 
+  This function compares the full fractional second, also the digits after
+  the precision. Thus a value can show as the start of a unit and still round
+  up. For example, the field `microsecond: {400, 3}` shows as `.000`, but
+  the value is 400 microseconds after the start.
+
   This function accepts a `NaiveDateTime` and a `DateTime` in the time zone
   `Etc/UTC`, as `floor/2` does. It does not accept a `Time`. A `Time` has no
   day. Thus for a `Time` near the end of the day, the next unit does not
   exist. For a `DateTime` in another time zone, this function raises
   `FunctionClauseError`, for the same reason as `floor/2`.
 
-  Use this function to find the next start of a unit, for example the time
-  of the next run of a job each hour. For a value at the start of a unit,
-  the result is that value and not the end of its unit. To get the end of
-  the unit that contains a value, add one unit to the result of `floor/2`.
+  Use this function to move a value to the start of a unit, but never to an
+  earlier time. An example is an expiry time at the start of an hour.
+
+  For a value at the start of a unit, the result is that value. Thus do not
+  use this function for the next run of a job each hour. Also do not use it
+  for the end of the unit that contains a value. For these two cases, add
+  one unit to the result of `floor/2`.
 
   ## Examples
 
@@ -239,6 +246,9 @@ defmodule Shoddy.DateTimes do
 
       iex> Shoddy.DateTimes.ceil(~U[2024-01-01 12:00:00.000001Z], :hour)
       ~U[2024-01-01 13:00:00.000000Z]
+
+      iex> Shoddy.DateTimes.ceil(%{~U[2024-01-01 12:00:00.000Z] | microsecond: {400, 3}}, :hour)
+      ~U[2024-01-01 13:00:00.000Z]
 
   This example gives a token a life of at least 30 minutes, and makes it
   expire at the start of an hour:

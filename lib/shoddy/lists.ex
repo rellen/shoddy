@@ -72,8 +72,8 @@ defmodule Shoddy.Lists do
   Returns the elements of a list that have the same key as another element.
 
   `key_fun` returns the key of an element. The result is a map. It has an
-  entry for each key that more than one element has, and the value of that
-  entry is the list of these elements, in the order of the input. A key that
+  entry for each key that more than one element has. The value of that entry
+  is the list of these elements, in the order of the input. A key that
   only one element has is not in the map. If no two elements have the same
   key, the result is an empty map.
 
