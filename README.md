@@ -32,7 +32,8 @@ params = %{"name" => "Ada", "email" => nil}
   or that have the same key. It also gets the only element of a list, and
   it makes a map from the key of each element to the element.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
-  together. It also changes an empty string to `nil`.
+  together. It also changes an empty string to `nil`. It shortens a string
+  for display.
 - `Shoddy.Parse` converts text, such as user input, into an integer or into
   an allowed atom. It returns a result.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
@@ -73,6 +74,7 @@ For one task, use a how-to guide:
 - [Build a keyword list of options](docs/how-to/build-a-keyword-list-of-options.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
 - [Treat an empty string as no value](docs/how-to/treat-an-empty-string-as-no-value.md)
+- [Shorten a string for display](docs/how-to/shorten-a-string-for-display.md)
 - [Parse user input](docs/how-to/parse-user-input.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)

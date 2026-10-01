@@ -477,3 +477,20 @@ can find the records.
 For data where a key can occur more than one time, the caller must select a
 rule. `Enum.group_by/2` keeps each element. `Shoddy.Lists.duplicates_by/2`
 finds the keys that are not unique.
+
+## How truncate counts the length
+
+`Shoddy.Strings.truncate/3` counts graphemes. A grapheme is a character that
+a reader sees. One grapheme can contain more than one code point, such as a
+letter and an accent, or the parts of an emoji. A count of bytes or of code
+points could cut such a character in half. The result would then show a
+wrong character, or it would not be a valid string.
+
+The omission is part of the maximum length. A caller gives the maximum
+because the space has a limit, such as the width of a column. A result that
+is longer than the maximum would not fit in that space.
+
+The function raises `ArgumentError` for an omission that is longer than the
+maximum. It raises this error also for a string that is short enough. A
+check that depends only on the arguments finds the mistake at the first
+call, and not only for a long string.

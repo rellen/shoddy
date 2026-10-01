@@ -59,6 +59,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/build-a-keyword-list-of-options.md",
         "docs/how-to/choose-the-first-available-value.md",
         "docs/how-to/treat-an-empty-string-as-no-value.md",
+        "docs/how-to/shorten-a-string-for-display.md",
         "docs/how-to/parse-user-input.md",
         "docs/how-to/chain-operations-that-can-fail.md",
         "docs/how-to/return-a-tagged-tuple-from-a-callback.md",

@@ -48,4 +48,24 @@ defmodule Shoddy.StringsPropertyTest do
       end
     end
   end
+
+  describe "truncate/3" do
+    property "returns a string of max graphemes or fewer that starts as the input, and ends in the omission if it is shorter" do
+      check all(
+              string <- string(:printable, max_length: 20),
+              omission <- member_of(["", "…", "..."]),
+              max <- integer(String.length(omission)..25)
+            ) do
+        result = Shoddy.Strings.truncate(string, max, omission: omission)
+
+        if String.length(string) <= max do
+          assert result == string
+        else
+          assert String.length(result) == max
+          assert String.ends_with?(result, omission)
+          assert String.starts_with?(string, String.slice(result, 0, max - String.length(omission)))
+        end
+      end
+    end
+  end
 end
