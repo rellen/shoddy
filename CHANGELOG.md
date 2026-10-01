@@ -117,3 +117,7 @@ The first release also contains these changes:
 - Add `Shoddy.Numbers` with `ceil_div/2` and `clamp/3`. `ceil_div/2`
   divides two integers and rounds up, with no float. `clamp/3` keeps a
   number in a range.
+- Add `Shoddy.DateTimes.next_start/2`. It returns the start of the next
+  minute, hour or day. The result is always after the value.
+- Add `Shoddy.DateTimes.overlap?/2`. It returns `true` if two periods have a
+  value in common. Two periods that only touch do not overlap.

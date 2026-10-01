@@ -18,7 +18,7 @@ of each module gives the full description of each function.
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
-| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.between?/3` |
+| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.next_start/2`, `Shoddy.DateTimes.between?/3`, `Shoddy.DateTimes.overlap?/2` |
 
 The names `Maps`, `Keywords`, `MapSets`, `Lists`, `Strings` and `DateTimes`
 are in the plural. Thus an alias of one of these modules does not hide the
@@ -42,7 +42,7 @@ function can be a step of a pipeline.
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
-| `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. |
+| `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
 In `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3`, the tag is the last
 argument.
@@ -157,6 +157,8 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time`, for `Shoddy.DateTimes.ceil/2`. |
+| `FunctionClauseError` | A `DateTime` in a time zone other than UTC, a `Time` or a `Date`, for `Shoddy.DateTimes.next_start/2`. |
+| `FunctionClauseError` | A period that is not a tuple of two values, or four values that do not have the same type, for `Shoddy.DateTimes.overlap?/2`. |
 | `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |

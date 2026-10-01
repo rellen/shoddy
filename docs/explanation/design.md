@@ -398,6 +398,11 @@ of a unit. It does not return the end of the unit that contains the
 argument. This rule makes it the counterpart of `floor/2`: each function
 returns the nearest start of a unit in one direction.
 
+`Shoddy.DateTimes.next_start/2` is the function for the other need. It
+returns the start of the next unit, also for a value at the start of a
+unit. Its result is always after the value. Thus a job that runs each hour
+never gets its own start time as the next run.
+
 ## What is_non_empty_string accepts
 
 `Shoddy.Strings.is_non_empty_string/1` is a guard, not a function. A guard
@@ -543,6 +548,11 @@ returns a boolean. Such a period contains no value, so `false` is correct.
 
 Unlike `Shoddy.DateTimes.floor/2`, this function accepts a `DateTime` in each
 time zone. A comparison of two points in time needs no time zone database.
+
+`Shoddy.DateTimes.overlap?/2` uses the same rule for two periods. Two
+periods overlap only if a value is in the two periods. Thus a booking that
+ends on 4 July and a booking that starts on 4 July do not overlap. A rule
+that included the last value would refuse the second booking.
 
 ## When nil counts as absent
 

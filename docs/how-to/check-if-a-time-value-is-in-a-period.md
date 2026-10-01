@@ -16,7 +16,7 @@ is not before the first value, and it is before the last value:
 ```elixir
 event = ~U[2024-01-01 23:59:59Z]
 start = DateTimes.floor(event, :day)
-next_day = DateTime.add(start, 1, :day)
+next_day = DateTimes.next_start(event, :day)
 
 DateTimes.between?(event, start, next_day)
 #=> true
@@ -59,6 +59,24 @@ The result is often wrong:
 DateTimes.between?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
 #=> false
 ```
+
+## Check if two periods overlap
+
+Use `Shoddy.DateTimes.overlap?/2`. Give each period as a tuple
+`{first, last}`. Two periods that only touch do not overlap:
+
+```elixir
+booked = {~D[2024-07-01], ~D[2024-07-04]}
+
+DateTimes.overlap?(booked, {~D[2024-07-04], ~D[2024-07-06]})
+#=> false
+
+DateTimes.overlap?(booked, {~D[2024-07-03], ~D[2024-07-05]})
+#=> true
+```
+
+The first booking ends on the morning of 4 July, and the second booking
+starts on that day. Thus the room is free for the second booking.
 
 ## Check values in different time zones
 

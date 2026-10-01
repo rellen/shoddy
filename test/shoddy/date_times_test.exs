@@ -276,4 +276,69 @@ defmodule Shoddy.DateTimesTest do
       assert_raise FunctionClauseError, fn -> apply(&between?/3, [%URI{}, %URI{}, %URI{}]) end
     end
   end
+
+  describe "next_start/2" do
+    test "returns the start of the next minute, hour and day" do
+      value = ~N[2024-12-31 23:59:59.5]
+
+      assert next_start(value, :minute) == ~N[2025-01-01 00:00:00.0]
+      assert next_start(value, :hour) == ~N[2025-01-01 00:00:00.0]
+      assert next_start(value, :day) == ~N[2025-01-01 00:00:00.0]
+    end
+
+    test "returns the start of the next unit for a value at the start of a unit" do
+      assert next_start(~U[2024-03-15 00:00:00Z], :day) == ~U[2024-03-16 00:00:00Z]
+      assert next_start(~U[2024-03-15 10:00:00Z], :minute) == ~U[2024-03-15 10:01:00Z]
+    end
+
+    test "keeps the precision of the fractional second" do
+      assert next_start(~U[2024-03-15 10:00:00.123Z], :hour).microsecond == {0, 3}
+    end
+
+    test "raises FunctionClauseError for a DateTime in another time zone, a Time, a Date and an unknown unit" do
+      paris = %{~U[2024-03-15 12:00:00Z] | time_zone: "Europe/Paris", zone_abbr: "CET", utc_offset: 3600}
+
+      for args <- [[paris, :hour], [~T[10:00:00], :hour], [~D[2024-03-15], :day], [~U[2024-03-15 10:00:00Z], :second]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&next_start/2, args) end
+        assert {error.module, error.function} == {Shoddy.DateTimes, :next_start}
+      end
+    end
+  end
+
+  describe "overlap?/2" do
+    test "returns true for two periods that share a value, also if one contains the other" do
+      assert overlap?({~D[2024-01-01], ~D[2024-01-10]}, {~D[2024-01-03], ~D[2024-01-04]})
+      assert overlap?({~D[2024-01-03], ~D[2024-01-04]}, {~D[2024-01-01], ~D[2024-01-10]})
+      assert overlap?({~D[2024-01-01], ~D[2024-01-02]}, {~D[2024-01-01], ~D[2024-01-02]})
+    end
+
+    test "returns false for two periods that only touch, in the two orders" do
+      refute overlap?({~D[2024-01-01], ~D[2024-01-02]}, {~D[2024-01-02], ~D[2024-01-03]})
+      refute overlap?({~D[2024-01-02], ~D[2024-01-03]}, {~D[2024-01-01], ~D[2024-01-02]})
+    end
+
+    test "returns false for an empty period or a period in the wrong order" do
+      refute overlap?({~D[2024-01-02], ~D[2024-01-02]}, {~D[2024-01-01], ~D[2024-01-03]})
+      refute overlap?({~D[2024-01-01], ~D[2024-01-03]}, {~D[2024-01-03], ~D[2024-01-01]})
+    end
+
+    test "compares DateTime values in different time zones by their points in time" do
+      paris = %{~U[2024-01-01 10:00:00Z] | hour: 11, time_zone: "Europe/Paris", zone_abbr: "CET", utc_offset: 3600}
+
+      assert overlap?({~U[2024-01-01 09:00:00Z], ~U[2024-01-01 10:30:00Z]}, {paris, ~U[2024-01-01 12:00:00Z]})
+      refute overlap?({~U[2024-01-01 09:00:00Z], ~U[2024-01-01 10:00:00Z]}, {paris, ~U[2024-01-01 12:00:00Z]})
+    end
+
+    test "raises FunctionClauseError for values of different types or periods that are not tuples" do
+      for args <- [
+            [{~D[2024-01-01], ~D[2024-01-02]}, {~N[2024-01-01 00:00:00], ~N[2024-01-02 00:00:00]}],
+            [{~D[2024-01-01], ~N[2024-01-02 00:00:00]}, {~D[2024-01-01], ~D[2024-01-02]}],
+            [[~D[2024-01-01], ~D[2024-01-02]], {~D[2024-01-01], ~D[2024-01-02]}],
+            [{1, 2}, {1, 2}]
+          ] do
+        error = assert_raise FunctionClauseError, fn -> apply(&overlap?/2, args) end
+        assert {error.module, error.function} == {Shoddy.DateTimes, :overlap?}
+      end
+    end
+  end
 end
