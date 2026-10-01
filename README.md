@@ -65,6 +65,7 @@ For one task, use a how-to guide:
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
+- [Find duplicates in a list](docs/how-to/find-duplicates-in-a-list.md)
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
 
