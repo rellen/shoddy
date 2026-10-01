@@ -760,4 +760,84 @@ defmodule Shoddy.ResultTest do
       assert_raise Protocol.UndefinedError, fn -> apply(&reduce_ok/3, [42, 0, fn x, _ -> {:ok, x} end]) end
     end
   end
+
+  describe "collect_map/1" do
+    test "gives nil for a bare :ok and for a bare :error" do
+      assert collect_map(%{a: :ok, b: {:ok, 1}}) == {:ok, %{a: nil, b: 1}}
+      assert collect_map(%{a: :error, b: {:ok, 1}}) == {:error, %{a: nil}}
+    end
+
+    test "returns each error and no value if any value is an error" do
+      assert collect_map(%{"a" => {:error, 1}, "b" => {:error, 2}, "c" => {:ok, 3}}) == {:error, %{"a" => 1, "b" => 2}}
+    end
+
+    test "keeps a value that is itself a result" do
+      assert collect_map(%{a: {:ok, {:error, :inner}}}) == {:ok, %{a: {:error, :inner}}}
+    end
+
+    test "raises FunctionClauseError for a value that is not a result" do
+      assert_raise FunctionClauseError, fn -> collect_map(%{a: 1}) end
+      assert_raise FunctionClauseError, fn -> collect_map(%{a: {:ok, 1, 2}}) end
+    end
+
+    test "raises FunctionClauseError from collect_map/1 itself for a struct or a list" do
+      for arg <- [%URI{}, [ok: 1]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&collect_map/1, [arg]) end
+        assert {error.module, error.function} == {Shoddy.Result, :collect_map}
+      end
+    end
+  end
+
+  describe "attempt/2" do
+    test "puts the return value into an ok tuple, also a result" do
+      assert attempt(fn -> 42 end, rescue: [ArgumentError]) == {:ok, 42}
+      assert attempt(fn -> {:error, :x} end, rescue: [ArgumentError]) == {:ok, {:error, :x}}
+    end
+
+    test "returns each listed exception as the reason" do
+      assert {:error, %KeyError{key: :a}} = attempt(fn -> Map.fetch!(%{}, :a) end, rescue: [ArgumentError, KeyError])
+    end
+
+    test "does not rescue an exception that is not in the list" do
+      assert_raise RuntimeError, fn -> attempt(fn -> raise "x" end, rescue: [ArgumentError]) end
+    end
+
+    test "keeps the stacktrace of an exception that it does not rescue" do
+      {error, [top | _]} =
+        try do
+          attempt(fn -> Map.fetch!(%{}, :a) end, rescue: [ArgumentError])
+        rescue
+          error in KeyError -> {error, __STACKTRACE__}
+        end
+
+      # A new raise in attempt/2 would put attempt/2 at the top of the stacktrace.
+      assert %KeyError{} = error
+      refute match?({Shoddy.Result, _function, _arity, _location}, top)
+    end
+
+    test "does not catch a throw or an exit" do
+      assert catch_throw(attempt(fn -> throw(:x) end, rescue: [ArgumentError])) == :x
+      assert catch_exit(attempt(fn -> exit(:x) end, rescue: [ArgumentError])) == :x
+    end
+
+    test "raises ArgumentError for an absent, empty or wrong :rescue option" do
+      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, []) end
+      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, rescue: []) end
+      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, rescue: ArgumentError) end
+
+      assert_raise ArgumentError, ~r/Enum in the option :rescue is not an exception module/, fn ->
+        attempt(fn -> 1 end, rescue: [Enum])
+      end
+
+      assert_raise ArgumentError, ~r/not an exception module/, fn -> attempt(fn -> 1 end, rescue: ["ArgumentError"]) end
+      assert_raise ArgumentError, fn -> attempt(fn -> 1 end, rescue: [ArgumentError], catch: [:x]) end
+    end
+
+    test "raises FunctionClauseError from attempt/2 itself for a function of the wrong arity" do
+      for args <- [[fn _ -> 1 end, [rescue: [ArgumentError]]], [fn -> 1 end, :rescue]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&attempt/2, args) end
+        assert {error.module, error.function} == {Shoddy.Result, :attempt}
+      end
+    end
+  end
 end

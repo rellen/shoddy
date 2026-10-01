@@ -764,6 +764,123 @@ defmodule Shoddy.Result do
     end)
   end
 
+  @doc """
+  Converts a map of results into one result, and keeps each error.
+
+  If each value of the map is an ok result, this function returns
+  `{:ok, map}` with the values. Otherwise, it returns `{:error, reasons}`.
+  `reasons` is a map from the key of each error to its reason. A bare `:ok`
+  gives the value `nil`, and a bare `:error` gives the reason `nil`.
+
+  The function returns each error, not only the first. A map has no order
+  that a program can use, so the first error has no meaning. Use this
+  function to check each field of a form, and to show each error at one
+  time.
+
+  The argument must be a plain map, and each value must be a result. This
+  function raises `FunctionClauseError` for a struct and for a value that
+  is not a result.
+
+  ## Examples
+
+      iex> Shoddy.Result.collect_map(%{name: {:ok, "Ada"}, age: {:ok, 36}})
+      {:ok, %{name: "Ada", age: 36}}
+
+      iex> Shoddy.Result.collect_map(%{name: {:ok, "Ada"}, age: {:error, :too_small}, email: {:error, :missing}})
+      {:error, %{age: :too_small, email: :missing}}
+
+      iex> Shoddy.Result.collect_map(%{})
+      {:ok, %{}}
+
+  Check each field of a form:
+
+      iex> params = %{"name" => "Ada", "age" => "x"}
+      iex> %{
+      ...>   name: Shoddy.Maps.fetch_keys(params, ["name"]) |> Shoddy.Result.map_ok(& &1["name"]),
+      ...>   age: Shoddy.Parse.integer(params["age"])
+      ...> }
+      ...> |> Shoddy.Result.collect_map()
+      {:error, %{age: :not_an_integer}}
+  """
+  @spec collect_map(%{optional(key) => t()}) :: {:ok, %{optional(key) => any()}} | {:error, %{optional(key) => any()}}
+        when key: any()
+  def collect_map(results) when is_map(results) and not is_struct(results) do
+    {values, reasons} = Enum.reduce(results, {%{}, %{}}, &collect_entry/2)
+    if map_size(reasons) == 0, do: {:ok, values}, else: {:error, reasons}
+  end
+
+  defp collect_entry({key, {:ok, value}}, {values, reasons}), do: {Map.put(values, key, value), reasons}
+  defp collect_entry({key, :ok}, {values, reasons}), do: {Map.put(values, key, nil), reasons}
+  defp collect_entry({key, {:error, reason}}, {values, reasons}), do: {values, Map.put(reasons, key, reason)}
+  defp collect_entry({key, :error}, {values, reasons}), do: {values, Map.put(reasons, key, nil)}
+
+  @doc """
+  Calls a function, and converts the given exceptions into an error result.
+
+  If `fun` returns a value, this function returns `{:ok, value}`. If `fun`
+  raises one of the exceptions in the option `:rescue`, this function
+  returns `{:error, exception}`. Each other exception continues with its
+  stacktrace, as if no `try` were present.
+
+  The option `:rescue` is required. It is a list of exception modules, such
+  as `[ArgumentError]`. This function never rescues each exception, because
+  an unexpected exception is usually a defect in the program, and a result
+  would hide it.
+
+  This function puts each return value into an ok tuple, also a result. To
+  remove the extra tuple, call `flatten/1` on the result.
+
+  This function raises `ArgumentError` for an unknown option, for an absent
+  or empty `:rescue`, and for a module in `:rescue` that is not an
+  exception.
+
+  ## Examples
+
+      iex> Shoddy.Result.attempt(fn -> String.to_existing_atom("ok") end, rescue: [ArgumentError])
+      {:ok, :ok}
+
+      iex> {:error, %ArgumentError{}} =
+      ...>   Shoddy.Result.attempt(fn -> String.to_existing_atom("shoddy_no_such_atom") end, rescue: [ArgumentError])
+
+  An exception that is not in the list continues:
+
+      iex> Shoddy.Result.attempt(fn -> raise "boom" end, rescue: [ArgumentError])
+      ** (RuntimeError) boom
+  """
+  @spec attempt((-> value), keyword()) :: {:ok, value} | {:error, Exception.t()} when value: any()
+  def attempt(fun, opts) when is_function(fun, 0) and is_list(opts) do
+    exceptions = exceptions!(opts)
+
+    try do
+      {:ok, fun.()}
+    rescue
+      exception ->
+        if exception.__struct__ in exceptions,
+          do: {:error, exception},
+          else: reraise(exception, __STACKTRACE__)
+    end
+  end
+
+  defp exceptions!(opts) do
+    Keyword.validate!(opts, [:rescue])
+    |> Keyword.fetch(:rescue)
+    |> case do
+      {:ok, [_ | _] = modules} ->
+        Enum.each(modules, &exception_module!/1)
+        modules
+
+      other ->
+        raise ArgumentError,
+              "the option :rescue must be a non-empty list of exception modules, got: #{inspect(other)}"
+    end
+  end
+
+  defp exception_module!(module) do
+    if not (is_atom(module) and Code.ensure_loaded?(module) and function_exported?(module, :exception, 1)) do
+      raise ArgumentError, "#{inspect(module)} in the option :rescue is not an exception module"
+    end
+  end
+
   defp on_error!(opts) do
     case Keyword.fetch!(opts, :on_error) do
       mode when mode in [:halt, :skip, :accumulate] ->
