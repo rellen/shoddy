@@ -161,6 +161,29 @@ does. They raise this error also if they do not put the value. A wrong key
 then causes an error at the first call, and not only when the value is
 present.
 
+## New names in take_as
+
+`Shoddy.Maps.take_as/2` converts the parameters of a web form, which have
+string keys, into a map with atom keys. The user controls the keys of the
+parameters. Thus the function never makes an atom from the input. Only the
+values of the mapping become keys, and your code contains the mapping.
+
+If two keys of the mapping have the same new name, the two values compete
+for one key. The value in the result would then depend on the order in which
+the function reads the mapping, and the contract of a map gives no order.
+Thus the function raises `ArgumentError`. The message names each shared new
+name with all of its keys, so you can correct the mapping in one step.
+
+The new name `:__struct__` would make a result that looks like a struct but
+has only some of its fields. Code that matches on the struct would then
+accept an incorrect value. Thus the function raises `ArgumentError` for that
+name, and the result is always a plain map.
+
+The mapping must be a plain map. The guard rejects a struct with
+`FunctionClauseError`, as for each other argument of the wrong type. Without
+the guard, most structs would cause `Protocol.UndefinedError`, because they
+do not implement `Enumerable`.
+
 ## One element for each call of toggle
 
 A map set can contain a list as an element. If `Shoddy.MapSets.toggle/2`
@@ -187,6 +210,42 @@ also for a list of a few elements.
 To toggle an element one time for each occurrence, for example to apply a
 list of events, call `Shoddy.MapSets.toggle/2` for each element with
 `Enum.reduce/3`.
+
+## How has_duplicates? finds a duplicate
+
+`Shoddy.Lists.has_duplicates?/1` must be fast for two types of list. In a
+list with a duplicate near the start, the function can stop at that
+duplicate. In a list with no duplicates, the function must read each
+element.
+
+Two methods are available:
+
+- A walk puts each element into a map, and stops at the first element that
+  is already in the map.
+- `:maps.from_keys/2` makes a map from all the elements in one call. The
+  function then compares the size of the map with the length of the list.
+  `:maps.from_keys/2` is a built-in function of the runtime, so it is
+  approximately 4 times faster than the walk. But it cannot stop early.
+
+Thus the function uses the two methods in sequence. It walks the first 1024
+elements. If it finds no duplicate there, it calls `:maps.from_keys/2` for
+the full list. This table shows the times for a list of 1 000 000 integers,
+on OTP 28 (median of 7 runs):
+
+| List | Walk | `:maps.from_keys/2` | `has_duplicates?/1` |
+| --- | --- | --- | --- |
+| No duplicates | 1144 ms | 283 ms | 282 ms |
+| One duplicate at the end | 1105 ms | 303 ms | 257 ms |
+| Many duplicates | 0.12 ms | 326 ms | 0.13 ms |
+| One duplicate at index 1100 | 0.15 ms | 253 ms | 247 ms |
+
+The last row shows the cost of this method. A duplicate just after the first
+1024 elements gets the time of `:maps.from_keys/2`, although a walk would
+stop soon after the first 1024 elements. In each other case,
+`has_duplicates?/1` gets the time of the faster method.
+
+`Shoddy.Lists.duplicates/1` must read each element in each case, so it does
+not use this method.
 
 ## Why extend_precision never lowers the precision
 
