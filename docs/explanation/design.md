@@ -89,6 +89,12 @@ function is the value.
 it does not call it. Thus the default can be any value, such as `nil` or a
 function.
 
+`Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3` follow the
+same rule for one key. An absent key and the value `nil` get the default,
+and `false` stays. `Map.get/3` gives its default only for an absent key, so
+an entry with the value `nil` still gives `nil`. The code then often adds
+`|| default`, and that operator replaces `false` too.
+
 ## Pipelines and with
 
 `Shoddy.Result` gives a pipeline for a sequence of operations that can fail.

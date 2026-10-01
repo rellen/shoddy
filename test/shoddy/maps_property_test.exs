@@ -61,6 +61,16 @@ defmodule Shoddy.MapsPropertyTest do
     end
   end
 
+  describe "get_present/3" do
+    property "returns the default for an absent key or nil, and the value otherwise" do
+      check all(map <- map_of(simple(), one_of([constant(nil), simple()]), max_length: 10), key <- simple()) do
+        expected = if is_nil(Map.get(map, key)), do: :default, else: Map.fetch!(map, key)
+
+        assert Maps.get_present(map, key, :default) === expected
+      end
+    end
+  end
+
   describe "a struct as the first argument" do
     @fields URI.__struct__() |> Map.keys()
 

@@ -27,4 +27,14 @@ defmodule Shoddy.KeywordsPropertyTest do
       end
     end
   end
+
+  describe "get_present/3" do
+    property "returns the default for an absent key or nil, and the value of Keyword.get/2 otherwise" do
+      check all(keywords <- list_of(tuple({key(), one_of([constant(nil), simple()])}), max_length: 6), key <- key()) do
+        expected = if is_nil(Keyword.get(keywords, key)), do: :default, else: Keyword.get(keywords, key)
+
+        assert Keywords.get_present(keywords, key, :default) === expected
+      end
+    end
+  end
 end

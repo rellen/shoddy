@@ -28,6 +28,35 @@ Shoddy.coalesce([user.nickname, user.name], default: "Anonymous")
 #=> "Anonymous"
 ```
 
+## Give a default for a key with the value nil
+
+`Map.get/3` returns its default only for an absent key. For a key with the
+value `nil`, it returns `nil`:
+
+```elixir
+element = %{name: "intro", tags: nil}
+
+Map.get(element, :tags, [])
+#=> nil
+```
+
+Use `Shoddy.Maps.get_present/3`. It returns the default for an absent key and
+for `nil`:
+
+```elixir
+Shoddy.Maps.get_present(element, :tags, [])
+#=> []
+```
+
+`Map.get(element, :tags) || []` returns the default also for `false`.
+`Shoddy.Maps.get_present/3` returns `false` with no change. For a keyword
+list, use `Shoddy.Keywords.get_present/3`:
+
+```elixir
+Shoddy.Keywords.get_present([retry: false], :retry, true)
+#=> false
+```
+
 ## Reject more values than nil
 
 By default, `Shoddy.coalesce/2` rejects only `nil`. An empty string is not

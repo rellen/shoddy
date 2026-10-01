@@ -94,6 +94,40 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "get_present/3" do
+    test "returns the value of the key" do
+      assert get_present(%{"a" => 1}, "a", 0) == 1
+    end
+
+    test "returns the default for an absent key and for nil" do
+      assert get_present(%{}, :a, 0) == 0
+      assert get_present(%{a: nil}, :a, 0) == 0
+    end
+
+    test "returns false, zero and an empty string with no change" do
+      assert get_present(%{a: false}, :a, true) == false
+      assert get_present(%{a: 0}, :a, 1) == 0
+      assert get_present(%{a: ""}, :a, "x") == ""
+    end
+
+    test "compares the key with the strict equality operator" do
+      assert get_present(%{1 => :int}, 1.0, :default) == :default
+    end
+
+    test "accepts nil as a key" do
+      assert get_present(%{nil => :value}, nil, :default) == :value
+    end
+
+    test "reads a field of a struct, and returns the default for a key that is not a field" do
+      assert get_present(%URI{host: "example.com"}, :host, "x") == "example.com"
+      assert get_present(%URI{}, :nope, "x") == "x"
+    end
+
+    test "raises FunctionClauseError for a first argument that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&get_present/3, [[a: 1], :a, 0]) end
+    end
+  end
+
   describe "a struct as the first argument" do
     for function <- [:put_if, :put_present] do
       test "#{function}/3 puts a value into a field of the struct" do
