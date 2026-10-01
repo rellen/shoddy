@@ -136,7 +136,7 @@ defmodule Shoddy.MapsPropertyTest do
   describe "increment/3" do
     property "returns the same result as Map.update/4 with the amount as the initial value" do
       check all(
-              map <- map_of(member_of([:a, :b]), integer(), max_length: 2),
+              map <- map(list_of(tuple({member_of([:a, :b]), integer()}), max_length: 2), &Map.new/1),
               key <- member_of([:a, :b, :c]),
               by <- integer()
             ) do
