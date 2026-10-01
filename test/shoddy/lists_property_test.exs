@@ -16,6 +16,22 @@ defmodule Shoddy.ListsPropertyTest do
     end
   end
 
+  describe "duplicates_by/2" do
+    property "returns the elements of each key that duplicates/1 returns for the keys" do
+      check all(list <- list_of(tuple({element(), integer()}), max_length: 20)) do
+        key = &elem(&1, 0)
+        result = Lists.duplicates_by(list, key)
+        expected_keys = list |> Enum.map(key) |> Lists.duplicates()
+
+        assert MapSet.new(Map.keys(result)) == MapSet.new(expected_keys)
+
+        for {k, elements} <- result do
+          assert elements == Enum.filter(list, &(key.(&1) === k))
+        end
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     property "returns true only if an element occurs more than one time" do
       check all(
