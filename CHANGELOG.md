@@ -54,3 +54,6 @@ The first release also contains these changes:
 - Add `Shoddy.Lists.single/1`. It returns the only element of a list in an
   ok tuple. It returns `{:error, :empty}` for an empty list and
   `{:error, {:many, count}}` for more than one element.
+- Add `Shoddy.Maps.deep_merge/2`. It merges two maps, and it merges each
+  nested plain map of the same key. The right side replaces each other
+  value, also a struct, a list and a keyword list.

@@ -183,6 +183,32 @@ does. They raise this error also if they do not put the value. A wrong key
 then causes an error at the first call, and not only when the value is
 present.
 
+## The values that deep_merge merges
+
+`Shoddy.Maps.deep_merge/2` merges two values only if they are plain maps. It
+does not merge a struct, a list or a keyword list. The value of the right
+side replaces it.
+
+A struct is a map, but its fields belong together. For example, a `Date`
+from the left side with the month of the right side can be a date that does
+not exist. A merge of two structs of different types makes a value that is
+not a correct struct.
+
+A list has no keys, so a merge of two lists has no single meaning. The
+result could join the lists, or remove the duplicates, or replace the list.
+A keyword list has keys, but it can contain a key more than one time, and
+its order can be important. Each rule is correct for some data and wrong for
+other data. Thus the function does not select a rule. `Map.merge/3` takes a
+function, and the caller can give each rule there.
+
+`Config.Reader.merge/2` merges nested keyword lists, but it accepts only a
+configuration: a keyword list of applications, each with a keyword list. It
+does not accept a map.
+
+An empty map on the right side does not remove the nested map of the left
+side. This rule follows from the merge: an empty map has no keys to change.
+To replace a nested map, put the new map after the merge.
+
 ## New names in take_as
 
 `Shoddy.Maps.take_as/2` converts the parameters of a web form, which have

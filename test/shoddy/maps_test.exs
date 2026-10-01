@@ -190,4 +190,66 @@ defmodule Shoddy.MapsTest do
       assert_raise FunctionClauseError, fn -> apply(&take_as/2, [[a: 1], %{a: :x}]) end
     end
   end
+
+  describe "deep_merge/2" do
+    test "merges the nested maps of a key at each level" do
+      left = %{a: %{b: %{c: 1, d: 2}, e: 3}, f: 4}
+      right = %{a: %{b: %{c: 10}, g: 5}}
+
+      assert deep_merge(left, right) == %{a: %{b: %{c: 10, d: 2}, e: 3, g: 5}, f: 4}
+    end
+
+    test "keeps each key that only one map has" do
+      assert deep_merge(%{a: 1}, %{b: 2}) == %{a: 1, b: 2}
+    end
+
+    test "returns the other map if one map is empty" do
+      assert deep_merge(%{}, %{a: %{b: 1}}) == %{a: %{b: 1}}
+      assert deep_merge(%{a: %{b: 1}}, %{}) == %{a: %{b: 1}}
+    end
+
+    test "keeps the nested map of the left map for an empty map in the right map" do
+      assert deep_merge(%{a: %{b: 1}}, %{a: %{}}) == %{a: %{b: 1}}
+    end
+
+    test "replaces a value with nil or false from the right map" do
+      assert deep_merge(%{a: %{b: 1}}, %{a: nil}) == %{a: nil}
+      assert deep_merge(%{a: 1}, %{a: false}) == %{a: false}
+    end
+
+    test "replaces a value that is not a map with a map, and a map with a value that is not a map" do
+      assert deep_merge(%{a: 1}, %{a: %{b: 2}}) == %{a: %{b: 2}}
+      assert deep_merge(%{a: %{b: 2}}, %{a: [b: 3]}) == %{a: [b: 3]}
+    end
+
+    test "replaces a list and a keyword list, and does not join them" do
+      assert deep_merge(%{a: [1, 2], b: [x: 1]}, %{a: [3], b: [y: 2]}) == %{a: [3], b: [y: 2]}
+    end
+
+    test "replaces a struct, and does not merge its fields" do
+      left = %{uri: %URI{host: "example.com", port: 443}}
+      right = %{uri: %URI{host: "example.org"}}
+
+      assert deep_merge(left, right) == right
+    end
+
+    test "replaces a struct with a plain map, and a plain map with a struct" do
+      assert deep_merge(%{a: %URI{port: 443}}, %{a: %{port: 80}}) == %{a: %{port: 80}}
+      assert deep_merge(%{a: %{port: 80}}, %{a: %URI{port: 443}}) == %{a: %URI{port: 443}}
+    end
+
+    test "keeps the left key and the right key of 1 and 1.0 as two keys" do
+      assert deep_merge(%{1 => %{a: 1}}, %{1.0 => %{b: 2}}) == %{1 => %{a: 1}, 1.0 => %{b: 2}}
+    end
+
+    test "raises FunctionClauseError for a struct as an argument" do
+      assert_raise FunctionClauseError, fn -> apply(&deep_merge/2, [%URI{}, %{port: 80}]) end
+      assert_raise FunctionClauseError, fn -> apply(&deep_merge/2, [%{port: 80}, %URI{}]) end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&deep_merge/2, [[a: 1], %{a: 2}]) end
+      assert_raise FunctionClauseError, fn -> apply(&deep_merge/2, [%{a: 1}, nil]) end
+    end
+  end
 end

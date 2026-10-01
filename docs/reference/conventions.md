@@ -8,7 +8,7 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.single/1` |
@@ -28,7 +28,7 @@ function can be a step of a pipeline.
 | Module | The first argument |
 | --- | --- |
 | `Shoddy` | The value. For `Shoddy.coalesce/2`, the list of values. |
-| `Shoddy.Maps` | The map. |
+| `Shoddy.Maps` | The map. For `Shoddy.Maps.deep_merge/2`, the map with the lower priority. |
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. |
@@ -115,6 +115,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
+| `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
 | `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
 | `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
