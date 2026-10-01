@@ -42,26 +42,24 @@ Do not use `Shoddy.DateTimes.ceil/2` for the next run of a job each hour.
 For a value at the start of a unit, it returns the value. A job that runs at
 13:00:00 then gets 13:00:00 as its next run, and it runs again at once.
 
-Add one unit to the result of `Shoddy.DateTimes.floor/2` instead. This
-result is always after the value:
+Use `Shoddy.DateTimes.next_start/2` instead. Its result is always after
+the value:
 
 ```elixir
-~U[2024-01-01 13:00:00Z]
-|> DateTimes.floor(:hour)
-|> DateTime.add(1, :hour)
+DateTimes.next_start(~U[2024-01-01 13:00:00Z], :hour)
 #=> ~U[2024-01-01 14:00:00Z]
 ```
 
 ## Find the end of the unit that contains a value
 
-Use the same method for the end of a period. The result of
-`Shoddy.DateTimes.floor/2` is the start:
+Use `Shoddy.DateTimes.next_start/2` for the end of a period too. The result
+of `Shoddy.DateTimes.floor/2` is the start:
 
 ```elixir
-start = DateTimes.floor(~U[2024-01-01 00:00:00Z], :day)
+DateTimes.floor(~U[2024-01-01 00:00:00Z], :day)
 #=> ~U[2024-01-01 00:00:00Z]
 
-DateTime.add(start, 1, :day)
+DateTimes.next_start(~U[2024-01-01 00:00:00Z], :day)
 #=> ~U[2024-01-02 00:00:00Z]
 ```
 

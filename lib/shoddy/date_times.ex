@@ -13,7 +13,10 @@ defmodule Shoddy.DateTimes do
   - `floor/2` rounds a value down to the start of a minute, an hour or a
     day.
   - `ceil/2` rounds a value up to the start of a minute, an hour or a day.
+  - `next_start/2` returns the start of the next minute, hour or day. The
+    result is always after the value.
   - `between?/3` tells if a value is in a period. It also accepts a `Date`.
+  - `overlap?/2` tells if two periods have a value in common.
 
   ## Precision
 
@@ -224,8 +227,8 @@ defmodule Shoddy.DateTimes do
 
   For a value at the start of a unit, the result is that value. Thus do not
   use this function for the next run of a job each hour. Also do not use it
-  for the end of the unit that contains a value. For these two cases, add
-  one unit to the result of `floor/2`.
+  for the end of the unit that contains a value. For these two cases, use
+  `next_start/2`.
 
   ## Examples
 
@@ -320,4 +323,84 @@ defmodule Shoddy.DateTimes do
       when module in [Date, Time, NaiveDateTime, DateTime] do
     module.compare(value, first) != :lt and module.compare(value, last) == :lt
   end
+
+  @doc """
+  Returns the start of the next unit after a time value.
+
+  The unit is `:minute`, `:hour` or `:day`. The result is always after the
+  value, also for a value that is at the start of a unit. It is equal to
+  the result of `floor/2`, plus one unit. The precision of the fractional
+  second stays the same.
+
+  `ceil/2` is different. It returns a value at the start of a unit with no
+  change. Use this function for the next run of a job each hour, and for
+  the end of the unit that contains a value.
+
+  This function accepts a `NaiveDateTime` and a `DateTime` in the time zone
+  `Etc/UTC`, as `ceil/2` does.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.next_start(~U[2024-01-01 12:34:56Z], :hour)
+      ~U[2024-01-01 13:00:00Z]
+
+  For a value at the start of a unit, the result is the start of the next
+  unit:
+
+      iex> Shoddy.DateTimes.next_start(~U[2024-01-01 13:00:00Z], :hour)
+      ~U[2024-01-01 14:00:00Z]
+
+      iex> Shoddy.DateTimes.ceil(~U[2024-01-01 13:00:00Z], :hour)
+      ~U[2024-01-01 13:00:00Z]
+
+  With `floor/2`, the function gives the period of a day:
+
+      iex> value = ~N[2024-12-31 18:00:00]
+      iex> {Shoddy.DateTimes.floor(value, :day), Shoddy.DateTimes.next_start(value, :day)}
+      {~N[2024-12-31 00:00:00], ~N[2025-01-01 00:00:00]}
+  """
+  @spec next_start(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
+  def next_start(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units,
+    do: value |> floor(unit) |> DateTime.add(1, unit)
+
+  def next_start(%NaiveDateTime{} = value, unit) when unit in @units,
+    do: value |> floor(unit) |> NaiveDateTime.add(1, unit)
+
+  @doc """
+  Returns `true` if two periods have a value in common.
+
+  Each period is a tuple `{first, last}`. As for `between?/3`, a period
+  includes its first value and excludes its last value. Thus two periods
+  that only touch, such as two days that follow each other, do not overlap.
+  A period with a last value that is not after its first value contains no
+  value, so it overlaps no period.
+
+  The four values must have the same type: `Date`, `Time`, `NaiveDateTime`
+  or `DateTime`. A `DateTime` can be in any time zone.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.overlap?({~T[09:00:00], ~T[11:00:00]}, {~T[10:00:00], ~T[12:00:00]})
+      true
+
+      iex> Shoddy.DateTimes.overlap?({~T[09:00:00], ~T[10:00:00]}, {~T[10:00:00], ~T[11:00:00]})
+      false
+
+  This example checks two bookings of a room:
+
+      iex> booked = {~D[2024-07-01], ~D[2024-07-04]}
+      iex> Shoddy.DateTimes.overlap?(booked, {~D[2024-07-04], ~D[2024-07-06]})
+      false
+      iex> Shoddy.DateTimes.overlap?(booked, {~D[2024-07-03], ~D[2024-07-05]})
+      true
+  """
+  @spec overlap?({value, value}, {value, value}) :: boolean()
+        when value: Date.t() | Time.t() | NaiveDateTime.t() | DateTime.t()
+  def overlap?({%module{} = first_a, %module{} = last_a}, {%module{} = first_b, %module{} = last_b})
+      when module in [Date, Time, NaiveDateTime, DateTime] do
+    before?(module, first_a, last_a) and before?(module, first_b, last_b) and
+      before?(module, first_a, last_b) and before?(module, first_b, last_a)
+  end
+
+  defp before?(module, left, right), do: module.compare(left, right) == :lt
 end

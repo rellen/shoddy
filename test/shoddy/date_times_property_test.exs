@@ -164,4 +164,32 @@ defmodule Shoddy.DateTimesPropertyTest do
       end
     end
   end
+
+  describe "next_start/2" do
+    property "returns the start of the unit after the start of the unit of the value" do
+      check all(unit <- member_of([:minute, :hour, :day]), value <- one_of([datetime(), naive_datetime()])) do
+        result = DateTimes.next_start(value, unit)
+        module = value.__struct__
+
+        assert module.compare(result, value) == :gt
+        assert DateTimes.floor(result, unit) == result
+        assert module.diff(result, DateTimes.floor(value, unit), :microsecond) == @unit_length[unit]
+      end
+    end
+  end
+
+  describe "overlap?/2" do
+    property "returns true only if a value is in the two periods" do
+      check all(
+              base <- naive_datetime(),
+              offsets <- list_of(integer(-5..5), length: 4)
+            ) do
+        [a1, a2, b1, b2] = Enum.map(offsets, &NaiveDateTime.add(base, &1, :second))
+        [x1, x2, y1, y2] = offsets
+        shared? = Enum.any?(-6..6, &(&1 >= x1 and &1 < x2 and &1 >= y1 and &1 < y2))
+
+        assert DateTimes.overlap?({a1, a2}, {b1, b2}) == shared?
+      end
+    end
+  end
 end
