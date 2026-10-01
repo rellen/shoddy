@@ -411,3 +411,29 @@ guard is different: it rejects each value that is not a binary. Thus
 The function does not trim the string, for the same reason as the guard.
 The two tools then agree: `presence/1` returns `nil` for a binary only if
 `is_non_empty_string/1` rejects it.
+
+## Why Parse examines the full text
+
+`Integer.parse/1` returns the start of the text as an integer, and it also
+returns the remaining text. The caller must check that the remaining text is
+empty. Code often omits this check, and then `"25 items"` becomes `25`. The
+functions of `Shoddy.Parse` do the check, so an incorrect value never
+becomes a correct one.
+
+The functions do not trim the text. A trim is a decision about the input,
+and different inputs need different rules. The caller makes this decision
+with `String.trim/1`.
+
+The functions return a result and do not raise an exception. Incorrect user
+input is not a defect in the program. The caller can show a message, or use
+a default with `Shoddy.Result.unwrap/2`. The options are different. An
+unknown option or a `:min` that is higher than `:max` is a defect in the
+program, so it raises `ArgumentError`.
+
+`Shoddy.Parse.one_of/2` returns an atom, but it never makes one. The runtime
+never removes an atom, and the number of atoms has a limit. If
+`String.to_atom/1` receives user input, a user can fill the table of atoms
+and stop the system. `String.to_existing_atom/1` is safe from this problem,
+but it accepts the name of each atom in the system, not only the atoms that
+the code expects. The list of allowed atoms is thus also a list of the
+correct values.

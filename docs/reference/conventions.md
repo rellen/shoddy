@@ -13,6 +13,7 @@ of each module gives the full description of each function.
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.single/1` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, and `Shoddy.Strings.presence/1` |
+| `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2` |
@@ -34,6 +35,7 @@ function can be a step of a pipeline.
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. |
 | `Shoddy.Strings` | The value. |
+| `Shoddy.Parse` | The text. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
@@ -101,9 +103,9 @@ return `nil`, and `Shoddy.Result.collect/2` puts `nil` into its list.
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
 bare `:error`.
 
-`Shoddy.Lists.single/1` also returns a result: `{:ok, element}` or
-`{:error, reason}`. Thus the functions of `Shoddy.Result` accept its return
-value.
+`Shoddy.Lists.single/1` and the functions of `Shoddy.Parse` also return a
+result: `{:ok, value}` or `{:error, reason}`. Thus the functions of
+`Shoddy.Result` accept their return values.
 
 ## Equality
 
@@ -132,6 +134,8 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time`, for `Shoddy.DateTimes.ceil/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |
+| `ArgumentError` | An unknown option, a limit that is not an integer or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.integer/2`. |
+| `ArgumentError` | An element of the allowed list that is not an atom, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |

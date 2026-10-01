@@ -13,6 +13,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.MapSets`
 - `Shoddy.Lists`
 - `Shoddy.Strings`
+- `Shoddy.Parse`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
@@ -66,3 +67,7 @@ The first release also contains these changes:
   one byte. It rejects `nil`, `""` and each value that is not a binary.
   `presence/1` changes `""` to `nil`, and it returns each other value with
   no change.
+- Add `Shoddy.Parse` with `integer/2` and `one_of/2`. `integer/2` converts
+  text into an integer only if the text contains only the integer. The
+  options `:min` and `:max` set a range. `one_of/2` converts text into an
+  atom from a list, and it never makes a new atom.
