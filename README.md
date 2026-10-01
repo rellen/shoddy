@@ -29,7 +29,8 @@ params = %{"name" => "Ada", "email" => nil}
   example into the options of a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
 - `Shoddy.Lists` finds the elements that occur more than one time in a list,
-  or that have the same key. It also gets the only element of a list.
+  or that have the same key. It also gets the only element of a list, and
+  it makes a map from the key of each element to the element.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together. It also changes an empty string to `nil`.
 - `Shoddy.Parse` converts text, such as user input, into an integer or into
@@ -77,6 +78,7 @@ For one task, use a how-to guide:
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
 - [Find duplicates in a list](docs/how-to/find-duplicates-in-a-list.md)
+- [Index a list by a key](docs/how-to/index-a-list-by-a-key.md)
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
