@@ -50,6 +50,10 @@ Shoddy.coalesce([user.nickname, user.name], reject: [nil, ""])
 The option replaces the default list `[nil]`. Thus, to reject `nil` also,
 keep `nil` in the list.
 
+To test one value for `nil` and `""`, use the guard
+`Shoddy.Strings.is_non_empty_string/1`. See
+[Treat an empty string as no value](treat-an-empty-string-as-no-value.md).
+
 ## Delay an expensive source
 
 Put the source into a function of arity 0. `Shoddy.coalesce/2` calls that

@@ -30,6 +30,8 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
 - `Shoddy.Lists` finds the elements that occur more than one time in a list,
   or that have the same key. It also gets the only element of a list.
+- `Shoddy.Strings` has a guard that rejects `nil` and an empty string
+  together.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
@@ -67,6 +69,7 @@ For one task, use a how-to guide:
 - [Merge nested maps](docs/how-to/merge-nested-maps.md)
 - [Build a keyword list of options](docs/how-to/build-a-keyword-list-of-options.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
+- [Treat an empty string as no value](docs/how-to/treat-an-empty-string-as-no-value.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)

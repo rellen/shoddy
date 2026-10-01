@@ -12,6 +12,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Keywords`
 - `Shoddy.MapSets`
 - `Shoddy.Lists`
+- `Shoddy.Strings`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
@@ -60,3 +61,6 @@ The first release also contains these changes:
 - Add `Shoddy.DateTimes.ceil/2`. It rounds a time value up to the start of
   a minute, an hour or a day. A value at the start of a unit stays the same.
   It accepts a `NaiveDateTime` and a `DateTime` in UTC, but not a `Time`.
+- Add `Shoddy.Strings` with the guard `is_non_empty_string/1`. It accepts a
+  binary that contains at least one byte. It rejects `nil`, `""` and each
+  value that is not a binary.

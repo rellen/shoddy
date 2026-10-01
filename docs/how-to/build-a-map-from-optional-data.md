@@ -28,6 +28,11 @@ params = %{"name" => "Ada", "email" => nil}
 For `nil` or `false`, `Shoddy.Maps.put_if/3` returns the map with no change.
 An entry that is already in the map stays.
 
+An empty string is truthy, so `Shoddy.Maps.put_if/3` puts it into the map. A
+web form sends `""` for a field that the user did not fill in.
+[Treat an empty string as no value](treat-an-empty-string-as-no-value.md)
+shows how to ignore it.
+
 ## Take the fields of the parameters with new names
 
 The parameters of a web form have string keys. Use `Shoddy.Maps.take_as/2`
