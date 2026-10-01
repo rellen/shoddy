@@ -118,10 +118,11 @@ defmodule Shoddy.StringsTest do
       assert_raise ArgumentError, ~r/expected a string/, fn -> truncate("abc", 2, omission: nil) end
     end
 
-    test "raises FunctionClauseError for a negative max and for a value that is not a string" do
-      assert_raise FunctionClauseError, fn -> apply(&truncate/2, ["abc", -1]) end
-      assert_raise FunctionClauseError, fn -> apply(&truncate/2, [nil, 3]) end
-      assert_raise FunctionClauseError, fn -> apply(&truncate/2, ["abc", 2.0]) end
+    test "raises FunctionClauseError from truncate/3 itself for an argument of the wrong type" do
+      for args <- [["abc", -1, []], [nil, 3, []], ["abc", 2.0, []], ["abc", 2, :omission]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&truncate/3, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :truncate}
+      end
     end
   end
 end
