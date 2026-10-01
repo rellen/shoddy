@@ -103,12 +103,14 @@ defmodule Shoddy.KeywordsTest do
       assert get_present([], :a, x: 1) == [x: 1]
     end
 
-    test "raises FunctionClauseError for a key that is not an atom" do
-      assert_raise FunctionClauseError, fn -> apply(&get_present/3, [[a: 1], "a", 0]) end
+    test "raises FunctionClauseError from get_present/3 itself for a key that is not an atom" do
+      error = assert_raise FunctionClauseError, fn -> apply(&get_present/3, [[a: 1], "a", 0]) end
+      assert {error.module, error.function} == {Shoddy.Keywords, :get_present}
     end
 
-    test "raises FunctionClauseError for a first argument that is not a list" do
-      assert_raise FunctionClauseError, fn -> apply(&get_present/3, [%{a: 1}, :a, 0]) end
+    test "raises FunctionClauseError from get_present/3 itself for a first argument that is not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&get_present/3, [%{a: 1}, :a, 0]) end
+      assert {error.module, error.function} == {Shoddy.Keywords, :get_present}
     end
   end
 end

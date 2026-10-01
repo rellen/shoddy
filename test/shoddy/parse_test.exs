@@ -67,9 +67,11 @@ defmodule Shoddy.ParseTest do
       assert_raise ArgumentError, ~r/higher than the option :max/, fn -> integer("1", min: 5, max: 1) end
     end
 
-    test "raises FunctionClauseError for text that is not a binary" do
-      assert_raise FunctionClauseError, fn -> apply(&integer/1, [42]) end
-      assert_raise FunctionClauseError, fn -> apply(&integer/1, [nil]) end
+    test "raises FunctionClauseError for text that is not a binary, from integer/2 itself" do
+      for args <- [[42, []], [nil, []], ["1", :min]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&integer/2, args) end
+        assert {error.module, error.function} == {Shoddy.Parse, :integer}
+      end
     end
   end
 
