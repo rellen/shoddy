@@ -96,4 +96,34 @@ defmodule Shoddy.ListsTest do
       assert_raise FunctionClauseError, fn -> apply(&has_duplicates?/1, [MapSet.new([1])]) end
     end
   end
+
+  describe "single/1" do
+    test "returns the only element in an ok tuple" do
+      assert single([%{id: 1}]) == {:ok, %{id: 1}}
+    end
+
+    test "returns an ok tuple for a falsy element" do
+      assert single([nil]) == {:ok, nil}
+      assert single([false]) == {:ok, false}
+    end
+
+    test "returns an ok tuple for an element that is a list" do
+      assert single([[]]) == {:ok, []}
+      assert single([[1, 2]]) == {:ok, [1, 2]}
+    end
+
+    test "returns :empty for an empty list" do
+      assert single([]) == {:error, :empty}
+    end
+
+    test "returns the number of elements for more than one element" do
+      assert single([1, 1]) == {:error, {:many, 2}}
+      assert single(Enum.to_list(1..1_000)) == {:error, {:many, 1_000}}
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&single/1, [MapSet.new([1])]) end
+      assert_raise FunctionClauseError, fn -> apply(&single/1, [nil]) end
+    end
+  end
 end

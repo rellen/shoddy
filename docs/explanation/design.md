@@ -269,6 +269,23 @@ stop soon after the first 1024 elements. In each other case,
 `Shoddy.Lists.duplicates/1` must read each element in each case, so it does
 not use this method.
 
+## Two errors from single
+
+`Shoddy.Lists.single/1` has two different errors. An empty list usually
+means that a record does not exist. More than one element usually means
+that a condition is not specific enough, or that the data is not correct.
+The caller must often do a different thing for each error, so the reasons
+are different.
+
+`List.first/1` does not tell these cases. It returns `nil` for an empty
+list, and it ignores each element after the first. A second element is thus
+not visible. The error `{:many, count}` makes it visible, and the count
+tells the size of the problem.
+
+The function returns a result and does not raise an exception. A list of the
+wrong length is usually an error in the data, not a defect in the program.
+If a different length is a defect, match the pattern `[element]`.
+
 ## Why extend_precision never lowers the precision
 
 The precision of a time value is part of its struct, and `==` compares the

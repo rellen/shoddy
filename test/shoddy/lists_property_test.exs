@@ -46,4 +46,19 @@ defmodule Shoddy.ListsPropertyTest do
       end
     end
   end
+
+  describe "single/1" do
+    property "returns the element for one element, and an error with the number of elements otherwise" do
+      check all(list <- list_of(element(), max_length: 20)) do
+        expected =
+          case length(list) do
+            0 -> {:error, :empty}
+            1 -> {:ok, hd(list)}
+            count -> {:error, {:many, count}}
+          end
+
+        assert Lists.single(list) === expected
+      end
+    end
+  end
 end
