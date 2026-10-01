@@ -182,6 +182,9 @@ defmodule Shoddy.ListsTest do
       assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [:asc]) end
       assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [{:up, & &1}]) end
       assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [fn _a, _b -> true end]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [{:up, & &1, Date}]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [{:asc, :value, Date}]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [{:asc, & &1, "Date"}]) end
     end
 
     test "raises ArgumentError for a module that does not export compare/2" do
