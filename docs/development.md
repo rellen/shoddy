@@ -98,6 +98,24 @@ Then do these steps:
 4. Read the text again, and compare it with the rules for prose in
    `CLAUDE.md`.
 
+## Document a new function
+
+Each new public function needs a document of each type that applies. Do
+these steps in the commit that adds the function:
+
+1. Reference: write the `@doc` with examples. Add the function to each
+   table of `docs/reference/conventions.md` that applies. Examples are the
+   tables of the modules, of the errors and of the functions as arguments.
+2. How-to guide: add a section to a guide in `docs/how-to`, or write a new
+   guide for a new task. Run each example.
+3. Explanation: if the function makes a decision that a reader can find
+   unusual, add a section to `docs/explanation/design.md`. The section tells
+   the reason for the decision.
+4. Tutorial: change `docs/tutorials/get-started.md` only if the function
+   belongs in a first lesson.
+5. Add a line to the part "Unreleased" of `CHANGELOG.md`. If the function
+   changes what a module does, change its description in `README.md`.
+
 ## The workflow
 
 `.github/workflows/check.yml` runs the checks for each pull request and for
