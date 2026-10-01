@@ -350,3 +350,22 @@ Thus the function raises `FunctionClauseError` for a `DateTime` in another
 time zone, and it does not return a value that can be wrong. The caller
 selects the rule. A conversion to UTC rounds the moment in UTC. A
 conversion to a `NaiveDateTime` rounds the local wall time.
+
+## Why ceil does not accept a Time
+
+`Shoddy.DateTimes.ceil/2` returns a value that is not before its argument.
+A `Time` has no day, so this rule fails near the end of the day. The next
+hour after `~T[23:30:00]` is midnight of the next day, and a `Time` cannot
+show that day. `Time.add/3` goes back to `~T[00:00:00]`, which is before the
+argument.
+
+The function could raise an error only for such a value. But then a correct
+call could fail at some times of the day only, and a test at another time
+would not find the problem. Thus the function does not accept a `Time` at
+all. `Shoddy.DateTimes.floor/2` accepts a `Time`, because its result is
+always in the same day.
+
+`ceil/2` returns its argument with no change if the argument is at the start
+of a unit. It does not return the end of the unit that contains the
+argument. This rule makes it the counterpart of `floor/2`: each function
+returns the nearest start of a unit in one direction.

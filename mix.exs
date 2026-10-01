@@ -65,6 +65,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/get-the-only-element-of-a-list.md",
         "docs/how-to/compare-time-values-of-different-precision.md",
         "docs/how-to/round-a-time-value-down.md",
+        "docs/how-to/round-a-time-value-up.md",
         "docs/reference/conventions.md",
         "docs/explanation/design.md",
         "docs/development.md"

@@ -136,4 +136,18 @@ defmodule Shoddy.DateTimesPropertyTest do
       end
     end
   end
+
+  describe "ceil/2" do
+    property "returns the first start of a unit at or after the value, with the same precision" do
+      check all(unit <- member_of([:minute, :hour, :day]), value <- one_of([datetime(), naive_datetime()])) do
+        result = DateTimes.ceil(value, unit)
+        module = value.__struct__
+        difference = module.diff(result, value, :microsecond)
+
+        assert difference >= 0 and difference < @unit_length[unit]
+        assert DateTimes.floor(result, unit) == result
+        assert elem(result.microsecond, 1) == elem(value.microsecond, 1)
+      end
+    end
+  end
 end

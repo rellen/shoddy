@@ -146,4 +146,72 @@ defmodule Shoddy.DateTimesTest do
       assert_raise FunctionClauseError, fn -> apply(&floor/2, [~D[2024-03-15], :day]) end
     end
   end
+
+  describe "ceil/2" do
+    test "rounds a DateTime up to the start of the next minute, hour and day" do
+      value = ~U[2024-03-15 12:34:56.789012Z]
+
+      assert ceil(value, :minute) == ~U[2024-03-15 12:35:00.000000Z]
+      assert ceil(value, :hour) == ~U[2024-03-15 13:00:00.000000Z]
+      assert ceil(value, :day) == ~U[2024-03-16 00:00:00.000000Z]
+    end
+
+    test "rounds a NaiveDateTime up to the start of the next minute, hour and day" do
+      value = ~N[2024-03-15 12:34:56.789]
+
+      assert ceil(value, :minute) == ~N[2024-03-15 12:35:00.000]
+      assert ceil(value, :hour) == ~N[2024-03-15 13:00:00.000]
+      assert ceil(value, :day) == ~N[2024-03-16 00:00:00.000]
+    end
+
+    test "goes into the next month and the next year" do
+      assert ceil(~U[2024-02-29 23:59:59Z], :day) == ~U[2024-03-01 00:00:00Z]
+      assert ceil(~N[2024-12-31 23:59:00.1], :minute) == ~N[2025-01-01 00:00:00.0]
+    end
+
+    test "keeps the precision of the fractional second" do
+      assert ceil(~U[2024-03-15 12:34:56.7Z], :hour).microsecond == {0, 1}
+      assert ceil(~U[2024-03-15 12:34:56Z], :hour).microsecond == {0, 0}
+    end
+
+    test "returns a value at the start of the unit with no change" do
+      assert ceil(~U[2024-03-15 00:00:00Z], :day) == ~U[2024-03-15 00:00:00Z]
+      assert ceil(~U[2024-03-15 13:00:00.000Z], :hour) == ~U[2024-03-15 13:00:00.000Z]
+      assert ceil(~N[2024-03-15 12:34:00], :minute) == ~N[2024-03-15 12:34:00]
+    end
+
+    test "rounds up a value that is one microsecond after the start of the unit" do
+      assert ceil(~U[2024-03-15 00:00:00.000001Z], :day) == ~U[2024-03-16 00:00:00.000000Z]
+    end
+
+    test "rounds up a value with a fractional second above zero and a precision of 0" do
+      value = %{~U[2024-03-15 12:00:00Z] | microsecond: {500_000, 0}}
+
+      assert ceil(value, :hour) == ~U[2024-03-15 13:00:00Z]
+    end
+
+    test "raises FunctionClauseError for a DateTime in a time zone other than UTC" do
+      value = %{
+        ~U[2024-03-15 12:34:56Z]
+        | time_zone: "Europe/Paris",
+          zone_abbr: "CET",
+          utc_offset: 3600
+      }
+
+      assert_raise FunctionClauseError, fn -> ceil(value, :hour) end
+    end
+
+    test "raises FunctionClauseError for a Time" do
+      assert_raise FunctionClauseError, fn -> apply(&ceil/2, [~T[12:34:56], :hour]) end
+      assert_raise FunctionClauseError, fn -> apply(&ceil/2, [~T[23:30:00], :hour]) end
+    end
+
+    test "raises FunctionClauseError for a unit that is not known" do
+      assert_raise FunctionClauseError, fn -> apply(&ceil/2, [~U[2024-03-15 12:34:56Z], :second]) end
+    end
+
+    test "raises FunctionClauseError for a Date" do
+      assert_raise FunctionClauseError, fn -> apply(&ceil/2, [~D[2024-03-15], :day]) end
+    end
+  end
 end

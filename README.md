@@ -35,8 +35,8 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
   value of a GenServer callback.
 - `Shoddy.DateTimes` operates on dates and times. It extends the precision
-  of a time value, and it rounds a time value down to a minute, an hour or
-  a day.
+  of a time value, and it rounds a time value down or up to a minute, an
+  hour or a day.
 
 ## Installation
 
@@ -74,6 +74,7 @@ For one task, use a how-to guide:
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
+- [Round a time value up](docs/how-to/round-a-time-value-up.md)
 
 For the rules that apply to each function, read the reference:
 

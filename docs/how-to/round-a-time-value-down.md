@@ -1,7 +1,8 @@
 # Round a time value down
 
 This guide shows how to round a time value down to the start of a minute,
-an hour or a day. Use `Shoddy.DateTimes.floor/2`. The examples use an alias:
+an hour or a day. Use `Shoddy.DateTimes.floor/2`. To round a value up, see
+[Round a time value up](round-a-time-value-up.md). The examples use an alias:
 
 ```elixir
 alias Shoddy.DateTimes
