@@ -153,4 +153,51 @@ defmodule Shoddy.Lists do
   defp scan([element | _rest], seen, _remaining, _list) when is_map_key(seen, element), do: true
 
   defp scan([element | rest], seen, remaining, list), do: scan(rest, Map.put(seen, element, []), remaining - 1, list)
+
+  @doc """
+  Returns the only element of a list in an ok tuple.
+
+  The function returns an error tuple if the list does not contain exactly
+  one element:
+
+  - `{:error, :empty}` for an empty list.
+  - `{:error, {:many, count}}` for a list of more than one element. `count`
+    is the number of elements.
+
+  `List.first/1` and `hd/1` ignore the other elements, and `List.first/1`
+  returns `nil` for an empty list. Use this function if more than one element
+  is an error, for example for a query that must find one record.
+
+  ## Examples
+
+      iex> Shoddy.Lists.single([:a])
+      {:ok, :a}
+
+      iex> Shoddy.Lists.single([])
+      {:error, :empty}
+
+      iex> Shoddy.Lists.single([:a, :b, :c])
+      {:error, {:many, 3}}
+
+  The element can be `nil` or `false`:
+
+      iex> Shoddy.Lists.single([nil])
+      {:ok, nil}
+
+      iex> Shoddy.Lists.single([false])
+      {:ok, false}
+
+  Use the function in a pipeline of results:
+
+      iex> [%{id: 1, email: "ada@example.com"}, %{id: 2, email: "grace@example.com"}]
+      ...> |> Enum.filter(&(&1.email == "ada@example.com"))
+      ...> |> Shoddy.Lists.single()
+      ...> |> Shoddy.Result.map_ok(& &1.id)
+      {:ok, 1}
+  """
+  @spec single([element]) :: {:ok, element} | {:error, :empty | {:many, pos_integer()}}
+        when element: var
+  def single([element]), do: {:ok, element}
+  def single([]), do: {:error, :empty}
+  def single([_, _ | _] = list), do: {:error, {:many, length(list)}}
 end

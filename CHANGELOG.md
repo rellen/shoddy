@@ -51,3 +51,6 @@ The first release also contains these changes:
   `nil`, and it returns the option `:default` for `nil`.
 - Add `Shoddy.Lists.duplicates_by/2`. It returns a map from each key that
   more than one element has to the elements that have that key.
+- Add `Shoddy.Lists.single/1`. It returns the only element of a list in an
+  ok tuple. It returns `{:error, :empty}` for an empty list and
+  `{:error, {:many, count}}` for more than one element.
