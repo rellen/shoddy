@@ -15,6 +15,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Strings`
 - `Shoddy.Parse`
 - `Shoddy.Env`
+- `Shoddy.Numbers`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
@@ -113,3 +114,6 @@ The first release also contains these changes:
 - Add `Shoddy.Env` with `integer/2` and `boolean/2`. They read a value from
   an environment variable, for `config/runtime.exs`. They raise an
   exception for a wrong value, and an empty value counts as absent.
+- Add `Shoddy.Numbers` with `ceil_div/2` and `clamp/3`. `ceil_div/2`
+  divides two integers and rounds up, with no float. `clamp/3` keeps a
+  number in a range.

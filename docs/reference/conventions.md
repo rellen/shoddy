@@ -15,6 +15,7 @@ of each module gives the full description of each function.
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` |
+| `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.between?/3` |
@@ -38,6 +39,7 @@ function can be a step of a pipeline.
 | `Shoddy.Strings` | The value. |
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
+| `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. |
@@ -149,6 +151,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2`. |
 | `FunctionClauseError` | A value that is not `nil` or a string, for `Shoddy.Strings.blank?/1`. |
 | `FunctionClauseError` | An empty separator for `Shoddy.Strings.split_trim/2`. |
+| `FunctionClauseError` | A divisor of zero, or a value that is not an integer, for `Shoddy.Numbers.ceil_div/2`. |
 | `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
 | `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
@@ -171,6 +174,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |
 | `ArgumentError` | A key in a wrong form, or a module that does not export `compare/2`, for `Shoddy.Lists.sort_by_keys/2`. |
+| `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
 | `ArgumentError` | A value of the variable that is not correct, or an unknown option, for `Shoddy.Env.integer/2` and `Shoddy.Env.boolean/2`. |
 | `System.EnvError` | An absent or empty variable without the option `:default`, for `Shoddy.Env.integer/2` and `Shoddy.Env.boolean/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |

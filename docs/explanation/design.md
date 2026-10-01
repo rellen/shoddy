@@ -609,3 +609,16 @@ does.
 The functions do not examine the default. A default of `nil` can then mark
 an optional setting. A default outside the range of `:min` and `:max` can
 mark a special case, such as "no limit".
+
+## Integers in Numbers
+
+`Shoddy.Numbers.ceil_div/2` uses only integer operations. The expression
+`ceil(a / b)` gives the same result for small numbers, but the operator `/`
+returns a float. A float stores about 16 decimal digits, so a larger integer
+loses its last digits. For example, `ceil((10 ** 17 + 1) / 1)` returns
+`10 ** 17`. A count of items or bytes can be that large, and an error of one
+gives a page or a block too few.
+
+`Shoddy.Numbers.clamp/3` raises `ArgumentError` if the minimum is higher
+than the maximum. Such a range contains no number. A result in that case
+would be wrong for each rule, so an error at the call is the safer choice.

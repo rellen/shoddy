@@ -42,6 +42,8 @@ params = %{"name" => "Ada", "email" => nil}
   float, a boolean or an allowed atom. It returns a result.
 - `Shoddy.Env` reads an integer or a boolean from an environment variable,
   for `config/runtime.exs`. It raises an exception for a wrong value.
+- `Shoddy.Numbers` divides two integers and rounds up, and it keeps a number
+  in a range.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
@@ -89,6 +91,7 @@ For one task, use a how-to guide:
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
 - [Find duplicates in a list](docs/how-to/find-duplicates-in-a-list.md)
 - [Index a list by a key](docs/how-to/index-a-list-by-a-key.md)
+- [Paginate a list](docs/how-to/paginate-a-list.md)
 - [Sort and group records for display](docs/how-to/sort-and-group-records-for-display.md)
 - [Update a list of records](docs/how-to/update-a-list-of-records.md)
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)
