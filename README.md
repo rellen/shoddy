@@ -32,7 +32,8 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
 - `Shoddy.Lists` finds the elements that occur more than one time in a list,
   or that have the same key. It also gets the only element of a list, and
-  it makes a map from the key of each element to the element.
+  it makes a map from the key of each element to the element. It sorts and
+  groups records in a fixed order, and it replaces or adds a record.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together. It also changes an empty string to `nil`. It shortens a string
   for display.
@@ -84,6 +85,8 @@ For one task, use a how-to guide:
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
 - [Find duplicates in a list](docs/how-to/find-duplicates-in-a-list.md)
 - [Index a list by a key](docs/how-to/index-a-list-by-a-key.md)
+- [Sort and group records for display](docs/how-to/sort-and-group-records-for-display.md)
+- [Update a list of records](docs/how-to/update-a-list-of-records.md)
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)

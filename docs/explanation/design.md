@@ -543,3 +543,29 @@ data. The function does not replace data, so it raises `ArgumentError`.
 does. A key with the value `nil` exists. A form or an API can send `nil` on
 purpose, for example to clear a field. The caller can remove such entries
 first if `nil` must count as absent.
+
+## The order of a list of records
+
+A list of records often goes to a person, for example as a table or as a
+list with headings. The order of that list is part of its meaning. Three
+functions of `Shoddy.Lists` keep or make an order where the standard
+functions lose it.
+
+`Shoddy.Lists.group_by_in_order/2` returns a list, not a map. A map with
+more than 32 keys has no order that a program can use, so the groups of
+`Enum.group_by/2` can change their order. A list of `{key, elements}`
+tuples keeps the order of the first element of each key. Thus a sorted
+list stays sorted after the grouping.
+
+`Shoddy.Lists.sort_by_keys/2` compares a date or a time with `compare/2` of
+its module. The operators `<` and `>` compare the fields of a struct in an
+order that is not the order of time. The function also gives each key its
+own direction. A single key with a tuple of values cannot do this, because
+the direction applies to the full tuple. Equal elements stay in the order
+of the input, so a second sort does not move them.
+
+`Shoddy.Lists.upsert_by/4` puts a changed record at the position of the old
+record. A person who reads the list then sees the change at the same place.
+If more than one record has the key, the function replaces only the first.
+The key should be unique, and a replacement of each such record would make
+copies of the new record.

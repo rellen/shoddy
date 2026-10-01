@@ -92,3 +92,9 @@ The first release also contains these changes:
   makes each map on the path that is absent or `nil`.
 - Add `Shoddy.Maps.fetch_keys/2`. It returns the given keys of a map, or
   `{:error, {:missing_keys, keys}}` with the keys that are absent.
+- Add `Shoddy.Lists.group_by_in_order/2`. It puts the elements into groups
+  by key, and it returns a list of groups in the order of the input.
+- Add `Shoddy.Lists.upsert_by/4`. It replaces the element with the same key
+  at its position, or it adds the element at the end or at the start.
+- Add `Shoddy.Lists.sort_by_keys/2`. It sorts by more than one key, with a
+  direction for each key and an optional module for `compare/2`.

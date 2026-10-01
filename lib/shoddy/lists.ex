@@ -169,6 +169,193 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Puts the elements of a list into groups by key, and keeps the order.
+
+  `key_fun` returns the key of an element. The result is a list of
+  `{key, elements}` tuples. The groups are in the order of the first
+  element of each key, and the elements of a group are in the order of the
+  input.
+
+  `Enum.group_by/2` returns a map. A map has no order that you can use, so
+  the groups can change their order. `Enum.chunk_by/2` keeps the order, but
+  it makes a new group each time the key changes. Use this function to show
+  groups in the order of the data, such as messages by day.
+
+  This function compares two keys with the strict equality operator `===/2`.
+
+  ## Examples
+
+      iex> Shoddy.Lists.group_by_in_order(["b1", "a1", "b2", "c1", "a2"], &String.first/1)
+      [{"b", ["b1", "b2"]}, {"a", ["a1", "a2"]}, {"c", ["c1"]}]
+
+      iex> Shoddy.Lists.group_by_in_order([], &String.first/1)
+      []
+
+  `Enum.chunk_by/2` makes a new group each time the key changes:
+
+      iex> Enum.chunk_by(["b1", "a1", "b2"], &String.first/1)
+      [["b1"], ["a1"], ["b2"]]
+
+      iex> Shoddy.Lists.group_by_in_order(["b1", "a1", "b2"], &String.first/1)
+      [{"b", ["b1", "b2"]}, {"a", ["a1"]}]
+  """
+  @spec group_by_in_order([element], (element -> key)) :: [{key, [element, ...]}]
+        when element: var, key: var
+  def group_by_in_order(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
+    {keys, groups} =
+      Enum.reduce(list, {[], %{}}, fn element, {keys, groups} ->
+        key = key_fun.(element)
+
+        case groups do
+          %{^key => elements} -> {keys, %{groups | key => [element | elements]}}
+          _new_key -> {[key | keys], Map.put(groups, key, [element])}
+        end
+      end)
+
+    keys
+    |> Enum.reverse()
+    |> Enum.map(&{&1, Enum.reverse(Map.fetch!(groups, &1))})
+  end
+
+  @doc """
+  Replaces the element with the same key, or adds the element to the list.
+
+  `key_fun` returns the key of an element. If an element of `list` has the
+  same key as `element`, this function puts `element` at its position. If
+  more than one element has that key, it replaces only the first. If no
+  element has that key, it adds `element` to the list.
+
+  Use this function to apply a change to a list of records. An example is a
+  message that tells about a new or a changed record.
+
+  This function compares two keys with the strict equality operator `===/2`.
+
+  ## Options
+
+    * `:at` - The place where the function adds a new element: `:end` or
+      `:start`. The default is `:end`. The option has no effect on a
+      replacement.
+
+  This function raises `ArgumentError` for an unknown option and for
+  another value of `:at`.
+
+  ## Examples
+
+      iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+      iex> Shoddy.Lists.upsert_by(users, & &1.id, %{id: 2, name: "Grace Hopper"})
+      [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace Hopper"}]
+      iex> Shoddy.Lists.upsert_by(users, & &1.id, %{id: 3, name: "Alan"})
+      [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}, %{id: 3, name: "Alan"}]
+      iex> Shoddy.Lists.upsert_by(users, & &1.id, %{id: 3, name: "Alan"}, at: :start)
+      [%{id: 3, name: "Alan"}, %{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+  """
+  @spec upsert_by([element], (element -> any()), element, keyword()) :: [element, ...] when element: var
+  def upsert_by(list, key_fun, element, opts \\ []) when is_list(list) and is_function(key_fun, 1) and is_list(opts) do
+    at = at!(opts)
+    key = key_fun.(element)
+
+    case Enum.find_index(list, &(key_fun.(&1) === key)) do
+      nil when at == :start -> [element | list]
+      nil -> list ++ [element]
+      index -> List.replace_at(list, index, element)
+    end
+  end
+
+  defp at!(opts) do
+    opts
+    |> Keyword.validate!(at: :end)
+    |> Keyword.fetch!(:at)
+    |> case do
+      at when at in [:end, :start] -> at
+      other -> raise ArgumentError, "invalid value for :at option: expected :end or :start, got: #{inspect(other)}"
+    end
+  end
+
+  @doc """
+  Sorts a list by more than one key, and gives each key its own direction.
+
+  `keys` is a list. The function compares two elements by the first key. If
+  the two values are equal, it compares them by the next key, and so on.
+  Elements with equal values for each key stay in the order of the input.
+
+  Each element of `keys` is one of these forms:
+
+    * `fun` - A function that returns the key. The direction is ascending.
+    * `{direction, fun}` - The direction is `:asc` or `:desc`.
+    * `{direction, fun, module}` - The function compares the values with
+      `module.compare/2`, for example `Date` or `DateTime`.
+
+  Use a module for each struct that has an order, such as a date or a time.
+  The operators `<` and `>` compare the fields of a struct, so they give a
+  wrong order for these values. `Enum.sort_by/3` accepts a module too, but
+  only for one key.
+
+  This function raises `ArgumentError` for an element of `keys` that is not
+  one of these forms, and for a module that does not export `compare/2`.
+
+  ## Examples
+
+      iex> people = [%{name: "Ada", age: 36}, %{name: "Alan", age: 41}, %{name: "Grace", age: 36}]
+      iex> Shoddy.Lists.sort_by_keys(people, [{:desc, & &1.age}, & &1.name])
+      [%{name: "Alan", age: 41}, %{name: "Ada", age: 36}, %{name: "Grace", age: 36}]
+
+  Give a module for a date:
+
+      iex> events = [%{on: ~D[2024-02-01], title: "B"}, %{on: ~D[2024-01-31], title: "A"}]
+      iex> Shoddy.Lists.sort_by_keys(events, [{:asc, & &1.on, Date}])
+      [%{on: ~D[2024-01-31], title: "A"}, %{on: ~D[2024-02-01], title: "B"}]
+  """
+  @spec sort_by_keys([element], [key_spec, ...]) :: [element]
+        when element: var,
+             key_spec:
+               (element -> any())
+               | {:asc | :desc, (element -> any())}
+               | {:asc | :desc, (element -> any()), module()}
+  def sort_by_keys(list, [_ | _] = keys) when is_list(list) do
+    specs = Enum.map(keys, &key_spec!/1)
+
+    Enum.sort_by(
+      list,
+      fn element -> Enum.map(specs, fn {_direction, fun, _module} -> fun.(element) end) end,
+      &in_order?(&1, &2, specs)
+    )
+  end
+
+  defp key_spec!(fun) when is_function(fun, 1), do: {:asc, fun, nil}
+  defp key_spec!({direction, fun}) when direction in [:asc, :desc] and is_function(fun, 1), do: {direction, fun, nil}
+
+  defp key_spec!({direction, fun, module} = spec)
+       when direction in [:asc, :desc] and is_function(fun, 1) and is_atom(module) do
+    if Code.ensure_loaded?(module) and function_exported?(module, :compare, 2) do
+      spec
+    else
+      raise ArgumentError, "the module #{inspect(module)} does not export compare/2"
+    end
+  end
+
+  defp key_spec!(other) do
+    raise ArgumentError,
+          "invalid key: expected a function of arity 1, {direction, fun} or {direction, fun, module}, " <>
+            "got: #{inspect(other)}"
+  end
+
+  defp in_order?([], [], []), do: true
+
+  defp in_order?([left | lefts], [right | rights], [{direction, _fun, module} | specs]) do
+    case {compare(left, right, module), direction} do
+      {:eq, _direction} -> in_order?(lefts, rights, specs)
+      {:lt, :asc} -> true
+      {:gt, :desc} -> true
+      _other -> false
+    end
+  end
+
+  defp compare(left, right, nil) when left < right, do: :lt
+  defp compare(left, right, nil) when left > right, do: :gt
+  defp compare(_left, _right, nil), do: :eq
+  defp compare(left, right, module), do: module.compare(left, right)
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

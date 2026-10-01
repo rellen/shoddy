@@ -97,6 +97,106 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "group_by_in_order/2" do
+    test "keeps the order of the first element of each key and the order of the elements" do
+      assert group_by_in_order([3, 1, 4, 1, 5, 9, 2, 6], &rem(&1, 3)) == [{0, [3, 9, 6]}, {1, [1, 4, 1]}, {2, [5, 2]}]
+    end
+
+    test "accepts nil and false as keys" do
+      assert group_by_in_order([1, 2, 3], &if(&1 != 2, do: false)) == [{false, [1, 3]}, {nil, [2]}]
+    end
+
+    test "keeps 1 and 1.0 as two keys" do
+      assert group_by_in_order([1, 1.0], & &1) == [{1, [1]}, {1.0, [1.0]}]
+    end
+
+    test "keeps the order for more than 32 keys" do
+      keys = Enum.to_list(100..1//-1)
+
+      assert group_by_in_order(keys, & &1) |> Enum.map(&elem(&1, 0)) == keys
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&group_by_in_order/2, [%{a: 1}, & &1]) end
+    end
+  end
+
+  describe "upsert_by/4" do
+    test "replaces only the first element with the same key, at its position" do
+      assert upsert_by([{:a, 1}, {:b, 2}, {:a, 3}], &elem(&1, 0), {:a, 9}) == [{:a, 9}, {:b, 2}, {:a, 3}]
+    end
+
+    test "adds a new element at the end, or at the start with at: :start" do
+      assert upsert_by([{:a, 1}], &elem(&1, 0), {:b, 2}) == [{:a, 1}, {:b, 2}]
+      assert upsert_by([{:a, 1}], &elem(&1, 0), {:b, 2}, at: :start) == [{:b, 2}, {:a, 1}]
+      assert upsert_by([], &elem(&1, 0), {:b, 2}) == [{:b, 2}]
+    end
+
+    test "ignores the option :at for a replacement" do
+      assert upsert_by([{:a, 1}, {:b, 2}], &elem(&1, 0), {:b, 3}, at: :start) == [{:a, 1}, {:b, 3}]
+    end
+
+    test "compares the keys with the strict equality operator" do
+      assert upsert_by([1], & &1, 1.0) == [1, 1.0]
+    end
+
+    test "raises ArgumentError for an unknown option or another value of :at" do
+      assert_raise ArgumentError, fn -> upsert_by([], & &1, 1, position: :end) end
+      assert_raise ArgumentError, ~r/expected :end or :start/, fn -> upsert_by([], & &1, 1, at: :middle) end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&upsert_by/3, [%{}, & &1, 1]) end
+    end
+  end
+
+  describe "sort_by_keys/2" do
+    test "compares by the next key only if the values of the earlier key are equal" do
+      list = [{2, :b}, {1, :b}, {2, :a}, {1, :a}]
+
+      assert sort_by_keys(list, [&elem(&1, 0), &elem(&1, 1)]) == [{1, :a}, {1, :b}, {2, :a}, {2, :b}]
+      assert sort_by_keys(list, [{:desc, &elem(&1, 0)}, {:asc, &elem(&1, 1)}]) == [{2, :a}, {2, :b}, {1, :a}, {1, :b}]
+      assert sort_by_keys(list, [{:asc, &elem(&1, 1)}, {:desc, &elem(&1, 0)}]) == [{2, :a}, {1, :a}, {2, :b}, {1, :b}]
+    end
+
+    test "keeps the order of the input for equal values" do
+      assert sort_by_keys([{1, :x}, {0, :y}, {1, :z}], [&elem(&1, 0)]) == [{0, :y}, {1, :x}, {1, :z}]
+      assert sort_by_keys([{1, :x}, {0, :y}, {1, :z}], [{:desc, &elem(&1, 0)}]) == [{1, :x}, {1, :z}, {0, :y}]
+    end
+
+    test "uses compare/2 of a module" do
+      times = [~U[2024-01-02 00:00:00Z], ~U[2023-12-31 00:00:00Z], ~U[2024-01-01 00:00:00Z]]
+
+      assert sort_by_keys(times, [{:asc, & &1, DateTime}]) ==
+               [~U[2023-12-31 00:00:00Z], ~U[2024-01-01 00:00:00Z], ~U[2024-01-02 00:00:00Z]]
+
+      assert sort_by_keys(times, [{:desc, & &1, DateTime}]) ==
+               [~U[2024-01-02 00:00:00Z], ~U[2024-01-01 00:00:00Z], ~U[2023-12-31 00:00:00Z]]
+    end
+
+    test "returns an empty list for an empty list" do
+      assert sort_by_keys([], [& &1]) == []
+    end
+
+    test "raises ArgumentError for a key in a wrong form" do
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [:asc]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [{:up, & &1}]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> sort_by_keys([1], [fn _a, _b -> true end]) end
+    end
+
+    test "raises ArgumentError for a module that does not export compare/2" do
+      assert_raise ArgumentError, ~r/does not export compare\/2/, fn -> sort_by_keys([1], [{:asc, & &1, Enum}]) end
+
+      assert_raise ArgumentError, ~r/does not export compare\/2/, fn ->
+        sort_by_keys([1], [{:asc, & &1, NoSuchModule}])
+      end
+    end
+
+    test "raises FunctionClauseError for an empty list of keys" do
+      assert_raise FunctionClauseError, fn -> apply(&sort_by_keys/2, [[1], []]) end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])

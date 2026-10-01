@@ -49,6 +49,44 @@ defmodule Shoddy.ListsPropertyTest do
     end
   end
 
+  describe "group_by_in_order/2" do
+    property "has the same groups as Enum.group_by/2, in the order of first occurrence" do
+      check all(list <- list_of(tuple({element(), integer()}), max_length: 20)) do
+        key = &elem(&1, 0)
+        result = Lists.group_by_in_order(list, key)
+
+        assert Map.new(result) == Enum.group_by(list, key)
+        assert Enum.map(result, &elem(&1, 0)) == list |> Enum.map(key) |> Enum.uniq()
+      end
+    end
+  end
+
+  describe "upsert_by/4" do
+    property "replaces the first element with the same key, or adds the element at the end" do
+      check all(list <- list_of(tuple({element(), integer()}), max_length: 10), new <- tuple({element(), integer()})) do
+        key = &elem(&1, 0)
+
+        expected =
+          case Enum.find_index(list, &(key.(&1) === key.(new))) do
+            nil -> list ++ [new]
+            index -> List.replace_at(list, index, new)
+          end
+
+        assert Lists.upsert_by(list, key, new) == expected
+      end
+    end
+  end
+
+  describe "sort_by_keys/2" do
+    property "returns the same order as a stable sort by the last key and then by the first key" do
+      check all(list <- list_of(tuple({integer(0..3), integer(0..3), integer()}), max_length: 20)) do
+        expected = list |> Enum.sort_by(&elem(&1, 1), :asc) |> Enum.sort_by(&elem(&1, 0), :desc)
+
+        assert Lists.sort_by_keys(list, [{:desc, &elem(&1, 0)}, {:asc, &elem(&1, 1)}]) == expected
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     property "returns true only if an element occurs more than one time" do
       check all(
