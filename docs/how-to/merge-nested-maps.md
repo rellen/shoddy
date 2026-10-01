@@ -54,6 +54,29 @@ defaults
 #=> %{log: %{level: :debug}, http: %{port: 8080, timeout: 5_000}}
 ```
 
+## Put one value deep into a map
+
+To set one value, use `Shoddy.Maps.put_path/3`. It makes each map on the
+path that is absent:
+
+```elixir
+Shoddy.Maps.put_path(%{}, [:log, :level], :debug)
+#=> %{log: %{level: :debug}}
+```
+
+`put_in/3` raises `ArgumentError` for the same call, because the map under
+`:log` is absent. A value of `nil` on the path also becomes a map:
+
+```elixir
+Shoddy.Maps.put_path(%{log: nil}, [:log, :level], :debug)
+#=> %{log: %{level: :debug}}
+```
+
+The function treats `nil` as absent. For another value on the path that is
+not a map, such as `false`, it raises `ArgumentError`. Thus, to turn off a
+group of settings that `Shoddy.Maps.put_path/3` must not change, use `false`
+and not `nil`.
+
 ## Turn off a nested group of settings
 
 A value that is not a map replaces the nested map. Use `nil` or `false`:

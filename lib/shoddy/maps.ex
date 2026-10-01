@@ -13,10 +13,11 @@ defmodule Shoddy.Maps do
   does not hide the standard `Map` module.
 
   A struct is also a map, but it has a fixed set of fields. For a struct,
-  `put_if/3` and `put_present/3` accept only a key that is a field of the
-  struct. They raise `KeyError` for another key, as the update syntax
-  `%{struct | key: value}` does. They raise this error also if they do not put
-  the value. Thus a wrong key always causes an error.
+  `put_if/3`, `put_present/3` and `put_path/3` accept only a key that is a
+  field of the struct. They raise `KeyError` for another key, as the update
+  syntax `%{struct | key: value}` does. `put_if/3` and `put_present/3` raise
+  this error also if they do not put the value. Thus a wrong key always
+  causes an error.
   """
 
   @doc """
@@ -322,6 +323,174 @@ defmodule Shoddy.Maps do
     do: deep_merge(left, right)
 
   defp merge_value(_key, _left, right), do: right
+
+  @doc """
+  Applies a function to each value of a map, and keeps the keys.
+
+  `fun` receives the value only. To use the key too, call `Map.new/2` with a
+  function that receives the key-value tuple.
+
+  The map must be a plain map. A struct has a fixed set of fields, and a
+  change to each field at one time is not a correct operation on it. For a
+  struct, this function raises `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.map_values(%{a: 1, b: 2}, &(&1 * 10))
+      %{a: 10, b: 20}
+
+      iex> Shoddy.Maps.map_values(%{}, &(&1 * 10))
+      %{}
+
+  This example counts the elements of each group:
+
+      iex> ["apple", "avocado", "banana"]
+      ...> |> Enum.group_by(&String.first/1)
+      ...> |> Shoddy.Maps.map_values(&length/1)
+      %{"a" => 2, "b" => 1}
+  """
+  @spec map_values(%{optional(key) => value}, (value -> new_value)) :: %{optional(key) => new_value}
+        when key: any(), value: any(), new_value: any()
+  def map_values(map, fun) when is_non_struct_map(map) and is_function(fun, 1) do
+    Map.new(map, fn {key, value} -> {key, fun.(value)} end)
+  end
+
+  @doc """
+  Applies a function to each key of a map, and keeps the values.
+
+  `fun` receives the key only. If `fun` returns the same new key for more
+  than one key, the result could keep only one of their values. Thus this
+  function raises `ArgumentError` for such keys. The message tells each new
+  key and the keys that gave it.
+
+  The map must be a plain map. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.map_keys(%{"name" => "Ada", "email" => "ada@example.com"}, &String.upcase/1)
+      %{"NAME" => "Ada", "EMAIL" => "ada@example.com"}
+
+      iex> Shoddy.Maps.map_keys(%{a: 1, b: 2}, &Atom.to_string/1)
+      %{"a" => 1, "b" => 2}
+
+  The function raises an error if two keys get the same new key:
+
+      iex> Shoddy.Maps.map_keys(%{"a" => 1, "A" => 2}, &String.downcase/1)
+      ** (ArgumentError) more than one key has the same new key: "a" for the keys ["A", "a"]
+  """
+  @spec map_keys(%{optional(key) => value}, (key -> new_key)) :: %{optional(new_key) => value}
+        when key: any(), value: any(), new_key: any()
+  def map_keys(map, fun) when is_non_struct_map(map) and is_function(fun, 1) do
+    result = Map.new(map, fn {key, value} -> {fun.(key), value} end)
+
+    if map_size(result) == map_size(map) do
+      result
+    else
+      mapping = Map.new(map, fn {key, _value} -> {key, fun.(key)} end)
+      raise ArgumentError, "more than one key has the same new key: " <> describe_collisions(mapping)
+    end
+  end
+
+  @doc """
+  Puts a value into a nested map, and makes each map on the path that is absent.
+
+  `path` is a list of keys. The last key gets the value. For each other key,
+  this function goes into the map under that key. If the key is absent, or
+  its value is `nil`, this function puts an empty map there first.
+
+  `put_in/3` is different. It raises `ArgumentError` if a map on the path is
+  absent.
+
+  If a value on the path is not a map and not `nil`, this function raises
+  `ArgumentError`. The message tells the path to that value. A struct on the
+  path accepts only its fields as keys, as in `put_if/3`. For another key,
+  this function raises `KeyError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.put_path(%{}, [:log, :level], :debug)
+      %{log: %{level: :debug}}
+
+      iex> Shoddy.Maps.put_path(%{log: %{format: :text}}, [:log, :level], :debug)
+      %{log: %{format: :text, level: :debug}}
+
+  The function replaces `nil` with a map:
+
+      iex> Shoddy.Maps.put_path(%{log: nil}, [:log, :level], :debug)
+      %{log: %{level: :debug}}
+
+  A path of one key puts the value into the map:
+
+      iex> Shoddy.Maps.put_path(%{a: 1}, [:b], 2)
+      %{a: 1, b: 2}
+
+  The function raises an error for a value on the path that is not a map:
+
+      iex> Shoddy.Maps.put_path(%{log: :off}, [:log, :level], :debug)
+      ** (ArgumentError) the value at the path [:log] is not a map: :off
+  """
+  @spec put_path(map(), [any(), ...], any()) :: map()
+  def put_path(map, [_ | _] = path, value) when is_map(map), do: put_path_at(map, path, value, [])
+
+  defp put_path_at(map, [key], value, _above), do: put_when(map, key, value, true)
+
+  defp put_path_at(map, [key | rest], value, above) do
+    child =
+      case map do
+        %{^key => child} when is_map(child) ->
+          child
+
+        %{^key => other} when not is_nil(other) ->
+          raise ArgumentError,
+                "the value at the path #{inspect(Enum.reverse([key | above]))} is not a map: #{inspect(other)}"
+
+        _absent_or_nil ->
+          %{}
+      end
+
+    put_when(map, key, put_path_at(child, rest, value, [key | above]), true)
+  end
+
+  @doc """
+  Takes the given keys from a map, or returns the keys that are absent.
+
+  If `map` has each key of `keys`, this function returns `{:ok, map}` with
+  only those keys. Otherwise, it returns `{:error, {:missing_keys, missing}}`.
+  `missing` lists each absent key one time, in the order of `keys`.
+
+  A key with the value `nil` is present, as for `Map.fetch/2`. To treat
+  `nil` as absent, remove such entries first, for example with
+  `Map.reject/2`.
+
+  `Map.take/2` is different. It ignores each absent key, so the caller cannot
+  tell that a key is missing.
+
+  ## Examples
+
+      iex> params = %{"name" => "Ada", "email" => "ada@example.com", "admin" => "true"}
+      iex> Shoddy.Maps.fetch_keys(params, ["name", "email"])
+      {:ok, %{"name" => "Ada", "email" => "ada@example.com"}}
+
+      iex> Shoddy.Maps.fetch_keys(%{"name" => "Ada"}, ["name", "email", "age"])
+      {:error, {:missing_keys, ["email", "age"]}}
+
+  A key with the value `nil` is present:
+
+      iex> Shoddy.Maps.fetch_keys(%{"name" => nil}, ["name"])
+      {:ok, %{"name" => nil}}
+  """
+  @spec fetch_keys(map(), [key]) :: {:ok, %{optional(key) => any()}} | {:error, {:missing_keys, [key, ...]}}
+        when key: any()
+  def fetch_keys(map, keys) when is_map(map) and is_list(keys) do
+    keys
+    |> Enum.reject(&Map.has_key?(map, &1))
+    |> Enum.uniq()
+    |> case do
+      [] -> {:ok, Map.take(map, keys)}
+      missing -> {:error, {:missing_keys, missing}}
+    end
+  end
 
   defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
     raise KeyError, key: key, term: struct
