@@ -12,13 +12,14 @@ of each module gives the full description of each function.
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.single/1` |
+| `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2` |
 
-The names `Maps`, `Keywords`, `MapSets`, `Lists` and `DateTimes` are in the
-plural. Thus an alias of one of these modules does not hide the standard
-module `Map`, `Keyword`, `MapSet`, `List` or `DateTime`.
+The names `Maps`, `Keywords`, `MapSets`, `Lists`, `Strings` and `DateTimes`
+are in the plural. Thus an alias of one of these modules does not hide the
+standard module `Map`, `Keyword`, `MapSet`, `List`, `String` or `DateTime`.
 
 ## The order of the arguments
 
@@ -32,6 +33,7 @@ function can be a step of a pipeline.
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. |
+| `Shoddy.Strings` | The value. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
@@ -43,6 +45,8 @@ argument.
 
 A truthy value is a value that is not `nil` and not `false`. A falsy value is
 `nil` or `false`. Zero, an empty string and an empty collection are truthy.
+To reject `nil` and an empty string together, use the guard
+`Shoddy.Strings.is_non_empty_string/1`.
 
 | Function | The value that must be truthy |
 | --- | --- |

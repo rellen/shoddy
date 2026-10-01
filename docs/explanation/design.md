@@ -369,3 +369,25 @@ always in the same day.
 of a unit. It does not return the end of the unit that contains the
 argument. This rule makes it the counterpart of `floor/2`: each function
 returns the nearest start of a unit in one direction.
+
+## What is_non_empty_string accepts
+
+`Shoddy.Strings.is_non_empty_string/1` is a guard, not a function. A guard
+can select a function clause, so the code needs no `if` expression in the
+body. But a guard can use only a small set of operations. These limits
+decide what the guard accepts.
+
+A guard cannot call `String.trim/1`, so it cannot find a string of spaces.
+Thus the guard accepts `" "`. A test of the first byte would reject `" "`,
+but it would accept `"  a"` and `" \n"` in different ways. A rule that is
+correct for some whitespace only is more difficult to know than no rule.
+Thus the caller trims the string first, if spaces must count as empty.
+
+A guard also cannot call `String.valid?/1`. Thus the guard accepts each
+binary that is not empty, also a binary that is not valid UTF-8. This is the
+same rule as `is_binary/1`, which Elixir uses for strings.
+
+The name does not end in `_present`. In Shoddy, `_present` means "not
+`nil`", and `""` is not `nil`. The name `is_non_empty_string` tells the two
+conditions: the value is a string, and it is not empty. The form follows
+`is_non_struct_map/1` of `Kernel`.
