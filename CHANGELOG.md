@@ -85,3 +85,10 @@ The first release also contains these changes:
 - Add `Shoddy.DateTimes.between?/3`. It returns `true` if a date or a time
   is in a period that includes its first value and excludes its last value.
   It accepts a `DateTime` in each time zone.
+- Add `Shoddy.Maps.map_values/2` and `Shoddy.Maps.map_keys/2`. They apply a
+  function to each value or to each key. `map_keys/2` raises
+  `ArgumentError` if two keys get the same new key.
+- Add `Shoddy.Maps.put_path/3`. It puts a value into a nested map, and it
+  makes each map on the path that is absent or `nil`.
+- Add `Shoddy.Maps.fetch_keys/2`. It returns the given keys of a map, or
+  `{:error, {:missing_keys, keys}}` with the keys that are absent.

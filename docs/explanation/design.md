@@ -255,6 +255,11 @@ The mapping must be a plain map. The guard rejects a struct with
 the guard, most structs would cause `Protocol.UndefinedError`, because they
 do not implement `Enumerable`.
 
+`Shoddy.Maps.map_keys/2` follows the same rule. If the function gives two
+keys the same new key, one value goes, and the order of the map decides
+which. Thus `Shoddy.Maps.map_keys/2` raises `ArgumentError`, and the message
+names each such new key with its keys.
+
 ## One element for each call of toggle
 
 A map set can contain a list as an element. If `Shoddy.MapSets.toggle/2`
@@ -518,3 +523,23 @@ returns a boolean. Such a period contains no value, so `false` is correct.
 
 Unlike `Shoddy.DateTimes.floor/2`, this function accepts a `DateTime` in each
 time zone. A comparison of two points in time needs no time zone database.
+
+## When nil counts as absent
+
+Some functions of `Shoddy.Maps` treat a key with the value `nil` as an
+absent key. Others treat it as a present key. The rule follows the purpose
+of each function.
+
+`Shoddy.Maps.get_present/3` reads a value. For a reader, an absent value and
+`nil` usually have the same meaning: no value. Thus the function returns the
+default for the two cases.
+
+`Shoddy.Maps.put_path/3` goes into a map at each key of the path. A value of
+`nil` contains nothing that the function can lose, so the function replaces
+it with a map. Each other value that is not a map, such as `false`, is
+data. The function does not replace data, so it raises `ArgumentError`.
+
+`Shoddy.Maps.fetch_keys/2` checks that the keys exist, as `Map.fetch/2`
+does. A key with the value `nil` exists. A form or an API can send `nil` on
+purpose, for example to clear a field. The caller can remove such entries
+first if `nil` must count as absent.

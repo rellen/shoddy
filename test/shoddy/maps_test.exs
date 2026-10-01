@@ -286,4 +286,112 @@ defmodule Shoddy.MapsTest do
       assert_raise FunctionClauseError, fn -> apply(&deep_merge/2, [%{a: 1}, nil]) end
     end
   end
+
+  describe "map_values/2" do
+    test "applies the function to each value and keeps the keys" do
+      assert map_values(%{"a" => 1, nil => 2}, &to_string/1) == %{"a" => "1", nil => "2"}
+    end
+
+    test "keeps a nil result" do
+      assert map_values(%{a: 1}, fn _ -> nil end) == %{a: nil}
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&map_values/2, [%URI{}, & &1]) end
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&map_values/2, [%{a: 1}, fn _k, v -> v end]) end
+    end
+  end
+
+  describe "map_keys/2" do
+    test "applies the function to each key and keeps the values" do
+      assert map_keys(%{1 => :a, 2 => :b}, &(&1 * 10)) == %{10 => :a, 20 => :b}
+    end
+
+    test "keeps 1 and 1.0 as two new keys" do
+      assert map_keys(%{a: 1, b: 2}, &if(&1 == :a, do: 1, else: 1.0)) == %{1 => 1, 1.0 => 2}
+    end
+
+    test "raises ArgumentError that tells each collision" do
+      message = "more than one key has the same new key: :x for the keys [:a, :b]; :y for the keys [:c, :d]"
+
+      assert_raise ArgumentError, message, fn ->
+        map_keys(%{a: 1, b: 2, c: 3, d: 4}, &if(&1 in [:a, :b], do: :x, else: :y))
+      end
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&map_keys/2, [%URI{}, & &1]) end
+    end
+  end
+
+  describe "put_path/3" do
+    test "makes each absent map on a path of three keys" do
+      assert put_path(%{}, [:a, :b, :c], 1) == %{a: %{b: %{c: 1}}}
+    end
+
+    test "keeps the other entries of each map on the path" do
+      assert put_path(%{a: %{x: 1, b: %{y: 2}}, z: 3}, [:a, :b, :c], 4) == %{a: %{x: 1, b: %{y: 2, c: 4}}, z: 3}
+    end
+
+    test "replaces the value at the last key" do
+      assert put_path(%{a: %{b: 1}}, [:a, :b], 2) == %{a: %{b: 2}}
+      assert put_path(%{a: %{b: %{c: 1}}}, [:a, :b], :flat) == %{a: %{b: :flat}}
+    end
+
+    test "accepts keys of any type" do
+      assert put_path(%{}, ["a", 1, {:k}], :v) == %{"a" => %{1 => %{{:k} => :v}}}
+    end
+
+    test "raises ArgumentError for false or another value on the path that is not a map" do
+      assert_raise ArgumentError, "the value at the path [:a, :b] is not a map: false", fn ->
+        put_path(%{a: %{b: false}}, [:a, :b, :c], 1)
+      end
+
+      assert_raise ArgumentError, ~r/\[:a\] is not a map: \[1\]/, fn -> put_path(%{a: [1]}, [:a, :b], 1) end
+    end
+
+    test "accepts a field of a struct on the path, and raises KeyError for another key" do
+      assert put_path(%{uri: %URI{}}, [:uri, :host], "example.com").uri.host == "example.com"
+      assert_raise KeyError, fn -> put_path(%{uri: %URI{}}, [:uri, :nope], 1) end
+      assert_raise KeyError, fn -> put_path(%URI{}, [:nope, :a], 1) end
+    end
+
+    test "raises FunctionClauseError for an empty path and for a first argument that is not a map" do
+      assert_raise FunctionClauseError, fn -> apply(&put_path/3, [%{}, [], 1]) end
+      assert_raise FunctionClauseError, fn -> apply(&put_path/3, [[a: 1], [:a], 1]) end
+    end
+  end
+
+  describe "fetch_keys/2" do
+    test "returns only the given keys" do
+      assert fetch_keys(%{a: 1, b: 2, c: 3}, [:a, :c]) == {:ok, %{a: 1, c: 3}}
+    end
+
+    test "returns an empty map for an empty list of keys" do
+      assert fetch_keys(%{a: 1}, []) == {:ok, %{}}
+    end
+
+    test "lists each absent key one time, in the order of the keys" do
+      assert fetch_keys(%{a: 1}, [:c, :a, :b, :c]) == {:error, {:missing_keys, [:c, :b]}}
+    end
+
+    test "treats a key with the value nil or false as present" do
+      assert fetch_keys(%{a: nil, b: false}, [:a, :b]) == {:ok, %{a: nil, b: false}}
+    end
+
+    test "compares the keys with the strict equality operator" do
+      assert fetch_keys(%{1 => :a}, [1.0]) == {:error, {:missing_keys, [1.0]}}
+    end
+
+    test "returns a plain map for a struct" do
+      assert fetch_keys(%URI{host: "h"}, [:host]) == {:ok, %{host: "h"}}
+    end
+
+    test "raises FunctionClauseError for keys that are not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&fetch_keys/2, [%{a: 1}, :a]) end
+    end
+  end
 end

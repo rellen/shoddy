@@ -85,6 +85,22 @@ end)
 #=> {:error, "Enter 1 or more."}
 ```
 
+## Require some parameters
+
+Use `Shoddy.Maps.fetch_keys/2`. It returns the required parameters, or the
+parameters that are absent:
+
+```elixir
+Shoddy.Maps.fetch_keys(%{"email" => "ada@example.com"}, ["email", "password"])
+#=> {:error, {:missing_keys, ["password"]}}
+
+Shoddy.Maps.fetch_keys(%{"email" => "ada@example.com", "password" => "x"}, ["email"])
+#=> {:ok, %{"email" => "ada@example.com"}}
+```
+
+The result contains only the given keys. `Map.take/2` returns the same map,
+but it ignores an absent key, so you cannot tell that it is absent.
+
 ## Accept spaces around the value
 
 The functions do not trim the text. Call `String.trim/1` first:

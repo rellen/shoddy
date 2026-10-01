@@ -2,6 +2,7 @@ defmodule Shoddy.MapsPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
+  alias Shoddy.Lists
   alias Shoddy.Maps
 
   defp simple, do: one_of([integer(), atom(:alphanumeric), string(:alphanumeric), boolean()])
@@ -71,6 +72,59 @@ defmodule Shoddy.MapsPropertyTest do
     end
   end
 
+  describe "map_values/2" do
+    property "keeps each key, and applies the function to its value" do
+      check all(map <- any_map()) do
+        result = Maps.map_values(map, fn value -> {value} end)
+
+        assert Map.keys(result) == Map.keys(map)
+        assert Enum.all?(map, fn {key, value} -> result[key] === {value} end)
+      end
+    end
+  end
+
+  describe "map_keys/2" do
+    property "applies the function to each key, and raises only if two keys get the same new key" do
+      check all(map <- map(list_of(tuple({integer(-5..5), simple()}), max_length: 10), &Map.new/1)) do
+        new_key = &abs/1
+
+        if Lists.has_duplicates?(Enum.map(Map.keys(map), new_key)) do
+          assert_raise ArgumentError, fn -> Maps.map_keys(map, new_key) end
+        else
+          assert Maps.map_keys(map, new_key) == Map.new(map, fn {key, value} -> {abs(key), value} end)
+        end
+      end
+    end
+  end
+
+  describe "put_path/3" do
+    property "returns the result of a model that makes each absent or nil map, or raises for another value" do
+      check all(
+              map <-
+                small_map(
+                  tree(one_of([integer(0..2), constant(nil), list_of(integer(0..2), max_length: 1)]), &small_map/1)
+                ),
+              path <- list_of(member_of([:a, :b, :c]), min_length: 1, max_length: 4)
+            ) do
+        case model_put_path(map, path) do
+          {:ok, expected} -> assert Maps.put_path(map, path, :new) == expected
+          :not_a_map -> assert_raise ArgumentError, fn -> Maps.put_path(map, path, :new) end
+        end
+      end
+    end
+  end
+
+  describe "fetch_keys/2" do
+    property "returns the same map as Map.take/2 if each key is present, and the absent keys otherwise" do
+      check all(map <- any_map(), keys <- list_of(simple(), max_length: 5)) do
+        missing = keys |> Enum.reject(&Map.has_key?(map, &1)) |> Enum.uniq()
+        expected = if missing == [], do: {:ok, Map.take(map, keys)}, else: {:error, {:missing_keys, missing}}
+
+        assert Maps.fetch_keys(map, keys) == expected
+      end
+    end
+  end
+
   describe "a struct as the first argument" do
     @fields URI.__struct__() |> Map.keys()
 
@@ -125,6 +179,23 @@ defmodule Shoddy.MapsPropertyTest do
         {_left, {:ok, r}} -> assert value === r
         {{:ok, l}, :error} -> assert value === l
       end
+    end
+  end
+
+  defp model_put_path(map, [key]), do: {:ok, Map.put(map, key, :new)}
+
+  defp model_put_path(map, [key | rest]) do
+    case Map.get(map, key) do
+      nil -> model_put_child(map, key, %{}, rest)
+      child when is_map(child) -> model_put_child(map, key, child, rest)
+      _other -> :not_a_map
+    end
+  end
+
+  defp model_put_child(map, key, child, rest) do
+    case model_put_path(child, rest) do
+      {:ok, new_child} -> {:ok, Map.put(map, key, new_child)}
+      :not_a_map -> :not_a_map
     end
   end
 end
