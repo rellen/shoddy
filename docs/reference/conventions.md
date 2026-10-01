@@ -96,6 +96,10 @@ return `nil`, and `Shoddy.Result.collect/2` puts `nil` into its list.
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
 bare `:error`.
 
+`Shoddy.Lists.single/1` also returns a result: `{:ok, element}` or
+`{:error, reason}`. Thus the functions of `Shoddy.Result` accept its return
+value.
+
 ## Equality
 
 These functions compare two values with the strict equality operator
@@ -136,3 +140,6 @@ These functions compare two values with the strict equality operator
 | Ends in `?` | The function returns a boolean. It raises an exception only for an argument of the wrong type. |
 | Ends in `!` | The function raises an exception for an error result. |
 | Starts with `is_` | The name is a guard. Require or import the module before you use it. |
+| Ends in `_if` | The function acts only if a condition is truthy. The condition is the value, or the return value of a predicate. See [Truthy and falsy values](#truthy-and-falsy-values). |
+| Ends in `_present` | The function acts for each value that is not `nil`. It acts also for `false`. |
+| Ends in `_by` | The function takes a function of arity 1 that returns the key of an element, as `Enum.uniq_by/2` does. |

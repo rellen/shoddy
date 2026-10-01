@@ -93,3 +93,22 @@ params = %{"name" => "Ada", "subscribed" => false, "email" => nil}
 |> Shoddy.Maps.put_present(:email, params["email"])
 #=> %{name: "Ada", subscribed: false}
 ```
+
+## Change a value that can be false
+
+`Shoddy.then_if/2` does not call the function for `false`. To change a value
+that can be `false`, use `Shoddy.then_present/3`. It ignores only `nil`.
+Then put the result with `Shoddy.Maps.put_present/3`:
+
+```elixir
+params = %{"name" => "Ada", "subscribed" => false}
+status = &if(&1, do: :active, else: :inactive)
+
+%{}
+|> Shoddy.Maps.put_present(:name, params["name"])
+|> Shoddy.Maps.put_present(:status, Shoddy.then_present(params["subscribed"], status))
+#=> %{name: "Ada", status: :inactive}
+```
+
+[Transform an optional value](transform-an-optional-value.md) tells more
+about `Shoddy.then_present/3`.
