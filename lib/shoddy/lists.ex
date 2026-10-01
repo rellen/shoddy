@@ -69,6 +69,56 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Returns the elements of a list that have the same key as another element.
+
+  `key_fun` returns the key of an element. The result is a map. It has an
+  entry for each key that more than one element has, and the value of that
+  entry is the list of these elements, in the order of the input. A key that
+  only one element has is not in the map. If no two elements have the same
+  key, the result is an empty map.
+
+  This function compares two keys with the strict equality operator `===/2`,
+  as the keys of a map do. Thus the integer `1` and the float `1.0` are two
+  different keys.
+
+  Use this function to tell which elements have the same value in a field.
+  `duplicates/1` on the values of the field tells only the value.
+
+  ## Examples
+
+      iex> users = [
+      ...>   %{name: "Ada", email: "ada@example.com"},
+      ...>   %{name: "Grace", email: "grace@example.com"},
+      ...>   %{name: "A. Lovelace", email: "ada@example.com"}
+      ...> ]
+      iex> Shoddy.Lists.duplicates_by(users, & &1.email)
+      %{
+        "ada@example.com" => [
+          %{name: "Ada", email: "ada@example.com"},
+          %{name: "A. Lovelace", email: "ada@example.com"}
+        ]
+      }
+
+      iex> Shoddy.Lists.duplicates_by(["a", "B", "b", "c"], &String.downcase/1)
+      %{"b" => ["B", "b"]}
+
+      iex> Shoddy.Lists.duplicates_by([1, 2, 3], & &1)
+      %{}
+
+  The function compares the keys with `===/2`:
+
+      iex> Shoddy.Lists.duplicates_by([1, 1.0], & &1)
+      %{}
+  """
+  @spec duplicates_by([element], (element -> key)) :: %{optional(key) => [element, ...]}
+        when element: var, key: var
+  def duplicates_by(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
+    list
+    |> Enum.group_by(key_fun)
+    |> Map.filter(&match?({_key, [_, _ | _]}, &1))
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

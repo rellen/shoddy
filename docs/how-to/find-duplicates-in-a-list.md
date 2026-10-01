@@ -3,7 +3,8 @@
 This guide shows how to find the elements that occur more than one time in a
 list. Use `Shoddy.Lists.duplicates/1` to get these elements. Use
 `Shoddy.Lists.has_duplicates?/1` if you need only to know that such an
-element exists. The examples use an alias:
+element exists. Use `Shoddy.Lists.duplicates_by/2` to find the elements that
+have the same value in a field. The examples use an alias:
 
 ```elixir
 alias Shoddy.Lists
@@ -58,10 +59,10 @@ Shoddy.Result.ensure(emails, &(not Lists.has_duplicates?(&1)), :duplicate_emails
 #=> {:error, :duplicate_emails}
 ```
 
-## Find the duplicates of a field
+## Find the duplicate values of a field
 
-To find the records that have the same value in a field, take the field from
-each record first:
+To find the values that occur in a field of more than one record, take the
+field from each record first:
 
 ```elixir
 users = [
@@ -76,9 +77,44 @@ users
 #=> ["ada@example.com"]
 ```
 
+## Find the records that have the same value in a field
+
+`Shoddy.Lists.duplicates_by/2` returns the records, not only the values. The
+result is a map from each duplicate value to its records, in the order of the
+list:
+
+```elixir
+Lists.duplicates_by(users, & &1.email)
+#=> %{
+#=>   "ada@example.com" => [
+#=>     %{name: "Ada", email: "ada@example.com"},
+#=>     %{name: "A. Lovelace", email: "ada@example.com"}
+#=>   ]
+#=> }
+```
+
+The function can calculate the key. This example finds the names that are
+equal if you ignore the case of the letters:
+
+```elixir
+Lists.duplicates_by(["Ada", "Grace", "ADA"], &String.downcase/1)
+#=> %{"ada" => ["Ada", "ADA"]}
+```
+
+The result is an empty map if no two records have the same value. The
+pattern `%{}` matches each map, so use `map_size/1` to examine the result:
+
+```elixir
+case Lists.duplicates_by(users, & &1.email) do
+  duplicates when map_size(duplicates) == 0 -> {:ok, users}
+  duplicates -> {:error, {:duplicate_emails, Map.keys(duplicates)}}
+end
+#=> {:error, {:duplicate_emails, ["ada@example.com"]}}
+```
+
 ## Find time values that are equal but have a different precision
 
-The two functions compare elements with the strict equality operator
+The functions compare elements and keys with the strict equality operator
 `===/2`. Two time values of the same point in time are different if their
 precision is different:
 

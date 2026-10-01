@@ -49,3 +49,5 @@ The first release also contains these changes:
   set of the list.
 - Add `Shoddy.then_present/3`. It applies a function to a value that is not
   `nil`, and it returns the option `:default` for `nil`.
+- Add `Shoddy.Lists.duplicates_by/2`. It returns a map from each key that
+  more than one element has to the elements that have that key.

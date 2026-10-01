@@ -11,7 +11,7 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
-| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.has_duplicates?/1` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2` |
@@ -69,6 +69,7 @@ These functions do not use this rule:
 | `Shoddy.then_if/3` | The predicate. | 0 or 1 |
 | `Shoddy.then_if/3` | The function to apply. | 1 |
 | `Shoddy.then_present/3` | The function to apply. | 1 |
+| `Shoddy.Lists.duplicates_by/2` | The function that returns the key of an element. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
@@ -105,6 +106,7 @@ These functions compare two values with the strict equality operator
   elements of the map set.
 - `Shoddy.Lists.duplicates/1` and `Shoddy.Lists.has_duplicates?/1`, for the
   elements of the list.
+- `Shoddy.Lists.duplicates_by/2`, for the keys of the elements.
 
 ## Errors
 

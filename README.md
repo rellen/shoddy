@@ -27,7 +27,8 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.Keywords` does the same for a keyword list, such as the options of
   a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
-- `Shoddy.Lists` finds the elements that occur more than one time in a list.
+- `Shoddy.Lists` finds the elements that occur more than one time in a list,
+  or that have the same key.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
