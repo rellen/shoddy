@@ -67,6 +67,8 @@ defmodule Shoddy.MixProject do
         "docs/how-to/toggle-elements-in-a-selection.md",
         "docs/how-to/find-duplicates-in-a-list.md",
         "docs/how-to/index-a-list-by-a-key.md",
+        "docs/how-to/sort-and-group-records-for-display.md",
+        "docs/how-to/update-a-list-of-records.md",
         "docs/how-to/get-the-only-element-of-a-list.md",
         "docs/how-to/compare-time-values-of-different-precision.md",
         "docs/how-to/round-a-time-value-down.md",

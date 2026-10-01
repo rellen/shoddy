@@ -11,7 +11,7 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
-| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1` and `Shoddy.Strings.truncate/3` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
@@ -82,6 +82,9 @@ These functions do not use this rule:
 | `Shoddy.Maps.map_keys/2` | The function to apply to each key. | 1 |
 | `Shoddy.Lists.duplicates_by/2` | The function that returns the key of an element. | 1 |
 | `Shoddy.Lists.index_by/2` | The function that returns the key of an element. | 1 |
+| `Shoddy.Lists.group_by_in_order/2` | The function that returns the key of an element. | 1 |
+| `Shoddy.Lists.upsert_by/4` | The function that returns the key of an element. | 1 |
+| `Shoddy.Lists.sort_by_keys/2` | Each function in the list of keys. It returns the value to compare. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
@@ -126,6 +129,8 @@ These functions compare two values with the strict equality operator
   elements of the list.
 - `Shoddy.Lists.duplicates_by/2`, for the keys of the elements.
 - `Shoddy.Lists.index_by/2`, for the keys of the elements.
+- `Shoddy.Lists.group_by_in_order/2` and `Shoddy.Lists.upsert_by/4`, for the
+  keys of the elements.
 - `Shoddy.Maps.map_keys/2`, for the new keys.
 - `Shoddy.Maps.fetch_keys/2`, for the keys to take.
 
@@ -139,6 +144,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
 | `FunctionClauseError` | A struct as the first argument of `Shoddy.Maps.map_values/2` or `Shoddy.Maps.map_keys/2`. |
 | `FunctionClauseError` | An empty path for `Shoddy.Maps.put_path/3`. |
+| `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2`. |
 | `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
 | `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
@@ -157,6 +163,8 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
+| `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |
+| `ArgumentError` | A key in a wrong form, or a module that does not export `compare/2`, for `Shoddy.Lists.sort_by_keys/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3` that is not enumerable. |
 
