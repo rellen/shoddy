@@ -125,3 +125,7 @@ The first release also contains these changes:
   result. For errors, it returns a map of each reason, with the same keys.
 - Add `Shoddy.Result.attempt/2`. It calls a function, and it converts the
   exceptions of the option `:rescue` into an error result.
+- Add `Shoddy.Maps.compact/1`, `increment/3`, `rename_key/3`,
+  `stringify_keys/1`, `diff/2` and `invert/1`. The functions that change
+  keys raise `ArgumentError` if an entry would go.
+- Add `Shoddy.Keywords.compact/1`. It removes each entry with `nil`.

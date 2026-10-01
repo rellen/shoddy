@@ -57,6 +57,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/build-a-map-from-optional-data.md",
         "docs/how-to/merge-nested-maps.md",
         "docs/how-to/transform-the-keys-and-values-of-a-map.md",
+        "docs/how-to/change-the-entries-of-a-map.md",
         "docs/how-to/build-a-keyword-list-of-options.md",
         "docs/how-to/choose-the-first-available-value.md",
         "docs/how-to/treat-an-empty-string-as-no-value.md",

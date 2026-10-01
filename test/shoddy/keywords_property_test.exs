@@ -37,4 +37,12 @@ defmodule Shoddy.KeywordsPropertyTest do
       end
     end
   end
+
+  describe "compact/1" do
+    property "returns the entries that are not nil, in the same order" do
+      check all(keywords <- list_of(tuple({key(), one_of([constant(nil), simple()])}), max_length: 6)) do
+        assert Keywords.compact(keywords) == Enum.reject(keywords, &is_nil(elem(&1, 1)))
+      end
+    end
+  end
 end

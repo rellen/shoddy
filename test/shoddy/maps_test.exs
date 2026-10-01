@@ -394,4 +394,123 @@ defmodule Shoddy.MapsTest do
       assert_raise FunctionClauseError, fn -> apply(&fetch_keys/2, [%{a: 1}, :a]) end
     end
   end
+
+  describe "compact/1" do
+    test "removes only the entries with nil" do
+      assert compact(%{a: nil, b: false, c: 0, d: ""}) == %{b: false, c: 0, d: ""}
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&compact/1, [%URI{}]) end
+    end
+  end
+
+  describe "increment/3" do
+    test "adds 1 by default, and puts the amount for an absent key" do
+      assert increment(%{a: 1}, :a) == %{a: 2}
+      assert increment(%{}, :a) == %{a: 1}
+    end
+
+    test "accepts a negative amount and a float" do
+      assert increment(%{a: 1}, :a, -3) == %{a: -2}
+      assert increment(%{a: 1}, :a, 0.5) == %{a: 1.5}
+      assert increment(%{}, :a, 0.5) == %{a: 0.5}
+    end
+
+    test "raises ArithmeticError for a value that is not a number" do
+      assert_raise ArithmeticError, fn -> increment(%{a: "1"}, :a) end
+    end
+
+    test "raises FunctionClauseError from increment/3 itself for a struct or an amount that is not a number" do
+      for args <- [[%URI{}, :port, 1], [%{a: 1}, :a, "1"]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&increment/3, args) end
+        assert {error.module, error.function} == {Shoddy.Maps, :increment}
+      end
+    end
+  end
+
+  describe "rename_key/3" do
+    test "keeps the value and the other entries" do
+      assert rename_key(%{a: 1, b: 2}, :a, :c) == %{c: 1, b: 2}
+    end
+
+    test "returns the map with no change for an absent key or the same key" do
+      assert rename_key(%{a: 1}, :x, :y) == %{a: 1}
+      assert rename_key(%{a: 1}, :a, :a) == %{a: 1}
+    end
+
+    test "keeps a value of nil" do
+      assert rename_key(%{a: nil}, :a, :b) == %{b: nil}
+    end
+
+    test "treats 1 and 1.0 as two keys" do
+      assert rename_key(%{1 => :x}, 1, 1.0) == %{1.0 => :x}
+    end
+
+    test "raises ArgumentError if the new key is already in the map" do
+      assert_raise ArgumentError, "the new key :b is already in the map", fn -> rename_key(%{a: 1, b: 2}, :a, :b) end
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&rename_key/3, [%URI{}, :host, :name]) end
+    end
+  end
+
+  describe "stringify_keys/1" do
+    test "converts atoms, numbers and strings, and keeps a nested map" do
+      assert stringify_keys(%{"s" => 1, 2 => 2, a: %{b: 1}}) == %{"s" => 1, "2" => 2, "a" => %{b: 1}}
+    end
+
+    test "raises ArgumentError if two keys give the same string" do
+      assert_raise ArgumentError, ~r/same new key: "1"/, fn -> stringify_keys(%{1 => :a, "1" => :b}) end
+    end
+
+    test "raises Protocol.UndefinedError for a key that is not a string, an atom or a number" do
+      assert_raise Protocol.UndefinedError, fn -> stringify_keys(%{{:a} => 1}) end
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&stringify_keys/1, [%URI{}]) end
+    end
+  end
+
+  describe "diff/2" do
+    test "compares the values with the strict equality operator" do
+      assert diff(%{a: 1}, %{a: 1.0}) == %{added: %{}, removed: %{}, changed: %{a: {1, 1.0}}}
+    end
+
+    test "treats nil as a value" do
+      assert diff(%{a: nil}, %{}) == %{added: %{}, removed: %{a: nil}, changed: %{}}
+      assert diff(%{a: nil}, %{a: false}) == %{added: %{}, removed: %{}, changed: %{a: {nil, false}}}
+    end
+
+    test "returns a nested map that changed as one changed value" do
+      assert diff(%{a: %{b: 1}}, %{a: %{b: 2}}) == %{added: %{}, removed: %{}, changed: %{a: {%{b: 1}, %{b: 2}}}}
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&diff/2, [%URI{}, %{}]) end
+      assert_raise FunctionClauseError, fn -> apply(&diff/2, [%{}, %URI{}]) end
+    end
+  end
+
+  describe "invert/1" do
+    test "swaps keys and values of any type" do
+      assert invert(%{"a" => nil, b: [1]}) == %{nil => "a", [1] => :b}
+    end
+
+    test "keeps 1 and 1.0 as two keys" do
+      assert invert(%{a: 1, b: 1.0}) == %{1 => :a, 1.0 => :b}
+    end
+
+    test "raises ArgumentError that tells each value of more than one key" do
+      assert_raise ArgumentError, "more than one key has the same value: [:x, :y]", fn ->
+        invert(%{a: :x, b: :x, c: :y, d: :y, e: :z})
+      end
+    end
+
+    test "raises FunctionClauseError for a struct" do
+      assert_raise FunctionClauseError, fn -> apply(&invert/1, [%URI{}]) end
+    end
+  end
 end

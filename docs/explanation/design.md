@@ -650,3 +650,22 @@ gives a page or a block too few.
 `Shoddy.Numbers.clamp/3` raises `ArgumentError` if the minimum is higher
 than the maximum. Such a range contains no number. A result in that case
 would be wrong for each rule, so an error at the call is the safer choice.
+
+## No entry is lost in a change of keys
+
+`Shoddy.Maps.rename_key/3`, `Shoddy.Maps.invert/1` and
+`Shoddy.Maps.stringify_keys/1` change the keys of a map. A map has one value
+for each key. If two entries get the same key, one value goes, and nothing
+tells the reader about it. Thus each of these functions raises
+`ArgumentError` for such a case, as `Shoddy.Maps.take_as/2` and
+`Shoddy.Maps.map_keys/2` do.
+
+`Shoddy.Maps.increment/3` puts the amount itself for an absent key. The
+expression `Map.update(map, key, 1, &(&1 + by))` puts `1`, which is
+correct only for an amount of `1`. The function makes the two values the
+same, so the mistake cannot occur.
+
+`Shoddy.Maps.diff/2` compares with `===/2` and only at the top level. A
+change from `1` to `1.0` is a change. A deep comparison would need a rule
+for lists, structs and keyword lists, and each rule is correct for some
+data only.

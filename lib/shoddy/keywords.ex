@@ -20,7 +20,8 @@ defmodule Shoddy.Keywords do
   with no change, also if it contains a key more than one time.
 
   `get_present/3` reads a value with `Keyword.get/2`. Thus it reads the
-  first entry for the key.
+  first entry for the key. `compact/1` removes each entry with the value
+  `nil`.
   """
 
   @doc """
@@ -149,4 +150,22 @@ defmodule Shoddy.Keywords do
       value -> value
     end
   end
+
+  @doc """
+  Removes each entry with the value `nil`.
+
+  Use this function before you give options to a library that treats `nil` as
+  a value. The function keeps the order of the entries, and it keeps a key
+  that occurs more than one time. It keeps `false`.
+
+  ## Examples
+
+      iex> Shoddy.Keywords.compact(timeout: 5_000, retry: nil, follow: false)
+      [timeout: 5_000, follow: false]
+
+      iex> Shoddy.Keywords.compact(header: "a", header: nil, header: "b")
+      [header: "a", header: "b"]
+  """
+  @spec compact(keyword()) :: keyword()
+  def compact(keywords) when is_list(keywords), do: Keyword.reject(keywords, fn {_key, value} -> is_nil(value) end)
 end

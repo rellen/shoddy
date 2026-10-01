@@ -125,6 +125,88 @@ defmodule Shoddy.MapsPropertyTest do
     end
   end
 
+  describe "compact/1" do
+    property "removes each nil value, and keeps each other entry" do
+      check all(map <- map_of(simple(), one_of([constant(nil), simple()]), max_length: 10)) do
+        assert Maps.compact(map) == for({key, value} <- map, not is_nil(value), into: %{}, do: {key, value})
+      end
+    end
+  end
+
+  describe "increment/3" do
+    property "returns the same result as Map.update/4 with the amount as the initial value" do
+      check all(
+              map <- map_of(member_of([:a, :b]), integer(), max_length: 2),
+              key <- member_of([:a, :b, :c]),
+              by <- integer()
+            ) do
+        assert Maps.increment(map, key, by) == Map.update(map, key, by, &(&1 + by))
+      end
+    end
+  end
+
+  describe "rename_key/3" do
+    property "moves the value to the new key, or raises if the new key is taken" do
+      check all(map <- any_map(), old <- simple(), new <- simple()) do
+        cond do
+          old === new or not Map.has_key?(map, old) ->
+            assert Maps.rename_key(map, old, new) == map
+
+          Map.has_key?(map, new) ->
+            assert_raise ArgumentError, fn -> Maps.rename_key(map, old, new) end
+
+          true ->
+            result = Maps.rename_key(map, old, new)
+            assert result[new] === map[old]
+            assert Map.delete(result, new) == Map.delete(map, old)
+        end
+      end
+    end
+  end
+
+  describe "stringify_keys/1" do
+    property "returns the same result as map_keys/2 with to_string/1" do
+      key = one_of([atom(:alphanumeric), integer(), string(:alphanumeric)])
+
+      check all(map <- map_of(key, simple(), max_length: 8)) do
+        if Lists.has_duplicates?(Enum.map(Map.keys(map), &to_string/1)) do
+          assert_raise ArgumentError, fn -> Maps.stringify_keys(map) end
+        else
+          assert Maps.stringify_keys(map) == Map.new(map, fn {key, value} -> {to_string(key), value} end)
+        end
+      end
+    end
+  end
+
+  describe "diff/2" do
+    property "gives the parts that rebuild the new map from the old map" do
+      check all(old <- any_map(), new <- any_map()) do
+        %{added: added, removed: removed, changed: changed} = Maps.diff(old, new)
+
+        rebuilt =
+          old |> Map.drop(Map.keys(removed)) |> Map.merge(added) |> Map.merge(Maps.map_values(changed, &elem(&1, 1)))
+
+        assert rebuilt == new
+
+        assert Enum.all?(changed, fn {key, {before, after_}} ->
+                 old[key] === before and new[key] === after_ and before !== after_
+               end)
+      end
+    end
+  end
+
+  describe "invert/1" do
+    property "returns a map that invert/1 changes back, or raises for a duplicate value" do
+      check all(map <- map_of(integer(), integer(0..20), max_length: 8)) do
+        if Lists.has_duplicates?(Map.values(map)) do
+          assert_raise ArgumentError, fn -> Maps.invert(map) end
+        else
+          assert map |> Maps.invert() |> Maps.invert() == map
+        end
+      end
+    end
+  end
+
   describe "a struct as the first argument" do
     @fields URI.__struct__() |> Map.keys()
 

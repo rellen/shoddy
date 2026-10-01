@@ -113,4 +113,15 @@ defmodule Shoddy.KeywordsTest do
       assert {error.module, error.function} == {Shoddy.Keywords, :get_present}
     end
   end
+
+  describe "compact/1" do
+    test "removes each entry with nil, and keeps the order and the other entries" do
+      assert compact(b: 1, a: nil, b: false, c: 0) == [b: 1, b: false, c: 0]
+      assert compact([]) == []
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&compact/1, [%{a: nil}]) end
+    end
+  end
 end

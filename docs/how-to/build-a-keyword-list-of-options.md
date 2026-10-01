@@ -57,3 +57,13 @@ entry:
 [{:where, :d} | [where: :a, select: :b, where: :c]]
 #=> [where: :d, where: :a, select: :b, where: :c]
 ```
+
+## Remove the options with nil from a list
+
+If the list already exists, use `Shoddy.Keywords.compact/1`. It removes each
+entry with `nil`, and it keeps the order and `false`:
+
+```elixir
+Shoddy.Keywords.compact(receive_timeout: 5_000, retry: nil, redirect: false)
+#=> [receive_timeout: 5_000, redirect: false]
+```
