@@ -218,6 +218,22 @@ in an ok tuple, or the first error:
 The option `:on_error` changes what the function does for an error. The
 sections below show each value.
 
+## Stop the work at the first error
+
+`Enum.map/2` parses each element, also after the first error. To stop at the
+first error, use `Stream.map/2`. `Shoddy.Result.collect/2` reads no element
+after the first error, so the stream does not parse `"5"` and `"-1"`:
+
+```elixir
+["41", "old", "5", "-1"]
+|> Stream.map(&parse_age/1)
+|> Shoddy.Result.collect()
+#=> {:error, {"old", :invalid_age}}
+```
+
+This applies only to the default `on_error: :halt`. With `:skip` or
+`:accumulate`, `Shoddy.Result.collect/2` reads each element.
+
 ## Keep the values and skip the errors
 
 Give `on_error: :skip`. The function ignores each error:

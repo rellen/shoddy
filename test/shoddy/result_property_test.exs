@@ -315,6 +315,16 @@ defmodule Shoddy.ResultPropertyTest do
         assert Result.collect(results, on_error: on_error) == model_collect(results, mode)
       end
     end
+
+    property "returns the same result for a stream as for a list" do
+      check all(
+              results <- list_of(result()),
+              on_error <- member_of([:halt, :skip, :accumulate])
+            ) do
+        assert Result.collect(Stream.map(results, & &1), on_error: on_error) ==
+                 Result.collect(results, on_error: on_error)
+      end
+    end
   end
 
   describe "the contract for an input that is not a result" do

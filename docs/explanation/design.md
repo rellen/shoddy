@@ -135,6 +135,24 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
+## A stream for collect
+
+Code often calls an operation that can fail for each element of a list, and
+must stop at the first error. A function that takes the list and the
+operation would do this work. But `Stream.map/2` already applies the
+operation one element at a time, and only when the next step reads that
+element.
+
+Thus `Shoddy.Result.collect/2` accepts a stream, and Shoddy has no second
+function for the same work. With `on_error: :halt`, the function reads no
+element after the first error. The stream then does not call the operation
+for a later element. The caller selects the behavior: `Enum.map/2` calls the
+operation for each element, and `Stream.map/2` stops at the first error.
+
+The function does not accept a map. A map is enumerable, but its elements
+are key-value tuples. A map as the first argument is thus a mistake, and
+`FunctionClauseError` tells the caller at once.
+
 ## Keyword lists in a separate module
 
 `Access` reads maps and keyword lists in the same way, but a put is different.

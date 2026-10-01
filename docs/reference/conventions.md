@@ -32,7 +32,7 @@ function can be a step of a pipeline.
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
 
@@ -110,7 +110,8 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
-| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the list of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
+| `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
+| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
@@ -118,6 +119,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` with a struct. The function raises this error also if it does not put the value. |
+| `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`. |
 
 ## Names
 
