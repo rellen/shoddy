@@ -53,14 +53,20 @@ Use it for a setting that is optional:
 config :my_app, :max_upload_mb, Shoddy.Env.integer("MAX_UPLOAD_MB", default: nil)
 ```
 
-## Read other values
+## Read a list of values
 
-For a string, use `System.get_env/2` or `System.fetch_env!/1`. For a list,
-such as a list of hosts, use `Shoddy.Strings.split_trim/2`:
+Use `Shoddy.Env.list/2`, for example for a list of hosts. It splits the value
+at each comma, trims each value, and removes each empty value:
 
 ```elixir
-"HOSTS" |> System.get_env("") |> Shoddy.Strings.split_trim()
-#=> ["a.example.com", "b.example.com"]
+config :my_app, :hosts, Shoddy.Env.list("HOSTS", default: ["localhost"])
 ```
 
-The last example shows the result for `HOSTS="a.example.com, b.example.com"`.
+For `HOSTS="a.example.com, b.example.com"`, the list is
+`["a.example.com", "b.example.com"]`. Give the option `:separator` for
+another separator.
+
+## Read a string
+
+Use `System.get_env/2` or `System.fetch_env!/1`. A string needs no
+conversion.

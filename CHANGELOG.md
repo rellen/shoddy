@@ -131,3 +131,9 @@ The first release also contains these changes:
 - Add `Shoddy.Keywords.compact/1`. It removes each entry with `nil`.
 - Add `Shoddy.Lists.toggle/2`, `move/3`, `sorted?/2`, `cycle_next/2`,
   `all_same_by?/2` and `join_by/4`.
+- Add `Shoddy.Strings.mask/2`, `ensure_prefix/2` and `ensure_suffix/2`.
+  `mask/2` never shows the full string.
+- Add `Shoddy.Env.list/2`. It reads a list of strings from an environment
+  variable.
+- Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty
+  list.

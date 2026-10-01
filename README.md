@@ -38,13 +38,15 @@ params = %{"name" => "Ada", "email" => nil}
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together, and a predicate that also treats whitespace as empty. It changes
   an empty string to `nil`. It shortens a string for display or to a number
-  of bytes, and it splits a list of values.
+  of bytes, and it splits a list of values. It hides a secret, and it adds a
+  prefix or a suffix if it is absent.
 - `Shoddy.Parse` converts text, such as user input, into an integer, a
   float, a boolean or an allowed atom. It returns a result.
-- `Shoddy.Env` reads an integer or a boolean from an environment variable,
-  for `config/runtime.exs`. It raises an exception for a wrong value.
-- `Shoddy.Numbers` divides two integers and rounds up, and it keeps a number
-  in a range.
+- `Shoddy.Env` reads an integer, a boolean or a list from an environment
+  variable, for `config/runtime.exs`. It raises an exception for a wrong
+  value.
+- `Shoddy.Numbers` divides two integers and rounds up, keeps a number in a
+  range, and calculates a mean.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
@@ -87,6 +89,7 @@ For one task, use a how-to guide:
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
 - [Treat an empty string as no value](docs/how-to/treat-an-empty-string-as-no-value.md)
 - [Shorten a string for display](docs/how-to/shorten-a-string-for-display.md)
+- [Prepare a string for output](docs/how-to/prepare-a-string-for-output.md)
 - [Parse user input](docs/how-to/parse-user-input.md)
 - [Read configuration from environment variables](docs/how-to/read-configuration-from-environment-variables.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
@@ -95,6 +98,7 @@ For one task, use a how-to guide:
 - [Find duplicates in a list](docs/how-to/find-duplicates-in-a-list.md)
 - [Index a list by a key](docs/how-to/index-a-list-by-a-key.md)
 - [Paginate a list](docs/how-to/paginate-a-list.md)
+- [Calculate an average](docs/how-to/calculate-an-average.md)
 - [Sort and group records for display](docs/how-to/sort-and-group-records-for-display.md)
 - [Update a list of records](docs/how-to/update-a-list-of-records.md)
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)

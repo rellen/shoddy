@@ -53,4 +53,19 @@ defmodule Shoddy.NumbersTest do
       end
     end
   end
+
+  describe "mean/1" do
+    test "returns a float, also for integers" do
+      assert mean([2, 4]) === {:ok, 3.0}
+      assert mean([1.5]) === {:ok, 1.5}
+    end
+
+    test "raises ArithmeticError for an element that is not a number" do
+      assert_raise ArithmeticError, fn -> mean([1, "2"]) end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&mean/1, [1..3]) end
+    end
+  end
 end

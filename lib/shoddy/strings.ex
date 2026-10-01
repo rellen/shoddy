@@ -28,6 +28,9 @@ defmodule Shoddy.Strings do
   - `truncate_bytes/2` shortens a string to a number of bytes, for storage.
   - `split_trim/2` splits a string into a list of values, and trims each
     value.
+  - `mask/2` hides a secret, and keeps some graphemes visible.
+  - `ensure_prefix/2` and `ensure_suffix/2` add a fixed text at an end of
+    the string, if it is not there.
   """
 
   @doc """
@@ -299,5 +302,120 @@ defmodule Shoddy.Strings do
       {grapheme_size, rest} when size + grapheme_size <= max_bytes -> prefix_size(rest, max_bytes, size + grapheme_size)
       _end_or_too_large -> size
     end
+  end
+
+  @doc """
+  Hides a string, such as a secret in a log, and keeps some graphemes visible.
+
+  This function replaces each grapheme with the option `:char`, except the
+  first `:keep_first` graphemes and the last `:keep_last` graphemes. The
+  result has the same number of graphemes as the input, so it shows the
+  length of the string.
+
+  The function never shows the full string. If `:keep_first` and
+  `:keep_last` together are as long as the string, or longer, it hides each
+  grapheme. Thus a short secret stays hidden.
+
+  ## Options
+
+    * `:keep_last` - The number of graphemes to show at the end. The default
+      is `4`.
+
+    * `:keep_first` - The number of graphemes to show at the start. The
+      default is `0`.
+
+    * `:char` - The string that replaces each hidden grapheme. The default
+      is `"*"`.
+
+  This function raises `ArgumentError` for these options:
+
+  - An unknown option.
+  - A count that is not a non-negative integer.
+  - A `:char` that is not a string.
+
+  ## Examples
+
+      iex> Shoddy.Strings.mask("4111111111111111")
+      "************1111"
+
+      iex> Shoddy.Strings.mask("sk_live_abcdef", keep_first: 3, keep_last: 2)
+      "sk_*********ef"
+
+  The function hides each grapheme of a short string:
+
+      iex> Shoddy.Strings.mask("1234")
+      "****"
+  """
+  @spec mask(String.t(), keyword()) :: String.t()
+  def mask(string, opts \\ []) when is_binary(string) and is_list(opts) do
+    opts = Keyword.validate!(opts, keep_first: 0, keep_last: 4, char: "*")
+    keep_first = count!(opts, :keep_first)
+    keep_last = count!(opts, :keep_last)
+    char = char!(opts)
+    graphemes = String.graphemes(string)
+    hidden = length(graphemes) - keep_first - keep_last
+
+    if hidden <= 0 do
+      String.duplicate(char, length(graphemes))
+    else
+      Enum.join(Enum.take(graphemes, keep_first)) <>
+        String.duplicate(char, hidden) <> Enum.join(Enum.take(graphemes, -keep_last))
+    end
+  end
+
+  defp count!(opts, name) do
+    case Keyword.fetch!(opts, name) do
+      count when is_integer(count) and count >= 0 ->
+        count
+
+      other ->
+        raise ArgumentError,
+              "invalid value for #{inspect(name)} option: expected a non-negative integer, got: #{inspect(other)}"
+    end
+  end
+
+  defp char!(opts) do
+    case Keyword.fetch!(opts, :char) do
+      char when is_binary(char) -> char
+      other -> raise ArgumentError, "invalid value for :char option: expected a string, got: #{inspect(other)}"
+    end
+  end
+
+  @doc """
+  Adds a prefix to a string, if the string does not start with it.
+
+  Use this function for a value that must start with a fixed text. Examples
+  are a scheme in a URL and a `#` before a color.
+
+  ## Examples
+
+      iex> Shoddy.Strings.ensure_prefix("example.com", "https://")
+      "https://example.com"
+
+      iex> Shoddy.Strings.ensure_prefix("https://example.com", "https://")
+      "https://example.com"
+  """
+  @spec ensure_prefix(String.t(), String.t()) :: String.t()
+  def ensure_prefix(string, prefix) when is_binary(string) and is_binary(prefix) do
+    if String.starts_with?(string, prefix), do: string, else: prefix <> string
+  end
+
+  @doc """
+  Adds a suffix to a string, if the string does not end with it.
+
+  Use this function for a value that must end with a fixed text, such as a
+  `/` at the end of a base URL.
+
+  ## Examples
+
+      iex> Shoddy.Strings.ensure_suffix("https://example.com/api", "/")
+      "https://example.com/api/"
+
+      iex> Shoddy.Strings.ensure_suffix("https://example.com/api/", "/")
+      "https://example.com/api/"
+  """
+  @spec ensure_suffix(String.t(), String.t()) :: String.t()
+  def ensure_suffix(string, suffix) when is_binary(string) and is_binary(suffix) do
+    if String.ends_with?(string, suffix), do: string, else: string <> suffix
   end
 end

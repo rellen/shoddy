@@ -8,6 +8,7 @@ defmodule Shoddy.Numbers do
   - `ceil_div/2` divides two integers, and rounds the result up. It gives
     the number of pages for a number of items.
   - `clamp/3` keeps a number in a range.
+  - `mean/1` returns the mean of a list, or an error for an empty list.
   """
 
   @doc """
@@ -97,4 +98,31 @@ defmodule Shoddy.Numbers do
       true -> value
     end
   end
+
+  @doc """
+  Returns the mean of a list of numbers.
+
+  The result is `{:ok, mean}`, and the mean is always a float. For an empty
+  list, the result is `{:error, :empty}`. `Enum.sum(list) / length(list)`
+  raises `ArithmeticError` for an empty list, so code must check it first.
+
+  Each element must be a number. For another element, this function raises
+  `ArithmeticError`.
+
+  ## Examples
+
+      iex> Shoddy.Numbers.mean([1, 2, 3, 4])
+      {:ok, 2.5}
+
+      iex> Shoddy.Numbers.mean([])
+      {:error, :empty}
+
+  Use `Shoddy.Result.unwrap/2` for a default:
+
+      iex> [] |> Shoddy.Numbers.mean() |> Shoddy.Result.unwrap(0.0)
+      0.0
+  """
+  @spec mean([number()]) :: {:ok, float()} | {:error, :empty}
+  def mean([]), do: {:error, :empty}
+  def mean([_ | _] = list), do: {:ok, Enum.sum(list) / length(list)}
 end
