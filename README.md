@@ -26,7 +26,7 @@ params = %{"name" => "Ada", "email" => nil}
   if the value is not `nil`. It reads a value with a default for `nil`. It
   also takes keys from a map with new names, and it merges nested maps. It
   changes each key or each value, puts a value deep into a map, and checks
-  for required keys.
+  for required keys. It removes, renames, counts and compares entries.
 - `Shoddy.Keywords` puts and reads a value in a keyword list in the same
   way, for example in the options of a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set.
@@ -81,6 +81,7 @@ For one task, use a how-to guide:
 - [Build a map from optional data](docs/how-to/build-a-map-from-optional-data.md)
 - [Merge nested maps](docs/how-to/merge-nested-maps.md)
 - [Transform the keys and values of a map](docs/how-to/transform-the-keys-and-values-of-a-map.md)
+- [Change the entries of a map](docs/how-to/change-the-entries-of-a-map.md)
 - [Build a keyword list of options](docs/how-to/build-a-keyword-list-of-options.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)
 - [Treat an empty string as no value](docs/how-to/treat-an-empty-string-as-no-value.md)

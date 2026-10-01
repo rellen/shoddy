@@ -8,8 +8,8 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2` |
-| `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
+| `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2` |
@@ -32,7 +32,7 @@ function can be a step of a pipeline.
 | Module | The first argument |
 | --- | --- |
 | `Shoddy` | The value. For `Shoddy.coalesce/2`, the list of values. |
-| `Shoddy.Maps` | The map. For `Shoddy.Maps.deep_merge/2`, the map with the lower priority. |
+| `Shoddy.Maps` | The map. For `Shoddy.Maps.deep_merge/2`, the map with the lower priority. For `Shoddy.Maps.diff/2`, the old map. |
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. |
@@ -139,6 +139,8 @@ These functions compare two values with the strict equality operator
   keys of the elements.
 - `Shoddy.Maps.map_keys/2`, for the new keys.
 - `Shoddy.Maps.fetch_keys/2`, for the keys to take.
+- `Shoddy.Maps.diff/2`, for the values.
+- `Shoddy.Maps.rename_key/3` and `Shoddy.Maps.invert/1`, for the keys.
 
 ## Errors
 
@@ -148,7 +150,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A function of the wrong arity. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
-| `FunctionClauseError` | A struct as the first argument of `Shoddy.Maps.map_values/2` or `Shoddy.Maps.map_keys/2`. |
+| `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |
 | `FunctionClauseError` | An empty path for `Shoddy.Maps.put_path/3`. |
 | `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2`. |
 | `FunctionClauseError` | A value that is not `nil` or a string, for `Shoddy.Strings.blank?/1`. |
@@ -175,7 +177,10 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
 | `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
-| `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2`. |
+| `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. |
+| `ArgumentError` | A new key that is already in the map, for `Shoddy.Maps.rename_key/3`. |
+| `ArgumentError` | More than one key with the same value, for `Shoddy.Maps.invert/1`. |
+| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |

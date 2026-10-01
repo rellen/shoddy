@@ -492,6 +492,182 @@ defmodule Shoddy.Maps do
     end
   end
 
+  @doc """
+  Removes each entry with the value `nil`.
+
+  Use this function before you send a map to a system that treats `null` and
+  an absent key in different ways. To build such a map from the start, use
+  `put_present/3`.
+
+  The function keeps `false`. The map must be a plain map. For a struct, it
+  raises `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.compact(%{name: "Ada", email: nil, admin: false})
+      %{name: "Ada", admin: false}
+
+      iex> Shoddy.Maps.compact(%{})
+      %{}
+  """
+  @spec compact(%{optional(key) => value | nil}) :: %{optional(key) => value} when key: any(), value: any()
+  def compact(map) when is_non_struct_map(map), do: Map.reject(map, fn {_key, value} -> is_nil(value) end)
+
+  @doc """
+  Adds a number to the value of a key, or puts the number for an absent key.
+
+  The default amount is `1`. For an absent key, the new value is the amount
+  itself. `Map.update(map, key, 1, &(&1 + by))` is a usual way to write this
+  operation, and its initial value `1` is wrong for each other amount.
+
+  The value of the key must be a number. For another value, this function
+  raises `ArithmeticError`. The map must be a plain map. For a struct, it
+  raises `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.increment(%{apple: 2}, :apple)
+      %{apple: 3}
+
+      iex> Shoddy.Maps.increment(%{}, :pear, 5)
+      %{pear: 5}
+
+  This example counts the words of a text:
+
+      iex> "a b a c a"
+      ...> |> String.split()
+      ...> |> Enum.reduce(%{}, &Shoddy.Maps.increment(&2, &1))
+      %{"a" => 3, "b" => 1, "c" => 1}
+  """
+  @spec increment(%{optional(key) => number()}, key, number()) :: %{optional(key) => number()} when key: any()
+  def increment(map, key, by \\ 1) when is_non_struct_map(map) and is_number(by) do
+    Map.update(map, key, by, &(&1 + by))
+  end
+
+  @doc """
+  Gives a key of a map a new name, and keeps the other entries.
+
+  If `old` is absent, this function returns the map with no change. If
+  `new` is already a key of the map, the value of `old` would replace its
+  value. Thus this function raises `ArgumentError` for that case. If `old`
+  and `new` are equal, the map stays the same.
+
+  `take_as/2` is different. It returns only the keys of its mapping.
+
+  The map must be a plain map. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.rename_key(%{mail: "ada@example.com", name: "Ada"}, :mail, :email)
+      %{email: "ada@example.com", name: "Ada"}
+
+      iex> Shoddy.Maps.rename_key(%{name: "Ada"}, :mail, :email)
+      %{name: "Ada"}
+
+      iex> Shoddy.Maps.rename_key(%{mail: "a@example.com", email: "b@example.com"}, :mail, :email)
+      ** (ArgumentError) the new key :email is already in the map
+  """
+  @spec rename_key(map(), any(), any()) :: map()
+  def rename_key(map, old, new) when is_non_struct_map(map) do
+    cond do
+      old === new or not is_map_key(map, old) -> map
+      is_map_key(map, new) -> raise ArgumentError, "the new key #{inspect(new)} is already in the map"
+      true -> map |> Map.delete(old) |> Map.put(new, Map.fetch!(map, old))
+    end
+  end
+
+  @doc """
+  Converts each key of a map into a string, at the top level only.
+
+  The function converts each key with `to_string/1`. Thus an atom, a number
+  and a string are correct keys. A key that does not implement `String.Chars`,
+  such as a tuple, raises `Protocol.UndefinedError`. If two keys give the same
+  string, such as `:a` and `"a"`, this function raises `ArgumentError`, as
+  `map_keys/2` does.
+
+  The function does not change a nested map. The map must be a plain map.
+  For a struct, it raises `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.stringify_keys(%{"role" => :admin, 1 => :one, name: "Ada"})
+      %{"name" => "Ada", "role" => :admin, "1" => :one}
+
+      iex> Shoddy.Maps.stringify_keys(%{"a" => 2, a: 1})
+      ** (ArgumentError) more than one key has the same new key: "a" for the keys [:a, "a"]
+  """
+  @spec stringify_keys(%{optional(any()) => value}) :: %{optional(String.t()) => value} when value: any()
+  def stringify_keys(map) when is_non_struct_map(map), do: map_keys(map, &to_string/1)
+
+  @doc """
+  Compares two maps, and returns the added, removed and changed entries.
+
+  The result is a map with three maps:
+
+    * `:added` - The entries of `new` with a key that `old` does not have.
+    * `:removed` - The entries of `old` with a key that `new` does not have.
+    * `:changed` - For each key that is in the two maps with different
+      values, a tuple `{old_value, new_value}`.
+
+  The function compares the values with the strict equality operator
+  `===/2`, so `1` and `1.0` are different. It compares only the top level. A
+  nested map that changes is one changed value.
+
+  The two maps must be plain maps. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.diff(%{name: "Ada", role: :user, age: 36}, %{name: "Ada", role: :admin, email: "ada@example.com"})
+      %{added: %{email: "ada@example.com"}, removed: %{age: 36}, changed: %{role: {:user, :admin}}}
+
+      iex> Shoddy.Maps.diff(%{a: 1}, %{a: 1})
+      %{added: %{}, removed: %{}, changed: %{}}
+  """
+  @spec diff(map(), map()) :: %{added: map(), removed: map(), changed: map()}
+  def diff(old, new) when is_non_struct_map(old) and is_non_struct_map(new) do
+    changed =
+      for {key, old_value} <- old,
+          {:ok, new_value} <- [Map.fetch(new, key)],
+          old_value !== new_value,
+          into: %{},
+          do: {key, {old_value, new_value}}
+
+    %{added: Map.drop(new, Map.keys(old)), removed: Map.drop(old, Map.keys(new)), changed: changed}
+  end
+
+  @doc """
+  Swaps the keys and the values of a map.
+
+  Each value becomes a key, and its key becomes the value. If two keys have
+  the same value, the result could keep only one of them. Thus this function
+  raises `ArgumentError` for such values. The message tells each such value,
+  in the order of terms.
+
+  The map must be a plain map. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Maps.invert(%{admin: 1, user: 2})
+      %{1 => :admin, 2 => :user}
+
+      iex> Shoddy.Maps.invert(%{a: 1, b: 1})
+      ** (ArgumentError) more than one key has the same value: [1]
+  """
+  @spec invert(%{optional(key) => value}) :: %{optional(value) => key} when key: any(), value: any()
+  def invert(map) when is_non_struct_map(map) do
+    inverted = Map.new(map, fn {key, value} -> {value, key} end)
+
+    if map_size(inverted) == map_size(map) do
+      inverted
+    else
+      values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
+      raise ArgumentError, "more than one key has the same value: #{inspect(values)}"
+    end
+  end
+
   defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
     raise KeyError, key: key, term: struct
   end
