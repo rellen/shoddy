@@ -57,3 +57,7 @@ The first release also contains these changes:
 - Add `Shoddy.Maps.deep_merge/2`. It merges two maps, and it merges each
   nested plain map of the same key. The right side replaces each other
   value, also a struct, a list and a keyword list.
+- Add `Shoddy.DateTimes.ceil/2`. It rounds a time value up to the start of
+  the next minute, hour or day. A value at the start of a unit stays the
+  same. It accepts a `NaiveDateTime` and a `DateTime` in UTC, but not a
+  `Time`.

@@ -12,6 +12,8 @@ defmodule Shoddy.DateTimes do
     higher.
   - `floor/2` rounds a value down to the start of a minute, an hour or a
     day.
+  - `ceil/2` rounds a value up to the start of the next minute, hour or
+    day.
 
   ## Precision
 
@@ -51,7 +53,7 @@ defmodule Shoddy.DateTimes do
   @typedoc "A precision is a name for a count of digits after the decimal point."
   @type precision :: :millisecond | :microsecond
 
-  @typedoc "A unit is the length of time that `floor/2` rounds a value down to."
+  @typedoc "A unit is the length of time that `floor/2` and `ceil/2` round a value to."
   @type unit :: :minute | :hour | :day
 
   @precisions [:millisecond, :microsecond]
@@ -197,4 +199,63 @@ defmodule Shoddy.DateTimes do
 
   defp floor_fields(value, :hour), do: %{floor_fields(value, :minute) | minute: 0}
   defp floor_fields(value, :day), do: %{floor_fields(value, :hour) | hour: 0}
+
+  @doc """
+  Rounds a time value up to the start of a unit.
+
+  The unit is `:minute`, `:hour` or `:day`. If the value is already at the
+  start of a unit, this function returns it with no change. Otherwise, it
+  returns the start of the next unit. The precision of the fractional second
+  stays the same.
+
+  This function accepts a `NaiveDateTime` and a `DateTime` in the time zone
+  `Etc/UTC`, as `floor/2` does. It does not accept a `Time`. A `Time` has no
+  day. Thus for a `Time` near the end of the day, the next unit does not
+  exist. For a `DateTime` in another time zone, this function raises
+  `FunctionClauseError`, for the same reason as `floor/2`.
+
+  Use this function to find the next start of a unit, for example the time
+  of the next run of a job each hour. For a value at the start of a unit,
+  the result is that value and not the end of its unit. To get the end of
+  the unit that contains a value, add one unit to the result of `floor/2`.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.ceil(~U[2024-01-01 12:34:56.789Z], :hour)
+      ~U[2024-01-01 13:00:00.000Z]
+
+      iex> Shoddy.DateTimes.ceil(~U[2024-01-01 12:34:56Z], :minute)
+      ~U[2024-01-01 12:35:00Z]
+
+      iex> Shoddy.DateTimes.ceil(~N[2024-12-31 00:00:01], :day)
+      ~N[2025-01-01 00:00:00]
+
+  A value at the start of the unit stays the same:
+
+      iex> Shoddy.DateTimes.ceil(~U[2024-01-01 12:00:00Z], :hour)
+      ~U[2024-01-01 12:00:00Z]
+
+  A fractional second above zero rounds up:
+
+      iex> Shoddy.DateTimes.ceil(~U[2024-01-01 12:00:00.000001Z], :hour)
+      ~U[2024-01-01 13:00:00.000000Z]
+
+  This example gives a token a life of at least 30 minutes, and makes it
+  expire at the start of an hour:
+
+      iex> ~U[2024-01-01 12:34:56Z]
+      ...> |> DateTime.add(30, :minute)
+      ...> |> Shoddy.DateTimes.ceil(:hour)
+      ~U[2024-01-01 14:00:00Z]
+  """
+  @spec ceil(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
+  def ceil(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units,
+    do: ceil_with(value, unit, &DateTime.add/3)
+
+  def ceil(%NaiveDateTime{} = value, unit) when unit in @units, do: ceil_with(value, unit, &NaiveDateTime.add/3)
+
+  defp ceil_with(value, unit, add) do
+    start = floor(value, unit)
+    if start == value, do: value, else: add.(start, 1, unit)
+  end
 end
