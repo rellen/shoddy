@@ -214,4 +214,66 @@ defmodule Shoddy.DateTimesTest do
       assert_raise FunctionClauseError, fn -> apply(&ceil/2, [~D[2024-03-15], :day]) end
     end
   end
+
+  describe "between?/3" do
+    test "includes the first value and excludes the last value" do
+      first = ~N[2024-01-01 10:00:00]
+      last = ~N[2024-01-01 11:00:00]
+
+      assert between?(first, first, last)
+      assert between?(~N[2024-01-01 10:59:59.999999], first, last)
+      refute between?(last, first, last)
+      refute between?(~N[2024-01-01 09:59:59.999999], first, last)
+    end
+
+    test "accepts Date, Time, NaiveDateTime and DateTime" do
+      assert between?(~D[2024-01-02], ~D[2024-01-01], ~D[2024-01-03])
+      assert between?(~T[10:30:00], ~T[10:00:00], ~T[11:00:00])
+      assert between?(~N[2024-01-01 10:30:00], ~N[2024-01-01 10:00:00], ~N[2024-01-01 11:00:00])
+      assert between?(~U[2024-01-01 10:30:00Z], ~U[2024-01-01 10:00:00Z], ~U[2024-01-01 11:00:00Z])
+    end
+
+    test "compares two dates in time, not by their fields" do
+      refute between?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
+      assert between?(~D[2024-01-31], ~D[2023-12-31], ~D[2024-02-01])
+    end
+
+    test "compares the points in time of DateTime values in different time zones" do
+      paris = %{
+        ~U[2024-01-01 11:00:00Z]
+        | hour: 12,
+          time_zone: "Europe/Paris",
+          zone_abbr: "CET",
+          utc_offset: 3600
+      }
+
+      assert between?(paris, ~U[2024-01-01 11:00:00Z], ~U[2024-01-01 11:00:01Z])
+      refute between?(paris, ~U[2024-01-01 11:00:01Z], ~U[2024-01-01 12:30:00Z])
+    end
+
+    test "ignores the precision of the fractional second" do
+      assert between?(~U[2024-01-01 10:00:00Z], ~U[2024-01-01 10:00:00.000000Z], ~U[2024-01-01 11:00:00Z])
+      refute between?(~U[2024-01-01 11:00:00.000Z], ~U[2024-01-01 10:00:00Z], ~U[2024-01-01 11:00:00Z])
+    end
+
+    test "returns false for an empty period and for a period in the wrong order" do
+      refute between?(~D[2024-01-01], ~D[2024-01-01], ~D[2024-01-01])
+      refute between?(~D[2024-01-02], ~D[2024-01-03], ~D[2024-01-01])
+    end
+
+    test "raises FunctionClauseError for values of different types" do
+      assert_raise FunctionClauseError, fn ->
+        apply(&between?/3, [~N[2024-01-01 10:00:00], ~U[2024-01-01 09:00:00Z], ~U[2024-01-01 11:00:00Z]])
+      end
+
+      assert_raise FunctionClauseError, fn ->
+        apply(&between?/3, [~D[2024-01-02], ~D[2024-01-01], ~N[2024-01-03 00:00:00]])
+      end
+    end
+
+    test "raises FunctionClauseError for a value that is not a date or a time" do
+      assert_raise FunctionClauseError, fn -> apply(&between?/3, [2, 1, 3]) end
+      assert_raise FunctionClauseError, fn -> apply(&between?/3, [%URI{}, %URI{}, %URI{}]) end
+    end
+  end
 end

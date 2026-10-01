@@ -16,7 +16,7 @@ of each module gives the full description of each function.
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
-| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2` |
+| `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.between?/3` |
 
 The names `Maps`, `Keywords`, `MapSets`, `Lists`, `Strings` and `DateTimes`
 are in the plural. Thus an alias of one of these modules does not hide the
@@ -38,7 +38,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
-| `Shoddy.DateTimes` | The time value. |
+| `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. |
 
 In `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3`, the tag is the last
 argument.
@@ -138,6 +138,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time`, for `Shoddy.DateTimes.ceil/2`. |
+| `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |
 | `ArgumentError` | An unknown option, an omission that is not a string, or an omission that is longer than the maximum, for `Shoddy.Strings.truncate/3`. |

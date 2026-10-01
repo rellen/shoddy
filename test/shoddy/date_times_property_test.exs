@@ -150,4 +150,18 @@ defmodule Shoddy.DateTimesPropertyTest do
       end
     end
   end
+
+  describe "between?/3" do
+    property "returns true only if the value is not before first and is before last" do
+      check all(
+              base <- one_of([datetime(), naive_datetime()]),
+              offsets <- list_of(integer(-100..100), length: 3)
+            ) do
+        [value, first, last] = Enum.map(offsets, &base.__struct__.add(base, &1, :second))
+        [v, f, l] = offsets
+
+        assert DateTimes.between?(value, first, last) == (v >= f and v < l)
+      end
+    end
+  end
 end

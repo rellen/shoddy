@@ -82,3 +82,6 @@ The first release also contains these changes:
 - Add `Shoddy.Strings.truncate/3`. It shortens a string to a maximum number
   of graphemes, and it puts the option `:omission` at the end. The omission
   is part of the maximum length.
+- Add `Shoddy.DateTimes.between?/3`. It returns `true` if a date or a time
+  is in a period that includes its first value and excludes its last value.
+  It accepts a `DateTime` in each time zone.

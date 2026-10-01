@@ -70,6 +70,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/compare-time-values-of-different-precision.md",
         "docs/how-to/round-a-time-value-down.md",
         "docs/how-to/round-a-time-value-up.md",
+        "docs/how-to/check-if-a-time-value-is-in-a-period.md",
         "docs/reference/conventions.md",
         "docs/explanation/design.md",
         "docs/development.md"

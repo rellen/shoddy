@@ -494,3 +494,27 @@ The function raises `ArgumentError` for an omission that is longer than the
 maximum. It raises this error also for a string that is short enough. A
 check that depends only on the arguments finds the mistake at the first
 call, and not only for a long string.
+
+## Why between? excludes the last value
+
+`Shoddy.DateTimes.between?/3` uses a period that includes its first value
+and excludes its last value. Two periods that follow each other then share
+no value. For example, midnight belongs to the new day, and not to the day
+before it. A period that included its last value would put midnight into
+two days, so a count by day would count an event two times.
+
+This rule also makes the last value easy to calculate. The end of a day is
+the start of the next day. A period that included its last value would need
+the last microsecond of the day, and that value depends on the precision.
+
+The function compares the values with the function `compare/2` of their
+module. The operators `<` and `>` compare the fields of a struct in an order
+that is not the order of time. For example, `~D[2024-02-01] < ~D[2024-01-31]`
+returns `true`.
+
+The function returns `false` for a period in the wrong order, and it does
+not raise an exception. A name that ends in `?` tells that the function
+returns a boolean. Such a period contains no value, so `false` is correct.
+
+Unlike `Shoddy.DateTimes.floor/2`, this function accepts a `DateTime` in each
+time zone. A comparison of two points in time needs no time zone database.

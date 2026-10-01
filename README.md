@@ -42,7 +42,7 @@ params = %{"name" => "Ada", "email" => nil}
   value of a GenServer callback.
 - `Shoddy.DateTimes` operates on dates and times. It extends the precision
   of a time value. It also rounds a time value down or up to a minute, an
-  hour or a day.
+  hour or a day. It tells if a date or a time is in a period.
 
 ## Installation
 
@@ -85,6 +85,7 @@ For one task, use a how-to guide:
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
 - [Round a time value up](docs/how-to/round-a-time-value-up.md)
+- [Check if a time value is in a period](docs/how-to/check-if-a-time-value-is-in-a-period.md)
 
 For the rules that apply to each function, read the reference:
 
