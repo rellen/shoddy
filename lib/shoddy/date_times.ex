@@ -1,7 +1,7 @@
 defmodule Shoddy.DateTimes do
   @moduledoc """
   Functions that operate on dates and times, and add to the standard modules
-  `DateTime`, `NaiveDateTime` and `Time`.
+  `Date`, `DateTime`, `NaiveDateTime` and `Time`.
 
   The name of this module is `DateTimes`, in the plural. Thus the alias
   `DateTimes` does not hide the standard `DateTime` module.
@@ -13,6 +13,7 @@ defmodule Shoddy.DateTimes do
   - `floor/2` rounds a value down to the start of a minute, an hour or a
     day.
   - `ceil/2` rounds a value up to the start of a minute, an hour or a day.
+  - `between?/3` tells if a value is in a period. It also accepts a `Date`.
 
   ## Precision
 
@@ -267,5 +268,56 @@ defmodule Shoddy.DateTimes do
   defp ceil_with(value, unit, add) do
     start = floor(value, unit)
     if start == value, do: value, else: add.(start, 1, unit)
+  end
+
+  @doc """
+  Returns `true` if a value is in the period from `first` to `last`.
+
+  The period includes `first` and excludes `last`. Thus two periods that
+  follow each other, such as two days, never contain the same value. The
+  function returns `false` if `last` is not after `first`, because such a
+  period contains no value.
+
+  The three values must have the same type: `Date`, `Time`, `NaiveDateTime`
+  or `DateTime`. The function compares them with the function `compare/2` of
+  that module. The operators `<` and `>` compare the fields of two structs,
+  so they give a wrong result for these values.
+
+  A `DateTime` can be in any time zone. `DateTime.compare/2` compares the
+  points in time, so the three values do not need the same time zone. The
+  precision of the fractional second also has no effect.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.between?(~U[2024-01-01 12:00:00Z], ~U[2024-01-01 00:00:00Z], ~U[2024-01-02 00:00:00Z])
+      true
+
+  The period includes the first value and excludes the last value:
+
+      iex> Shoddy.DateTimes.between?(~D[2024-01-01], ~D[2024-01-01], ~D[2024-01-03])
+      true
+
+      iex> Shoddy.DateTimes.between?(~D[2024-01-03], ~D[2024-01-01], ~D[2024-01-03])
+      false
+
+  The operator `<` gives a wrong result for two dates:
+
+      iex> ~D[2024-02-01] < ~D[2024-01-31]
+      true
+
+      iex> Shoddy.DateTimes.between?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
+      false
+
+  A period with a last value that is not after the first value contains no
+  value:
+
+      iex> Shoddy.DateTimes.between?(~T[12:00:00], ~T[13:00:00], ~T[11:00:00])
+      false
+  """
+  @spec between?(value, value, value) :: boolean()
+        when value: Date.t() | Time.t() | NaiveDateTime.t() | DateTime.t()
+  def between?(%module{} = value, %module{} = first, %module{} = last)
+      when module in [Date, Time, NaiveDateTime, DateTime] do
+    module.compare(value, first) != :lt and module.compare(value, last) == :lt
   end
 end
