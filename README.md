@@ -19,8 +19,9 @@ params = %{"name" => "Ada", "email" => nil}
 
 ## The modules
 
-- `Shoddy` applies a function to a value only if a condition is true, and
-  selects the first value from a list of sources.
+- `Shoddy` applies a function to a value only if a condition is true or
+  only if the value is not `nil`, and selects the first value from a list of
+  sources.
 - `Shoddy.Maps` puts a value into a map only if the value is truthy, or only
   if the value is not `nil`. It also takes keys from a map with new names.
 - `Shoddy.Keywords` does the same for a keyword list, such as the options of
@@ -59,6 +60,7 @@ To learn the library, start with the tutorial:
 
 For one task, use a how-to guide:
 
+- [Transform an optional value](docs/how-to/transform-an-optional-value.md)
 - [Build a map from optional data](docs/how-to/build-a-map-from-optional-data.md)
 - [Build a keyword list of options](docs/how-to/build-a-keyword-list-of-options.md)
 - [Choose the first available value](docs/how-to/choose-the-first-available-value.md)

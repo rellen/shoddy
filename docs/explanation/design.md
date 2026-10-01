@@ -49,6 +49,10 @@ who knows `if` also knows the rule of these functions.
 This rule has a cost. `Shoddy.Maps.put_if/3` never puts `false` into a map.
 Thus `Shoddy.Maps.put_present/3` has the rule of `Shoddy.coalesce/2`, and
 it ignores only `nil`.
+For the same reason, `Shoddy.then_present/3` ignores only `nil`, and it calls
+the function for `false`. It also gives a default for `nil`. A default for
+`Shoddy.then_if/2` would be ambiguous, because the function would return
+the default for `false` too.
 [Build a map from optional data](../how-to/build-a-map-from-optional-data.md#keep-a-field-that-can-be-false)
 shows when to use each function.
 

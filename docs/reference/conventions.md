@@ -7,7 +7,7 @@ of each module gives the full description of each function.
 
 | Module | Functions |
 | --- | --- |
-| `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
+| `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
@@ -56,6 +56,8 @@ These functions do not use this rule:
 
 - `Shoddy.Maps.put_present/3` ignores only `nil`.
 - `Shoddy.Keywords.put_present/3` ignores only `nil`.
+- `Shoddy.then_present/3` ignores only `nil`. It calls the function for
+  `false`.
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
   default of that option is `[nil]`.
 
@@ -66,6 +68,7 @@ These functions do not use this rule:
 | `Shoddy.then_if/2` | The function to apply. | 1 |
 | `Shoddy.then_if/3` | The predicate. | 0 or 1 |
 | `Shoddy.then_if/3` | The function to apply. | 1 |
+| `Shoddy.then_present/3` | The function to apply. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
@@ -115,6 +118,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
+| `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |

@@ -37,6 +37,38 @@ defmodule ShoddyTest do
     end
   end
 
+  describe "then_present/3" do
+    test "calls the function for false" do
+      assert Shoddy.then_present(false, &{:seen, &1}) == {:seen, false}
+    end
+
+    test "returns the result of the function, also if the result is nil" do
+      assert Shoddy.then_present(42, fn _ -> nil end, default: :default) == nil
+    end
+
+    test "does not call the function for nil" do
+      Shoddy.then_present(nil, fn _ -> send(self(), :called) end)
+      refute_received :called
+    end
+
+    test "returns any term as the default" do
+      assert Shoddy.then_present(nil, & &1, default: false) == false
+      assert Shoddy.then_present(nil, & &1, default: [a: 1]) == [a: 1]
+    end
+
+    test "raises ArgumentError for an unknown option" do
+      assert_raise ArgumentError, fn -> Shoddy.then_present(nil, & &1, defualt: []) end
+    end
+
+    test "raises FunctionClauseError for nil and a function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&Shoddy.then_present/2, [nil, fn -> 0 end]) end
+    end
+
+    test "raises FunctionClauseError for options that are not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&Shoddy.then_present/3, [nil, & &1, :x]) end
+    end
+  end
+
   # Some tests below call a function through apply/2. The compiler examines
   # the type of each argument at a direct call. It reports a type violation
   # for an argument that no clause of the function accepts. Those tests must

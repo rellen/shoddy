@@ -27,6 +27,16 @@ defmodule ShoddyPropertyTest do
     end
   end
 
+  describe "then_present/3" do
+    property "returns the default for nil, and the result of the function for each other value" do
+      check all(value <- one_of([constant(nil), term()]), default <- term()) do
+        expected = if is_nil(value), do: default, else: {:seen, value}
+
+        assert Shoddy.then_present(value, &{:seen, &1}, default: default) == expected
+      end
+    end
+  end
+
   describe "then_if/3" do
     property "applies the function when the predicate returns a truthy value" do
       check all(value <- term()) do
