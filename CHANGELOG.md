@@ -14,6 +14,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Lists`
 - `Shoddy.Strings`
 - `Shoddy.Parse`
+- `Shoddy.Env`
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
@@ -109,3 +110,6 @@ The first release also contains these changes:
   `integer/2` does.
 - Add `Shoddy.Parse.boolean/2`. It accepts `"true"` and `"false"` by
   default. The options `:true_values` and `:false_values` change the lists.
+- Add `Shoddy.Env` with `integer/2` and `boolean/2`. They read a value from
+  an environment variable, for `config/runtime.exs`. They raise an
+  exception for a wrong value, and an empty value counts as absent.

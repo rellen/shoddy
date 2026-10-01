@@ -589,3 +589,23 @@ record. A person who reads the list then sees the change at the same place.
 If more than one record has the key, the function replaces only the first.
 The key should be unique, and a replacement of each such record would make
 copies of the new record.
+
+## Why Env raises an exception
+
+The functions of `Shoddy.Parse` return a result, because incorrect user
+input is not a defect. The functions of `Shoddy.Env` raise an exception
+instead. They run when the application starts, in `config/runtime.exs`. A
+wrong value there is a mistake in the deployment. If the application
+started with a default in place of the wrong value, nobody would see the
+mistake until the setting had an effect. An exception stops the start, and
+its message tells the name of the variable.
+
+An empty value counts as an absent variable. A tool that starts a container
+often sets each variable of a template, also the variables with no value.
+Thus `""` usually means "not set". For an absent variable without a
+default, the functions raise `System.EnvError`, as `System.fetch_env!/1`
+does.
+
+The functions do not examine the default. A default of `nil` can then mark
+an optional setting. A default outside the range of `:min` and `:max` can
+mark a special case, such as "no limit".

@@ -62,6 +62,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/treat-an-empty-string-as-no-value.md",
         "docs/how-to/shorten-a-string-for-display.md",
         "docs/how-to/parse-user-input.md",
+        "docs/how-to/read-configuration-from-environment-variables.md",
         "docs/how-to/chain-operations-that-can-fail.md",
         "docs/how-to/return-a-tagged-tuple-from-a-callback.md",
         "docs/how-to/toggle-elements-in-a-selection.md",
@@ -89,6 +90,7 @@ defmodule Shoddy.MixProject do
         Values: [Shoddy, Shoddy.Strings, Shoddy.Parse],
         Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets, Shoddy.Lists],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
+        Configuration: [Shoddy.Env],
         "Dates and times": [Shoddy.DateTimes]
       ]
     ]
