@@ -28,4 +28,24 @@ defmodule Shoddy.StringsPropertyTest do
       end
     end
   end
+
+  describe "presence/1" do
+    property "returns nil for the empty string, and each other value with no change" do
+      check all(
+              value <-
+                one_of([
+                  string(:printable),
+                  binary(),
+                  constant(nil),
+                  boolean(),
+                  integer(),
+                  list_of(integer(0..127), max_length: 3)
+                ])
+            ) do
+        expected = if value != "", do: value
+
+        assert Shoddy.Strings.presence(value) === expected
+      end
+    end
+  end
 end

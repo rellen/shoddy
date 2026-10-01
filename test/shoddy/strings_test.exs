@@ -17,12 +17,12 @@ defmodule Shoddy.StringsTest do
       refute is_non_empty_string("")
     end
 
-    test "accepts a string of whitespace, because it does not trim the string" do
+    test "accepts a string that contains only whitespace, because it does not trim the string" do
       assert is_non_empty_string(" ")
       assert is_non_empty_string("\n\t")
     end
 
-    test "accepts a binary that is not valid UTF-8" do
+    test "accepts a binary that is not valid UTF-8, the encoding of a string" do
       assert is_non_empty_string(<<255>>)
     end
 
@@ -51,6 +51,31 @@ defmodule Shoddy.StringsTest do
 
     test "operates as a capture for Enum.filter/2" do
       assert Enum.filter(["Ada", "", nil, " "], &is_non_empty_string/1) == ["Ada", " "]
+    end
+  end
+
+  describe "presence/1" do
+    test "returns nil for the empty string and for nil" do
+      assert presence("") == nil
+      assert presence(nil) == nil
+    end
+
+    test "returns a string that is not empty with no change" do
+      assert presence("Ada") == "Ada"
+      assert presence(<<255>>) == <<255>>
+    end
+
+    test "returns a string that contains only whitespace with no change" do
+      assert presence(" ") == " "
+      assert presence("\n\t") == "\n\t"
+    end
+
+    test "returns false and each other value that is not a string with no change" do
+      assert presence(false) == false
+      assert presence(0) == 0
+      assert presence([]) == []
+      assert presence(~c"") == []
+      assert presence(%{}) == %{}
     end
   end
 end

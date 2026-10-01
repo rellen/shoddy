@@ -61,6 +61,8 @@ The first release also contains these changes:
 - Add `Shoddy.DateTimes.ceil/2`. It rounds a time value up to the start of
   a minute, an hour or a day. A value at the start of a unit stays the same.
   It accepts a `NaiveDateTime` and a `DateTime` in UTC, but not a `Time`.
-- Add `Shoddy.Strings` with the guard `is_non_empty_string/1`. It accepts a
-  binary that contains at least one byte. It rejects `nil`, `""` and each
-  value that is not a binary.
+- Add `Shoddy.Strings` with the guard `is_non_empty_string/1` and the
+  function `presence/1`. The guard accepts a binary that contains at least
+  one byte. It rejects `nil`, `""` and each value that is not a binary.
+  `presence/1` changes `""` to `nil`, and it returns each other value with
+  no change.
