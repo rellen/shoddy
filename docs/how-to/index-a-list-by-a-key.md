@@ -30,15 +30,19 @@ lookups in a long list, the map is faster.
 
 ## Join two lists by a key
 
-Index one list, and then read the other list:
+Use `Shoddy.Lists.join_by/4`. It puts each element of the first list with
+the element of the second list that has the same key:
 
 ```elixir
-orders = [%{user_id: 3, total: 12}, %{user_id: 1, total: 30}]
-by_id = Lists.index_by(users, & &1.id)
+orders = [%{user_id: 3, total: 12}, %{user_id: 9, total: 30}]
 
-Enum.map(orders, &{by_id[&1.user_id].name, &1.total})
-#=> [{"Alan", 12}, {"Ada", 30}]
+Lists.join_by(orders, users, & &1.user_id, & &1.id)
+#=> [{%{user_id: 3, total: 12}, %{id: 3, name: "Alan"}}, {%{user_id: 9, total: 30}, nil}]
 ```
+
+For a key with no partner, the second element of the tuple is `nil`. The
+function indexes the second list with `Shoddy.Lists.index_by/2`, so the keys
+of the second list must be unique.
 
 ## Find an error in data that must have unique keys
 

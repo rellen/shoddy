@@ -129,3 +129,5 @@ The first release also contains these changes:
   `stringify_keys/1`, `diff/2` and `invert/1`. The functions that change
   keys raise `ArgumentError` if an entry would go.
 - Add `Shoddy.Keywords.compact/1`. It removes each entry with `nil`.
+- Add `Shoddy.Lists.toggle/2`, `move/3`, `sorted?/2`, `cycle_next/2`,
+  `all_same_by?/2` and `join_by/4`.

@@ -52,3 +52,15 @@ Use `Enum.reject/2`:
 Enum.reject(users, &(&1.id == 1))
 #=> [%{id: 2, name: "Grace"}]
 ```
+
+## Move a record to a new position
+
+Use `Shoddy.Lists.move/3`, for example after a user drags a record to a new
+place. The indexes start at 0:
+
+```elixir
+Lists.move([:a, :b, :c, :d], 0, 2)
+#=> [:b, :c, :a, :d]
+```
+
+For an index that is not in the list, the function raises `ArgumentError`.

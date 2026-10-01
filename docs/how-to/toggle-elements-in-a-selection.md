@@ -64,3 +64,30 @@ MapSet.union(selected, group)
 MapSet.difference(selected, group)
 #=> MapSet.new([])
 ```
+
+## Keep the order of the selection
+
+A `MapSet` has no order. If the order of the selection is important, keep a
+list, and use `Shoddy.Lists.toggle/2`. It adds a new element at the end:
+
+```elixir
+[:name, :email]
+|> Shoddy.Lists.toggle(:age)
+|> Shoddy.Lists.toggle(:name)
+#=> [:email, :age]
+```
+
+## Select the next element of a fixed list
+
+For a list of tabs or a list of servers, use `Shoddy.Lists.cycle_next/2`. It
+returns the first element after the last element:
+
+```elixir
+tabs = [:inbox, :sent, :drafts]
+
+Shoddy.Lists.cycle_next(tabs, :drafts)
+#=> :inbox
+```
+
+The current element must be in the list. For another element, the function
+raises `ArgumentError`.

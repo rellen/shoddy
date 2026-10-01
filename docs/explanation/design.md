@@ -669,3 +669,22 @@ same, so the mistake cannot occur.
 change from `1` to `1.0` is a change. A deep comparison would need a rule
 for lists, structs and keyword lists, and each rule is correct for some
 data only.
+
+## Lists that a user changes
+
+`Shoddy.Lists.toggle/2` removes each occurrence of an element that the list
+contains. A selection usually contains an element one time. If it contains
+the element more than one time, a user who turns the element off expects
+it to go completely. A new element goes to the end, so the selection keeps
+the order in which the user made it.
+
+`Shoddy.Lists.move/3` and `Shoddy.Lists.cycle_next/2` raise `ArgumentError`
+for an index or an element that is not in the list. The caller gets that
+value from the list, so a wrong value is a defect. A quiet result, such as
+the list with no change, would hide the defect.
+
+`Shoddy.Lists.join_by/4` keeps each element of the first list, also an
+element with no partner. A report about orders must show each order, also
+an order whose user is gone. The keys of the second list must be unique.
+Otherwise one order would have more than one partner, and the function
+would have to select one of them.
