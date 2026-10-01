@@ -30,7 +30,7 @@ end
 ## Toggle each element of a list
 
 Use `Shoddy.MapSets.toggle_all/2`. It toggles each element of the list one
-time:
+time, also if the list contains the element more than one time:
 
 ```elixir
 selected = MapSet.new(["elixir"])

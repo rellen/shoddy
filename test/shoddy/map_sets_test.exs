@@ -87,10 +87,11 @@ defmodule Shoddy.MapSetsTest do
       assert toggle_all(MapSet.new(), []) == MapSet.new()
     end
 
-    test "toggles an element one time for each occurrence in the list" do
-      assert toggle_all(MapSet.new(), [:a, :a]) == MapSet.new()
+    test "toggles an element one time if it occurs more than one time in the list" do
+      assert toggle_all(MapSet.new(), [:a, :a]) == MapSet.new([:a])
       assert toggle_all(MapSet.new(), [:a, :a, :a]) == MapSet.new([:a])
-      assert toggle_all(MapSet.new([:a]), [:a, :a]) == MapSet.new([:a])
+      assert toggle_all(MapSet.new([:a]), [:a, :a]) == MapSet.new()
+      assert toggle_all(MapSet.new([:a, :b]), [:b, :c, :b, :c]) == MapSet.new([:a, :c])
     end
 
     test "returns the initial map set after two calls with the same list" do
@@ -99,7 +100,7 @@ defmodule Shoddy.MapSetsTest do
       assert set |> toggle_all([:b, :c]) |> toggle_all([:b, :c]) == set
     end
 
-    test "returns the same result as one call to toggle/2 for each element" do
+    test "returns the same result as one call to toggle/2 for each element of a list with no duplicates" do
       set = MapSet.new([:a, :b])
 
       assert toggle_all(set, [:b, :c, :d]) == set |> toggle(:b) |> toggle(:c) |> toggle(:d)
@@ -118,7 +119,7 @@ defmodule Shoddy.MapSetsTest do
     test "treats a list inside the list as one element" do
       assert toggle_all(MapSet.new(), [[1, 2]]) == MapSet.new([[1, 2]])
       assert toggle_all(MapSet.new([[1, 2]]), [[1, 2]]) == MapSet.new()
-      assert toggle_all(MapSet.new(), [[1, 2], [1, 2]]) == MapSet.new()
+      assert toggle_all(MapSet.new(), [[1, 2], [1, 2]]) == MapSet.new([[1, 2]])
       assert toggle_all(MapSet.new(), [[], :a]) == MapSet.new([[], :a])
     end
 

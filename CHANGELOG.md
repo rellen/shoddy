@@ -40,3 +40,7 @@ The first release also contains these changes:
   list. `has_duplicates?/1` returns `true` if such an element exists.
 - Add `Shoddy.Maps.take_as/2`. It takes keys from a map, and gives each key
   a new name from its argument `mapping`.
+- Breaking: `Shoddy.MapSets.toggle_all/2` toggles each element of the list
+  one time, also if the list contains the element more than one time. The
+  result is equal to the result of `MapSet.symmetric_difference/2` with a map
+  set of the list.
