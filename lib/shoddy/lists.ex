@@ -119,6 +119,56 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Returns a map from the key of each element to the element.
+
+  `key_fun` returns the key of an element. Use this function to find
+  records by a key, such as an ID, many times. A lookup in the map is faster
+  than `Enum.find/2` on the list.
+
+  Each key must be unique. This function raises `ArgumentError` if more than
+  one element has the same key. The message tells each such key.
+  `Map.new(list, &{&1.id, &1})` is different: it keeps the last of these
+  elements, and it does not tell you about the others.
+
+  This function compares two keys with the strict equality operator `===/2`,
+  as the keys of a map do. Thus the integer `1` and the float `1.0` are two
+  different keys.
+
+  ## Examples
+
+      iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+      iex> Shoddy.Lists.index_by(users, & &1.id)
+      %{1 => %{id: 1, name: "Ada"}, 2 => %{id: 2, name: "Grace"}}
+
+      iex> Shoddy.Lists.index_by([], & &1.id)
+      %{}
+
+  The function raises an error for a key that is not unique:
+
+      iex> Shoddy.Lists.index_by([%{id: 1}, %{id: 1}], & &1.id)
+      ** (ArgumentError) more than one element has the same key: [1]
+
+  Use the map to find each record by its key:
+
+      iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+      iex> by_id = Shoddy.Lists.index_by(users, & &1.id)
+      iex> Enum.map([2, 1], &by_id[&1].name)
+      ["Grace", "Ada"]
+  """
+  @spec index_by([element], (element -> key)) :: %{optional(key) => element}
+        when element: var, key: var
+  def index_by(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
+    index = Map.new(list, &{key_fun.(&1), &1})
+
+    if map_size(index) == length(list) do
+      index
+    else
+      keys = list |> Enum.map(key_fun) |> duplicates()
+      raise ArgumentError, "more than one element has the same key: #{inspect(keys)}"
+    end
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

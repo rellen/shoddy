@@ -71,3 +71,6 @@ The first release also contains these changes:
   text into an integer only if the text contains only the integer. The
   options `:min` and `:max` set a range. `one_of/2` converts text into an
   atom from a list, and it never makes a new atom.
+- Add `Shoddy.Lists.index_by/2`. It returns a map from the key of each
+  element to the element. It raises `ArgumentError` if more than one
+  element has the same key.

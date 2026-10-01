@@ -437,3 +437,20 @@ and stop the system. `String.to_existing_atom/1` is safe from this problem,
 but it accepts the name of each atom in the system, not only the atoms that
 the code expects. The list of allowed atoms is thus also a list of the
 correct values.
+
+## Why index_by raises for a key that is not unique
+
+`Shoddy.Lists.index_by/2` makes a map, and a map has one value for each key.
+If two elements have the same key, one of them must go. `Map.new/2` keeps the
+last element, and the program continues with less data than it read. No
+error tells the reader about the loss.
+
+The caller of `Shoddy.Lists.index_by/2` expects unique keys. A second element
+with the same key thus shows that this expectation is wrong, in the code or
+in the data. The function raises `ArgumentError`, so the problem is visible
+at the place where it occurs. The message tells each such key, so the reader
+can find the records.
+
+For data where a key can occur more than one time, the caller must select a
+rule. `Enum.group_by/2` keeps each element. `Shoddy.Lists.duplicates_by/2`
+finds the keys that are not unique.

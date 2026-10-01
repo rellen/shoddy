@@ -65,6 +65,38 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "index_by/2" do
+    test "returns a map from the key of each element to the element" do
+      assert index_by([{:a, 1}, {:b, 2}], &elem(&1, 0)) == %{a: {:a, 1}, b: {:b, 2}}
+    end
+
+    test "accepts nil and false as keys" do
+      assert index_by([1, 2], &if(&1 != 1, do: false)) == %{nil => 1, false => 2}
+    end
+
+    test "keeps 1 and 1.0 as two keys" do
+      assert index_by([1, 1.0], & &1) == %{1 => 1, 1.0 => 1.0}
+    end
+
+    test "raises ArgumentError that tells each duplicate key, in the order of first occurrence" do
+      assert_raise ArgumentError, "more than one element has the same key: [:b, :a]", fn ->
+        index_by([{:b, 1}, {:a, 2}, {:b, 3}, {:a, 4}, {:a, 5}, {:c, 6}], &elem(&1, 0))
+      end
+    end
+
+    test "raises ArgumentError for two equal elements" do
+      assert_raise ArgumentError, fn -> index_by([:x, :x], & &1) end
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&index_by/2, [%{a: 1}, & &1]) end
+    end
+
+    test "raises FunctionClauseError for a key function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&index_by/2, [[1], fn -> 1 end]) end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])

@@ -11,7 +11,7 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
-| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.single/1` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, and `Shoddy.Strings.presence/1` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
@@ -77,6 +77,7 @@ These functions do not use this rule:
 | `Shoddy.then_if/3` | The function to apply. | 1 |
 | `Shoddy.then_present/3` | The function to apply. | 1 |
 | `Shoddy.Lists.duplicates_by/2` | The function that returns the key of an element. | 1 |
+| `Shoddy.Lists.index_by/2` | The function that returns the key of an element. | 1 |
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
@@ -118,6 +119,7 @@ These functions compare two values with the strict equality operator
 - `Shoddy.Lists.duplicates/1` and `Shoddy.Lists.has_duplicates?/1`, for the
   elements of the list.
 - `Shoddy.Lists.duplicates_by/2`, for the keys of the elements.
+- `Shoddy.Lists.index_by/2`, for the keys of the elements.
 
 ## Errors
 
@@ -139,6 +141,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
+| `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` with a struct. The function raises this error also if it does not put the value. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`. |
 

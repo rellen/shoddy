@@ -32,6 +32,23 @@ defmodule Shoddy.ListsPropertyTest do
     end
   end
 
+  describe "index_by/2" do
+    property "returns the element of each key if the keys are unique, and raises otherwise" do
+      check all(list <- list_of(tuple({element(), integer()}), max_length: 20)) do
+        key = &elem(&1, 0)
+
+        if Lists.has_duplicates?(Enum.map(list, key)) do
+          assert_raise ArgumentError, fn -> Lists.index_by(list, key) end
+        else
+          index = Lists.index_by(list, key)
+
+          assert map_size(index) == length(list)
+          assert Enum.all?(list, &(index[key.(&1)] === &1))
+        end
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     property "returns true only if an element occurs more than one time" do
       check all(
