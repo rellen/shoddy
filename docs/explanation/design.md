@@ -708,3 +708,15 @@ do not log the value at all.
 mean of no numbers is not defined, and 0 would be a wrong answer. An
 average rating of 0 is a different fact from no ratings. A result makes the
 caller decide, for example with `Shoddy.Result.unwrap/2`.
+
+## A stream of time values
+
+`Shoddy.DateTimes.stream/3` returns a stream, not a range. A `Range` holds
+integers, and `Date.range/2` holds dates and includes its last date. The
+function stops before its last value instead, as the periods of
+`Shoddy.DateTimes.between?/3` do. Thus the stream from 09:00 to 12:00 gives
+three hours, and the stream of the next period starts at 12:00 with no
+overlap.
+
+`Shoddy.DateTimes.round/2` rounds a value at the middle of a unit up. The
+rule follows `Kernel.round/1`, which rounds 0.5 up.

@@ -192,4 +192,28 @@ defmodule Shoddy.DateTimesPropertyTest do
       end
     end
   end
+
+  describe "stream/3" do
+    property "returns each step from first before last, one unit apart" do
+      check all(first <- naive_datetime(), steps <- integer(-2..6), unit <- member_of([:minute, :hour, :day])) do
+        last = NaiveDateTime.add(first, steps, unit)
+
+        assert DateTimes.stream(first, last, unit) |> Enum.to_list() ==
+                 Enum.map(0..(steps - 1)//1, &NaiveDateTime.add(first, &1, unit))
+      end
+    end
+  end
+
+  describe "round/2" do
+    property "returns the nearer of floor/2 and next_start/2, and next_start/2 at the middle" do
+      check all(unit <- member_of([:minute, :hour, :day]), value <- one_of([datetime(), naive_datetime()])) do
+        module = value.__struct__
+        down = DateTimes.floor(value, unit)
+        up = DateTimes.next_start(value, unit)
+        expected = if module.diff(value, down, :microsecond) < module.diff(up, value, :microsecond), do: down, else: up
+
+        assert DateTimes.round(value, unit) == expected
+      end
+    end
+  end
 end

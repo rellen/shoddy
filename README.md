@@ -53,8 +53,9 @@ params = %{"name" => "Ada", "email" => nil}
   value of a GenServer callback.
 - `Shoddy.DateTimes` operates on dates and times. It extends the precision
   of a time value. It rounds a time value down or up to a minute, an hour
-  or a day. It finds the start of the next unit. It tells if a date or a
-  time is in a period, and if two periods overlap.
+  or a day, or to the nearest unit. It finds the start of the next unit, and
+  it makes each unit of a period. It tells if a date or a time is in a
+  period, and if two periods overlap.
 
 ## Installation
 

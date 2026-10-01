@@ -137,3 +137,9 @@ The first release also contains these changes:
   variable.
 - Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty
   list.
+- Add `Shoddy.DateTimes.stream/3`. It returns a stream of values one unit
+  apart, from the first value and before the last value.
+- Add `Shoddy.DateTimes.round/2`. It rounds a value to the nearest start of
+  a unit, and a value at the middle rounds up.
+- Add `Shoddy.Result.unwrap_lazy/2`. It calls a function for the default of
+  an error, and it does not call the function for an ok result.
