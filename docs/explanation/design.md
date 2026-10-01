@@ -168,6 +168,26 @@ toggled each element of a list, then no call could toggle a list that is an
 element. Thus `Shoddy.MapSets.toggle/2` always toggles one element, and
 `Shoddy.MapSets.toggle_all/2` toggles each element of a list.
 
+## One toggle for each element of the list
+
+`Shoddy.MapSets.toggle_all/2` toggles an element one time, also if the list
+contains the element more than one time. A list of elements to toggle often
+contains a duplicate by accident, for example after `++/2`. If the function
+toggled the element one time for each occurrence, two occurrences would
+cancel and the element would not change. The function would not tell you
+about this.
+
+With one toggle for each element, the result of
+`Shoddy.MapSets.toggle_all/2` is equal to the result of
+`MapSet.symmetric_difference/2` with a map set of the list. The function is
+also fast for a short list and a large map set. On Elixir 1.19 and 1.20,
+`MapSet.symmetric_difference/2` reads each element of the larger map set,
+also for a list of a few elements.
+
+To toggle an element one time for each occurrence, for example to apply a
+list of events, call `Shoddy.MapSets.toggle/2` for each element with
+`Enum.reduce/3`.
+
 ## Why extend_precision never lowers the precision
 
 The precision of a time value is part of its struct, and `==` compares the

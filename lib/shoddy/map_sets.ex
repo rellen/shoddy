@@ -87,19 +87,21 @@ defmodule Shoddy.MapSets do
   @doc """
   Toggles the membership of each element of a list in a map set.
 
-  This function calls `toggle/2` one time for each element of the list. The
-  function starts at the first element of the list. If the list is empty,
-  this function returns the map set with no change.
+  This function toggles each different element of the list one time. If an
+  element occurs more than one time in the list, the function toggles it one
+  time only. If the list is empty, this function returns the map set with no
+  change.
 
   The second argument must be a list. Each element of that list is one
   element of the map set. Thus a list inside that list is one element.
 
-  The function toggles an element one time for each occurrence of the
-  element in the list. Thus two occurrences of an element cause no change.
-  For the same reason, two calls with the same list return a map set that is
-  equal to the initial map set.
-
+  The result is equal to the result of
+  `MapSet.symmetric_difference(map_set, MapSet.new(elements))`. Two calls
+  with the same list return a map set that is equal to the initial map set.
   The order of the elements in the list does not change the result.
+
+  To toggle an element one time for each occurrence, for example to apply a
+  list of events, call `toggle/2` for each element with `Enum.reduce/3`.
 
   ## Examples
 
@@ -119,13 +121,14 @@ defmodule Shoddy.MapSets do
       iex> Shoddy.MapSets.toggle_all(MapSet.new([:a]), [])
       MapSet.new([:a])
 
-  The function toggles an element one time for each occurrence in the list:
+  The function toggles an element one time, also if it occurs more than one
+  time in the list:
 
       iex> Shoddy.MapSets.toggle_all(MapSet.new(), [:a, :a])
-      MapSet.new([])
-
-      iex> Shoddy.MapSets.toggle_all(MapSet.new(), [:a, :a, :a])
       MapSet.new([:a])
+
+      iex> Shoddy.MapSets.toggle_all(MapSet.new([:a]), [:a, :a, :a])
+      MapSet.new([])
 
   A list inside the list is one element:
 
@@ -142,6 +145,8 @@ defmodule Shoddy.MapSets do
   @spec toggle_all(MapSet.t(element), [new_element]) :: MapSet.t(element | new_element)
         when element: var, new_element: var
   def toggle_all(%MapSet{} = map_set, elements) when is_list(elements) do
-    Enum.reduce(elements, map_set, fn element, acc -> toggle(acc, element) end)
+    elements
+    |> Enum.uniq()
+    |> Enum.reduce(map_set, &toggle(&2, &1))
   end
 end

@@ -8,7 +8,12 @@ defmodule Shoddy.MapSetsPropertyTest do
 
   defp any_map_set, do: map(list_of(element(), max_length: 10), &MapSet.new/1)
 
-  defp elements, do: list_of(element(), max_length: 10)
+  defp elements do
+    one_of([
+      list_of(element(), max_length: 10),
+      list_of(member_of([:a, :b, 1, "a"]), max_length: 10)
+    ])
+  end
 
   defp map_set_with_member do
     bind(list_of(element(), min_length: 1, max_length: 10), fn list ->
@@ -82,9 +87,9 @@ defmodule Shoddy.MapSetsPropertyTest do
   end
 
   describe "toggle_all/2" do
-    property "returns the same result as one call to toggle/2 for each element" do
+    property "returns the same result as MapSet.symmetric_difference/2 with a map set of the list" do
       check all(map_set <- any_map_set(), list <- elements()) do
-        expected = Enum.reduce(list, map_set, fn element, acc -> MapSets.toggle(acc, element) end)
+        expected = MapSet.symmetric_difference(map_set, MapSet.new(list))
 
         assert MapSets.toggle_all(map_set, list) == expected
       end
@@ -96,12 +101,12 @@ defmodule Shoddy.MapSetsPropertyTest do
       end
     end
 
-    property "changes the membership of an element that occurs an odd number of times" do
+    property "changes the membership of each element that the list contains" do
       check all(map_set <- any_map_set(), list <- elements(), element <- element()) do
         result = MapSets.toggle_all(map_set, list)
-        odd? = rem(Enum.count(list, &(&1 === element)), 2) == 1
+        in_list? = Enum.any?(list, &(&1 === element))
 
-        assert MapSet.member?(result, element) == (MapSet.member?(map_set, element) != odd?)
+        assert MapSet.member?(result, element) == (MapSet.member?(map_set, element) != in_list?)
       end
     end
 
