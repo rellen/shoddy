@@ -140,6 +140,53 @@ defmodule Shoddy.Maps do
   def put_present(map, key, value) when is_map(map), do: put_when(map, key, value, not is_nil(value))
 
   @doc """
+  Returns the value of a key, or a default if the value is absent or `nil`.
+
+  If `map` has no entry for `key`, or the value of the entry is `nil`, this
+  function returns `default`. It returns `false` with no change.
+
+  `Map.get(map, key, default)` is different. It returns `nil` for an entry
+  with the value `nil`. `Map.get(map, key) || default` is also different. It
+  returns the default also for `false`.
+
+  Use this function for data where an absent key and the value `nil` have
+  the same meaning, such as decoded JSON or optional fields.
+
+  ## Examples
+
+      iex> Shoddy.Maps.get_present(%{tags: [:a]}, :tags, [])
+      [:a]
+
+      iex> Shoddy.Maps.get_present(%{}, :tags, [])
+      []
+
+      iex> Shoddy.Maps.get_present(%{tags: nil}, :tags, [])
+      []
+
+  `Map.get/3` returns `nil` for an entry with the value `nil`:
+
+      iex> Map.get(%{tags: nil}, :tags, [])
+      nil
+
+  The function returns `false` with no change:
+
+      iex> Shoddy.Maps.get_present(%{active: false}, :active, true)
+      false
+
+  The function also reads a field of a struct:
+
+      iex> Shoddy.Maps.get_present(%URI{port: nil}, :port, 443)
+      443
+  """
+  @spec get_present(map(), key, default) :: value | default when key: any(), value: any(), default: any()
+  def get_present(map, key, default) when is_map(map) do
+    case map do
+      %{^key => value} when not is_nil(value) -> value
+      _other -> default
+    end
+  end
+
+  @doc """
   Takes keys from a map, and gives each key a new name.
 
   `mapping` is a map from each key to take to its new name. The result

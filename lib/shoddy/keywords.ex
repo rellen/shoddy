@@ -13,11 +13,14 @@ defmodule Shoddy.Keywords do
   The name of this module is `Keywords`, in the plural. Thus the alias
   `Keywords` does not hide the standard `Keyword` module.
 
-  Each function puts a value with `Keyword.put/3`. That function deletes each
-  entry for the key, and it puts the new entry at the start of the list.
-  Thus a key that occurs more than one time occurs one time after the call.
-  If a function does not put the value, the list stays with no change, also
-  if it contains a key more than one time.
+  `put_if/3` and `put_present/3` put a value with `Keyword.put/3`. That
+  function deletes each entry for the key, and it puts the new entry at the
+  start of the list. Thus a key that occurs more than one time occurs one
+  time after the call. If a function does not put the value, the list stays
+  with no change, also if it contains a key more than one time.
+
+  `get_present/3` reads a value with `Keyword.get/2`. Thus it reads the
+  first entry for the key.
   """
 
   @doc """
@@ -105,5 +108,45 @@ defmodule Shoddy.Keywords do
   @spec put_present(keyword(), atom(), value) :: keyword() when value: any()
   def put_present(keywords, key, value) when is_list(keywords) and is_atom(key) do
     if is_nil(value), do: keywords, else: Keyword.put(keywords, key, value)
+  end
+
+  @doc """
+  Returns the value of a key, or a default if the value is absent or `nil`.
+
+  This function reads the first entry for `key`, as `Keyword.get/2` does. If
+  the list has no entry for `key`, or the value of the first entry is `nil`,
+  this function returns `default`. It returns `false` with no change.
+
+  `Keyword.get(keywords, key, default)` is different. It returns `nil` for an
+  entry with the value `nil`. `Keyword.get(keywords, key) || default` is also
+  different. It returns the default also for `false`.
+
+  ## Examples
+
+      iex> Shoddy.Keywords.get_present([timeout: 5_000], :timeout, 1_000)
+      5_000
+
+      iex> Shoddy.Keywords.get_present([], :timeout, 1_000)
+      1_000
+
+      iex> Shoddy.Keywords.get_present([timeout: nil], :timeout, 1_000)
+      1_000
+
+  The function returns `false` with no change:
+
+      iex> Shoddy.Keywords.get_present([retry: false], :retry, true)
+      false
+
+  The first entry for the key decides:
+
+      iex> Shoddy.Keywords.get_present([timeout: nil, timeout: 5_000], :timeout, 1_000)
+      1_000
+  """
+  @spec get_present(keyword(), atom(), default) :: value | default when value: any(), default: any()
+  def get_present(keywords, key, default) when is_list(keywords) and is_atom(key) do
+    case Keyword.get(keywords, key) do
+      nil -> default
+      value -> value
+    end
   end
 end

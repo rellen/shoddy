@@ -74,3 +74,6 @@ The first release also contains these changes:
 - Add `Shoddy.Lists.index_by/2`. It returns a map from the key of each
   element to the element. It raises `ArgumentError` if more than one
   element has the same key.
+- Add `Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3`. They
+  return the value of a key, or a default for an absent key and for `nil`.
+  They return `false` with no change.

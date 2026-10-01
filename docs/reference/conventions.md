@@ -8,8 +8,8 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2` |
-| `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2` |
+| `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, and `Shoddy.Strings.presence/1` |
@@ -63,6 +63,8 @@ These functions do not use this rule:
 
 - `Shoddy.Maps.put_present/3` ignores only `nil`.
 - `Shoddy.Keywords.put_present/3` ignores only `nil`.
+- `Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3` return the
+  default only for an absent key and for `nil`. They return `false`.
 - `Shoddy.then_present/3` ignores only `nil`. It calls the function for
   `false`.
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The

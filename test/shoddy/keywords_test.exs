@@ -77,4 +77,38 @@ defmodule Shoddy.KeywordsTest do
       assert_raise FunctionClauseError, fn -> apply(&put_present/3, [%{}, :a, nil]) end
     end
   end
+
+  describe "get_present/3" do
+    test "returns the value of the first entry for the key" do
+      assert get_present([a: 1, a: 2], :a, 0) == 1
+    end
+
+    test "returns the default for an absent key and for nil" do
+      assert get_present([b: 1], :a, 0) == 0
+      assert get_present([a: nil], :a, 0) == 0
+    end
+
+    test "returns false and other falsy-looking values with no change" do
+      assert get_present([a: false], :a, true) == false
+      assert get_present([a: 0], :a, 1) == 0
+      assert get_present([a: ""], :a, "x") == ""
+    end
+
+    test "does not read a later entry if the first entry is nil" do
+      assert get_present([a: nil, a: 2], :a, 0) == 0
+    end
+
+    test "returns any term as the default" do
+      assert get_present([], :a, nil) == nil
+      assert get_present([], :a, x: 1) == [x: 1]
+    end
+
+    test "raises FunctionClauseError for a key that is not an atom" do
+      assert_raise FunctionClauseError, fn -> apply(&get_present/3, [[a: 1], "a", 0]) end
+    end
+
+    test "raises FunctionClauseError for a first argument that is not a list" do
+      assert_raise FunctionClauseError, fn -> apply(&get_present/3, [%{a: 1}, :a, 0]) end
+    end
+  end
 end
