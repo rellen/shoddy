@@ -40,6 +40,8 @@ params = %{"name" => "Ada", "email" => nil}
   of bytes, and it splits a list of values.
 - `Shoddy.Parse` converts text, such as user input, into an integer, a
   float, a boolean or an allowed atom. It returns a result.
+- `Shoddy.Env` reads an integer or a boolean from an environment variable,
+  for `config/runtime.exs`. It raises an exception for a wrong value.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
@@ -81,6 +83,7 @@ For one task, use a how-to guide:
 - [Treat an empty string as no value](docs/how-to/treat-an-empty-string-as-no-value.md)
 - [Shorten a string for display](docs/how-to/shorten-a-string-for-display.md)
 - [Parse user input](docs/how-to/parse-user-input.md)
+- [Read configuration from environment variables](docs/how-to/read-configuration-from-environment-variables.md)
 - [Chain operations that can fail](docs/how-to/chain-operations-that-can-fail.md)
 - [Return a tagged tuple from a callback](docs/how-to/return-a-tagged-tuple-from-a-callback.md)
 - [Toggle elements in a selection](docs/how-to/toggle-elements-in-a-selection.md)
