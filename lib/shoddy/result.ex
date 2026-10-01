@@ -569,7 +569,11 @@ defmodule Shoddy.Result do
   # Lists of results
 
   @doc """
-  Converts a list of results into one result.
+  Converts a list or a stream of results into one result.
+
+  The first argument is a list, a stream, or another struct that implements
+  `Enumerable`. A map is not accepted, because its elements are key-value
+  tuples and not results.
 
   If each element is ok, this function returns `{:ok, values}`. The list
   `values` contains the value of each element, in the order of the input. A
@@ -578,7 +582,13 @@ defmodule Shoddy.Result do
   The option `:on_error` tells the function what to do for an error. The
   default is `:halt`, which returns the first error with no change.
 
-  Use this function after `Enum.map/2` with an operation that can fail.
+  Use this function after `Enum.map/2` with an operation that can fail. Use
+  it after `Stream.map/2` to stop the operation at the first error: with
+  `on_error: :halt`, this function reads no element after the first error,
+  so the stream does not call the operation for a later element. With
+  another value of `:on_error`, this function reads each element until a
+  function of `:on_error` returns `{:halt, error}`. Thus the stream must be
+  finite.
 
   This function raises `FunctionClauseError` for an element that is not a
   result, if it examines that element.
@@ -659,7 +669,8 @@ defmodule Shoddy.Result do
       iex> Shoddy.Result.collect(results, on_error: fn {:error, reason} -> {:halt, {:error, {:row, reason}}} end)
       {:error, {:row, :bad}}
 
-  Use the function after `Enum.map/2`:
+  Use the function after `Enum.map/2` or `Stream.map/2`. In the last
+  example, the stream does not call `parse` for `"y"`:
 
       iex> parse = fn text ->
       ...>   case Integer.parse(text) do
@@ -673,9 +684,18 @@ defmodule Shoddy.Result do
       {:error, {:invalid, "x"}}
       iex> ["1", "x", "y"] |> Enum.map(parse) |> Shoddy.Result.collect(on_error: :accumulate)
       {:error, [{:invalid, "x"}, {:invalid, "y"}]}
+      iex> ["1", "x", "y"] |> Stream.map(parse) |> Shoddy.Result.collect()
+      {:error, {:invalid, "x"}}
+
+  The function stops also for an infinite stream:
+
+      iex> Stream.concat([{:ok, 1}, {:error, :bad}], Stream.repeatedly(fn -> {:ok, 0} end))
+      ...> |> Shoddy.Result.collect()
+      {:error, :bad}
   """
-  @spec collect([t()], keyword()) :: {:ok, [any()]} | :error | {:error, any()}
-  def collect(results, opts \\ []) when is_list(results) and is_list(opts) do
+  @spec collect([t()] | struct() | (any(), any() -> any()), keyword()) :: {:ok, [any()]} | :error | {:error, any()}
+  def collect(results, opts \\ [])
+      when (is_list(results) or is_struct(results) or is_function(results, 2)) and is_list(opts) do
     opts = Keyword.validate!(opts, on_error: :halt)
     collect_with(results, on_error!(opts))
   end

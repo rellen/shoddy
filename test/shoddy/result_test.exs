@@ -504,8 +504,51 @@ defmodule Shoddy.ResultTest do
       assert_raise FunctionClauseError, fn -> apply(&collect/1, [[{:ok, 1}, 42]]) end
     end
 
-    test "raises FunctionClauseError for an argument that is not a list" do
+    test "accepts a stream" do
+      assert collect(Stream.map([1, 2], &{:ok, &1})) == {:ok, [1, 2]}
+      assert collect(Stream.map([1, 2], &{:error, &1})) == {:error, 1}
+    end
+
+    test "accepts a stream that is a function" do
+      assert collect(Stream.repeatedly(fn -> {:error, :bad} end)) == {:error, :bad}
+
+      assert collect(
+               Stream.unfold(3, fn
+                 0 -> nil
+                 n -> {{:ok, n}, n - 1}
+               end)
+             ) == {:ok, [3, 2, 1]}
+    end
+
+    test "accepts another struct that implements Enumerable" do
+      assert collect(MapSet.new([{:ok, 1}])) == {:ok, [1]}
+    end
+
+    test "reads no element of a stream after the first error" do
+      results =
+        Stream.map([{:ok, 1}, {:error, :bad}, :boom], fn
+          :boom -> flunk("the stream computed an element after the first error")
+          result -> result
+        end)
+
+      assert collect(results) == {:error, :bad}
+    end
+
+    test "stops at the first error of an infinite stream" do
+      results = Stream.concat([{:ok, 1}, {:error, :bad}], Stream.repeatedly(fn -> {:ok, 0} end))
+
+      assert collect(results) == {:error, :bad}
+    end
+
+    test "raises FunctionClauseError for an argument that is not a list, a stream or a struct" do
       assert_raise FunctionClauseError, fn -> apply(&collect/1, [{:ok, 1}]) end
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [42]) end
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [nil]) end
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [fn x -> x end]) end
+    end
+
+    test "raises FunctionClauseError for a map" do
+      assert_raise FunctionClauseError, fn -> apply(&collect/1, [%{ok: 1}]) end
     end
   end
 
