@@ -88,4 +88,33 @@ defmodule Shoddy.MapsPropertyTest do
       end
     end
   end
+
+  describe "deep_merge/2" do
+    property "takes each value from the right map, and merges two plain maps of the same key" do
+      check all(left <- nested_map(), right <- nested_map()) do
+        assert_merged(left, right, Maps.deep_merge(left, right))
+      end
+    end
+  end
+
+  defp nested_map do
+    leaf = one_of([integer(0..2), constant(nil), list_of(integer(0..2), max_length: 2), constant(~D[2024-01-01])])
+    nested = tree(leaf, &small_map/1)
+
+    small_map(nested)
+  end
+
+  defp small_map(values), do: map(list_of(tuple({member_of([:a, :b, :c]), values}), max_length: 4), &Map.new/1)
+
+  defp assert_merged(left, right, result) do
+    assert MapSet.new(Map.keys(result)) == MapSet.new(Map.keys(left) ++ Map.keys(right))
+
+    for {key, value} <- result do
+      case {Map.fetch(left, key), Map.fetch(right, key)} do
+        {{:ok, l}, {:ok, r}} when is_non_struct_map(l) and is_non_struct_map(r) -> assert_merged(l, r, value)
+        {_left, {:ok, r}} -> assert value === r
+        {{:ok, l}, :error} -> assert value === l
+      end
+    end
+  end
 end

@@ -55,6 +55,7 @@ defmodule Shoddy.MixProject do
         "docs/tutorials/get-started.md",
         "docs/how-to/transform-an-optional-value.md",
         "docs/how-to/build-a-map-from-optional-data.md",
+        "docs/how-to/merge-nested-maps.md",
         "docs/how-to/build-a-keyword-list-of-options.md",
         "docs/how-to/choose-the-first-available-value.md",
         "docs/how-to/chain-operations-that-can-fail.md",

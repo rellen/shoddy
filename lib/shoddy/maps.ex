@@ -224,6 +224,58 @@ defmodule Shoddy.Maps do
     end)
   end
 
+  @doc """
+  Merges two maps, and merges each nested map of the same key.
+
+  For a key that is in the two maps, the value comes from `right`. But if the
+  two values are plain maps, the function merges them in the same way. Thus a
+  nested map of `right` changes only its keys of the nested map of `left`.
+
+  The function merges only plain maps. `right` replaces each other value,
+  also if the two values are structs, lists or keyword lists. A value of
+  `nil` in `right` also replaces the value of `left`. An empty map in `right`
+  keeps the nested map of `left` with no change.
+
+  The two arguments must be plain maps. For a struct, this function raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> defaults = %{log: %{level: :info, format: :text}, port: 4000}
+      iex> Shoddy.Maps.deep_merge(defaults, %{log: %{level: :debug}})
+      %{log: %{level: :debug, format: :text}, port: 4000}
+
+  `Map.merge/2` replaces the nested map:
+
+      iex> Map.merge(%{log: %{level: :info, format: :text}}, %{log: %{level: :debug}})
+      %{log: %{level: :debug}}
+
+  The function does not merge a list, a keyword list or a struct:
+
+      iex> Shoddy.Maps.deep_merge(%{tags: [:a], opts: [x: 1]}, %{tags: [:b], opts: [y: 2]})
+      %{tags: [:b], opts: [y: 2]}
+
+      iex> Shoddy.Maps.deep_merge(%{date: ~D[2024-01-01]}, %{date: ~D[2025-06-30]})
+      %{date: ~D[2025-06-30]}
+
+  A value that is not a map replaces a map, and a map replaces such a value:
+
+      iex> Shoddy.Maps.deep_merge(%{log: %{level: :info}}, %{log: nil})
+      %{log: nil}
+
+      iex> Shoddy.Maps.deep_merge(%{log: false}, %{log: %{level: :info}})
+      %{log: %{level: :info}}
+  """
+  @spec deep_merge(map(), map()) :: map()
+  def deep_merge(left, right) when is_non_struct_map(left) and is_non_struct_map(right) do
+    Map.merge(left, right, &merge_value/3)
+  end
+
+  defp merge_value(_key, left, right) when is_non_struct_map(left) and is_non_struct_map(right),
+    do: deep_merge(left, right)
+
+  defp merge_value(_key, _left, right), do: right
+
   defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
     raise KeyError, key: key, term: struct
   end
