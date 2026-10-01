@@ -36,7 +36,7 @@ function can be a step of a pipeline.
 | `Shoddy.Lists` | The list. |
 | `Shoddy.Strings` | The value. |
 | `Shoddy.Parse` | The text. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, the enumerable. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. |
 
@@ -84,6 +84,7 @@ These functions do not use this rule:
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
+| `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -100,7 +101,8 @@ These functions do not use this rule:
 | `:error` | An error result with no reason. |
 
 For a bare `:ok`, `Shoddy.Result.unwrap/2` and `Shoddy.Result.unwrap!/1`
-return `nil`, and `Shoddy.Result.collect/2` puts `nil` into its list.
+return `nil`, `Shoddy.Result.collect/2` puts `nil` into its list, and
+`Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator.
 
 `Shoddy.Result.recover/2` and the function of the option `:on_error` of
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
@@ -142,10 +144,11 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An element of the allowed list that is not an atom, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
+| `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` with a struct. The function raises this error also if it does not put the value. |
-| `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`. |
+| `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3` that is not enumerable. |
 
 ## Names
 

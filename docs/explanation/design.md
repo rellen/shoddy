@@ -163,6 +163,23 @@ The function does not accept a map. A map is enumerable, but its elements
 are key-value tuples. A map as the first argument is thus a mistake, and
 `FunctionClauseError` tells the caller at once.
 
+## A reduction that can fail
+
+`Shoddy.Result.collect/2` makes a list of independent values. Some work is
+different: each step needs the result of the step before it. An example is
+a stock that each order reduces. `Enum.reduce_while/3` can do this work, but
+each call needs the same `case` expression. That expression changes each
+result into `{:cont, acc}` or `{:halt, error}`. `Shoddy.Result.reduce_ok/3`
+contains this expression.
+
+The function accepts a map, but `Shoddy.Result.collect/2` does not. The
+elements of `Shoddy.Result.collect/2` must be results, and the elements of a
+map are key-value tuples. The elements of `Shoddy.Result.reduce_ok/3` are
+input to the function, so a key-value tuple is a correct element.
+
+For a bare `:ok`, the new accumulator is `nil`. This follows the rule of the
+other functions of `Shoddy.Result`: a bare `:ok` has the value `nil`.
+
 ## Keyword lists in a separate module
 
 `Access` reads maps and keyword lists in the same way, but a put is different.

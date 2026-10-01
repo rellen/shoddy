@@ -292,3 +292,22 @@ This example puts 0 into the list for each error:
 |> Shoddy.Result.collect(on_error: fn _error -> {:cont, 0} end)
 #=> {:ok, [41, 0, 5]}
 ```
+
+## Accumulate a value with an operation that can fail
+
+If each step needs the result of the step before it, use
+`Shoddy.Result.reduce_ok/3`. It stops at the first error. This example adds
+the ages, and it stops at the first incorrect age:
+
+```elixir
+add_age = fn text, total -> text |> parse_age() |> Shoddy.Result.map_ok(&(total + &1)) end
+
+Shoddy.Result.reduce_ok(["41", "5"], 0, add_age)
+#=> {:ok, 46}
+
+Shoddy.Result.reduce_ok(["41", "old", "5"], 0, add_age)
+#=> {:error, {"old", :invalid_age}}
+```
+
+`Shoddy.Result.collect/2` returns a list of the values. Use it if each step
+is independent of the other steps.
