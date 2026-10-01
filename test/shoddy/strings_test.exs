@@ -125,4 +125,74 @@ defmodule Shoddy.StringsTest do
       end
     end
   end
+
+  describe "blank?/1" do
+    test "returns true for nil, the empty string and whitespace" do
+      assert blank?(nil)
+      assert blank?("")
+      assert blank?("  \t\r\n")
+      assert blank?("\u00A0\u2003")
+    end
+
+    test "returns false for a string with another character" do
+      refute blank?(" a ")
+      refute blank?("0")
+    end
+
+    test "raises FunctionClauseError for a value that is not nil or a string" do
+      for value <- [false, 0, [], :a] do
+        error = assert_raise FunctionClauseError, fn -> apply(&blank?/1, [value]) end
+        assert {error.module, error.function} == {Shoddy.Strings, :blank?}
+      end
+    end
+  end
+
+  describe "split_trim/2" do
+    test "splits at the default separator, trims each value and removes each empty value" do
+      assert split_trim(" a ,, b , ") == ["a", "b"]
+      assert split_trim(" , ") == []
+    end
+
+    test "accepts another separator and a list of separators" do
+      assert split_trim("a | b", "|") == ["a", "b"]
+      assert split_trim("a;b,c", [";", ","]) == ["a", "b", "c"]
+    end
+
+    test "keeps the spaces inside a value" do
+      assert split_trim("Ada Lovelace, Grace Hopper") == ["Ada Lovelace", "Grace Hopper"]
+    end
+
+    test "raises FunctionClauseError from split_trim/2 itself for an empty separator or a value that is not a string" do
+      for args <- [["a", ""], [nil, ","], ["a", :comma]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&split_trim/2, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :split_trim}
+      end
+    end
+  end
+
+  describe "truncate_bytes/2" do
+    test "returns a string of max_bytes bytes or fewer with no change" do
+      assert truncate_bytes("abc", 3) == "abc"
+      assert truncate_bytes("", 0) == ""
+    end
+
+    test "returns an empty string for 0 bytes" do
+      assert truncate_bytes("abc", 0) == ""
+    end
+
+    test "never cuts a grapheme of more than one code point" do
+      family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}"
+
+      assert truncate_bytes(family <> "a", byte_size(family) - 1) == ""
+      assert truncate_bytes(family <> "a", byte_size(family)) == family
+      assert truncate_bytes("e\u0301x", 2) == ""
+    end
+
+    test "raises FunctionClauseError from truncate_bytes/2 itself for an argument of the wrong type" do
+      for args <- [["abc", -1], [nil, 3], ["abc", 2.0]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&truncate_bytes/2, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :truncate_bytes}
+      end
+    end
+  end
 end

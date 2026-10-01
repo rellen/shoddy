@@ -68,4 +68,42 @@ defmodule Shoddy.StringsPropertyTest do
       end
     end
   end
+
+  describe "blank?/1" do
+    property "returns true only for nil or a string that String.trim/1 makes empty" do
+      check all(
+              value <-
+                one_of([constant(nil), string(:printable, max_length: 5), member_of([" ", "\t", "\n", "\u00A0"])])
+            ) do
+        assert Shoddy.Strings.blank?(value) == (is_nil(value) or String.trim(value) == "")
+      end
+    end
+  end
+
+  describe "split_trim/2" do
+    property "returns the values of Enum.join/2 again, if each value is trimmed and not empty" do
+      check all(
+              values <- list_of(string(:alphanumeric, min_length: 1), max_length: 5),
+              padding <- member_of(["", " ", "  "])
+            ) do
+        text = Enum.map_join(values, ",", &(padding <> &1 <> padding))
+
+        assert Shoddy.Strings.split_trim(text) == values
+      end
+    end
+  end
+
+  describe "truncate_bytes/2" do
+    property "returns the longest start of full graphemes that has max_bytes bytes or fewer" do
+      check all(string <- string(:printable, max_length: 10), max_bytes <- integer(0..40)) do
+        result = Shoddy.Strings.truncate_bytes(string, max_bytes)
+        graphemes = String.graphemes(string)
+        count = length(String.graphemes(result))
+
+        assert byte_size(result) <= max_bytes
+        assert result == Enum.join(Enum.take(graphemes, count))
+        assert count == length(graphemes) or byte_size(Enum.join(Enum.take(graphemes, count + 1))) > max_bytes
+      end
+    end
+  end
 end

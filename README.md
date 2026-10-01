@@ -35,8 +35,9 @@ params = %{"name" => "Ada", "email" => nil}
   it makes a map from the key of each element to the element. It sorts and
   groups records in a fixed order, and it replaces or adds a record.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
-  together. It also changes an empty string to `nil`. It shortens a string
-  for display.
+  together, and a predicate that also treats whitespace as empty. It changes
+  an empty string to `nil`. It shortens a string for display or to a number
+  of bytes, and it splits a list of values.
 - `Shoddy.Parse` converts text, such as user input, into an integer or into
   an allowed atom. It returns a result.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a

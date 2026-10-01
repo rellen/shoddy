@@ -423,6 +423,12 @@ The name does not end in `_present`. In Shoddy, `_present` means "not
 conditions: the value is a string, and it is not empty. The form follows
 `is_non_struct_map/1` of `Kernel`.
 
+`Shoddy.Strings.blank?/1` is the function for the other rule. It calls
+`String.trim/1`, so it treats whitespace as empty, and it knows the Unicode
+whitespace. A function can do this, but a guard cannot. The function accepts
+only `nil` and a string. A number or a list is not text, so `blank?` has no
+clear answer for it, and the function raises `FunctionClauseError`.
+
 ## Why presence changes only the empty string
 
 `Shoddy.Strings.presence/1` changes `""` to `nil`, and it returns each other
@@ -499,6 +505,13 @@ The function raises `ArgumentError` for an omission that is longer than the
 maximum. It raises this error also for a string that is short enough. A
 check that depends only on the arguments finds the mistake at the first
 call, and not only for a long string.
+
+`Shoddy.Strings.truncate_bytes/2` has a different purpose: storage. A
+database column or a protocol counts bytes. The function stops at the end
+of a grapheme, not at the end of a code point. A cut after a letter and
+before its accent would give a valid string, but it would show a different
+character. The function adds no omission, because the stored value is data,
+not text for a reader.
 
 ## Why between? excludes the last value
 

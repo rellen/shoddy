@@ -98,3 +98,9 @@ The first release also contains these changes:
   at its position, or it adds the element at the end or at the start.
 - Add `Shoddy.Lists.sort_by_keys/2`. It sorts by more than one key, with a
   direction for each key and an optional module for `compare/2`.
+- Add `Shoddy.Strings.blank?/1`. It returns `true` for `nil`, an empty
+  string and a string that contains only whitespace.
+- Add `Shoddy.Strings.split_trim/2`. It splits a string, trims each value,
+  and removes each empty value.
+- Add `Shoddy.Strings.truncate_bytes/2`. It shortens a string to a maximum
+  number of bytes, and it never cuts a grapheme.

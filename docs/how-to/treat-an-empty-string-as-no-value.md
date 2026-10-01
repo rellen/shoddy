@@ -108,5 +108,16 @@ first. `Shoddy.then_if/2` returns `nil` with no change:
 #=> nil
 ```
 
+To only check a value, use `Shoddy.Strings.blank?/1`. It returns `true` for
+`nil`, `""` and a string that contains only whitespace:
+
+```elixir
+Strings.blank?("  ")
+#=> true
+
+Strings.blank?(" Ada ")
+#=> false
+```
+
 [The design of Shoddy](../explanation/design.md#what-is_non_empty_string-accepts)
 tells why the guard does not trim the string.

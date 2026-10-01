@@ -18,10 +18,16 @@ defmodule Shoddy.Strings do
   Neither tool trims a string. Whitespace is a character such as a space, a
   tab or a newline. A string that contains only whitespace, such as `" "`, is
   not empty, so the two tools keep it. To treat such a string as empty, call
-  `String.trim/1` first.
+  `String.trim/1` first. The predicate `blank?/1` also treats such a string
+  as empty.
 
-  `truncate/3` shortens a string for display. It counts graphemes, which are
-  the characters that a reader sees.
+  The other functions change a string:
+
+  - `truncate/3` shortens a string for display. It counts graphemes, which
+    are the characters that a reader sees.
+  - `truncate_bytes/2` shortens a string to a number of bytes, for storage.
+  - `split_trim/2` splits a string into a list of values, and trims each
+    value.
   """
 
   @doc """
@@ -184,6 +190,114 @@ defmodule Shoddy.Strings do
 
       true ->
         omission
+    end
+  end
+
+  @doc """
+  Returns `true` for `nil`, an empty string and a string of whitespace only.
+
+  Whitespace is a character such as a space, a tab or a newline. This
+  function uses `String.trim/1`, so it also knows the Unicode whitespace,
+  such as the no-break space.
+
+  This function is not a guard, because a guard cannot trim a string. It
+  accepts only `nil` and a string. For another value, it raises
+  `FunctionClauseError`.
+
+  ## Examples
+
+      iex> Shoddy.Strings.blank?(nil)
+      true
+
+      iex> Shoddy.Strings.blank?("")
+      true
+
+      iex> Shoddy.Strings.blank?(" \\t\\n")
+      true
+
+      iex> Shoddy.Strings.blank?(" Ada ")
+      false
+  """
+  @spec blank?(String.t() | nil) :: boolean()
+  def blank?(nil), do: true
+  def blank?(value) when is_binary(value), do: String.trim(value) == ""
+
+  @doc """
+  Splits a string into a list of values, trims each value, and removes each
+  empty value.
+
+  The default separator is `","`. Give another string, or a list of
+  strings, as the separator. An empty separator is not accepted.
+
+  Use this function for a list in one field of a form or in one variable of
+  the environment, such as `"red, green, ,blue"`.
+
+  ## Examples
+
+      iex> Shoddy.Strings.split_trim("red, green, ,blue")
+      ["red", "green", "blue"]
+
+      iex> Shoddy.Strings.split_trim("")
+      []
+
+      iex> Shoddy.Strings.split_trim("a; b\\nc", [";", "\\n"])
+      ["a", "b", "c"]
+
+  `String.split/2` keeps the spaces and the empty values:
+
+      iex> String.split("red, green, ,blue", ",")
+      ["red", " green", " ", "blue"]
+  """
+  @spec split_trim(String.t(), String.t() | [String.t(), ...]) :: [String.t()]
+  def split_trim(string, separator \\ ",")
+      when is_binary(string) and ((is_binary(separator) and separator != "") or is_list(separator)) do
+    string
+    |> String.split(separator)
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  @doc """
+  Shortens a string to a maximum number of bytes, and never cuts a grapheme.
+
+  A database column or a protocol can limit the size of a value in bytes. A
+  character in UTF-8 can use more than one byte, so a cut at a byte position
+  can make a string that is not valid. This function returns the longest
+  start of the string that contains only full graphemes and has `max_bytes`
+  bytes or fewer.
+
+  This function adds no omission. For display, use `truncate/3`, which
+  counts graphemes.
+
+  ## Examples
+
+      iex> Shoddy.Strings.truncate_bytes("Hello", 3)
+      "Hel"
+
+      iex> Shoddy.Strings.truncate_bytes("Hello", 10)
+      "Hello"
+
+  The letter `ö` uses two bytes. The function does not cut it:
+
+      iex> Shoddy.Strings.truncate_bytes("Möbius", 2)
+      "M"
+
+      iex> binary_part("Möbius", 0, 2) |> String.valid?()
+      false
+  """
+  @spec truncate_bytes(String.t(), non_neg_integer()) :: String.t()
+  def truncate_bytes(string, max_bytes) when is_binary(string) and is_integer(max_bytes) and max_bytes >= 0 do
+    if byte_size(string) <= max_bytes do
+      string
+    else
+      binary_part(string, 0, prefix_size(string, max_bytes, 0))
+    end
+  end
+
+  defp prefix_size(rest, max_bytes, size) do
+    case String.next_grapheme_size(rest) do
+      {grapheme_size, rest} when size + grapheme_size <= max_bytes -> prefix_size(rest, max_bytes, size + grapheme_size)
+      _end_or_too_large -> size
     end
   end
 end

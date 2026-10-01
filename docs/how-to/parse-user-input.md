@@ -101,6 +101,27 @@ Shoddy.Maps.fetch_keys(%{"email" => "ada@example.com", "password" => "x"}, ["ema
 The result contains only the given keys. `Map.take/2` returns the same map,
 but it ignores an absent key, so you cannot tell that it is absent.
 
+## Read a list of values
+
+Use `Shoddy.Strings.split_trim/2` for a list in one field, such as tags. It
+trims each value, and it removes each empty value:
+
+```elixir
+Shoddy.Strings.split_trim("elixir, otp, ,beam,")
+#=> ["elixir", "otp", "beam"]
+```
+
+Give the separator as the second argument. Then give each value to a
+function of `Shoddy.Parse`, and combine the results:
+
+```elixir
+"3; 1; 2"
+|> Shoddy.Strings.split_trim(";")
+|> Enum.map(&Parse.integer/1)
+|> Shoddy.Result.collect()
+#=> {:ok, [3, 1, 2]}
+```
+
 ## Accept spaces around the value
 
 The functions do not trim the text. Call `String.trim/1` first:

@@ -64,3 +64,17 @@ and add the omission yourself:
 |> Kernel.<>("…")
 #=> "The design…"
 ```
+
+## Shorten a string to a number of bytes
+
+A database column or a protocol can limit a value in bytes, not in
+characters. Use `Shoddy.Strings.truncate_bytes/2`. It never cuts a
+character in half:
+
+```elixir
+Strings.truncate_bytes("Möbius", 2)
+#=> "M"
+```
+
+The letter `ö` uses two bytes, so it does not fit after `M`.
+`binary_part/3` would cut it, and the result would not be a valid string.
