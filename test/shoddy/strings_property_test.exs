@@ -108,7 +108,7 @@ defmodule Shoddy.StringsPropertyTest do
   end
 
   describe "mask/2" do
-    property "keeps the length, and shows at most the given graphemes of a longer string" do
+    property "keeps the length, and shows the given graphemes only if they are at most half of the string" do
       check all(string <- string(:printable, max_length: 12), first <- integer(0..4), last <- integer(0..4)) do
         result = Shoddy.Strings.mask(string, keep_first: first, keep_last: last, char: "*")
         graphemes = String.graphemes(string)
@@ -116,7 +116,7 @@ defmodule Shoddy.StringsPropertyTest do
 
         assert String.length(result) == count
 
-        if first + last >= count do
+        if 2 * (first + last) > count do
           assert result == String.duplicate("*", count)
         else
           assert String.starts_with?(result, Enum.join(Enum.take(graphemes, first)))

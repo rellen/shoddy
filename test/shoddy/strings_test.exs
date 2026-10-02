@@ -108,8 +108,9 @@ defmodule Shoddy.StringsTest do
       assert truncate(accent <> accent <> accent, 2) == accent <> "…"
     end
 
-    test "raises ArgumentError for an omission that is longer than max" do
+    test "raises ArgumentError for an omission that is longer than max, also for a string that fits" do
       assert_raise ArgumentError, ~r/longer than the maximum length 2/, fn -> truncate("a", 2, omission: "...") end
+      assert_raise ArgumentError, ~r/longer than the maximum length 0/, fn -> truncate("", 0) end
       assert_raise ArgumentError, fn -> truncate("abc", 0) end
     end
 
@@ -162,8 +163,14 @@ defmodule Shoddy.StringsTest do
       assert split_trim("Ada Lovelace, Grace Hopper") == ["Ada Lovelace", "Grace Hopper"]
     end
 
-    test "raises FunctionClauseError from split_trim/2 itself for an empty separator or a value that is not a string" do
-      for args <- [["a", ""], [nil, ","], ["a", :comma]] do
+    test "raises ArgumentError for an empty separator" do
+      for separator <- ["", [], [",", ""], [",", :semicolon]] do
+        assert_raise ArgumentError, ~r/invalid separator/, fn -> split_trim("a,b", separator) end
+      end
+    end
+
+    test "raises FunctionClauseError from split_trim/2 itself for an argument of the wrong type" do
+      for args <- [[nil, ","], ["a", :comma]] do
         error = assert_raise FunctionClauseError, fn -> apply(&split_trim/2, args) end
         assert {error.module, error.function} == {Shoddy.Strings, :split_trim}
       end
@@ -206,7 +213,10 @@ defmodule Shoddy.StringsTest do
       assert mask("abcdefgh", keep_last: 0) == "********"
     end
 
-    test "hides each grapheme if the visible parts are as long as the string" do
+    test "hides each grapheme if the visible parts are more than half of the string" do
+      assert mask("abcde") == "*****"
+      assert mask("abcdefgh") == "****efgh"
+      assert mask("abcdefg", keep_first: 2, keep_last: 2) == "*******"
       assert mask("abcd", keep_first: 2, keep_last: 2) == "****"
       assert mask("ab", keep_first: 5) == "**"
       assert mask("") == ""

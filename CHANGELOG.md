@@ -31,7 +31,8 @@ The first release also contains these changes:
   of a minute, an hour or a day.
 - Breaking: `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise
   `KeyError` for a struct and a key that is not a field of the struct. They
-  raise this error also if they do not put the value.
+  raise this error also if they do not put the value. The key `:__struct__`
+  is not a field.
 - Add `Shoddy.Keywords` with `put_if/3` and `put_present/3`. They put a
   value into a keyword list with `Keyword.put/3`, which deletes each entry
   for the key.
@@ -103,7 +104,8 @@ The first release also contains these changes:
 - Add `Shoddy.Strings.blank?/1`. It returns `true` for `nil`, an empty
   string and a string that contains only whitespace.
 - Add `Shoddy.Strings.split_trim/2`. It splits a string, trims each value,
-  and removes each empty value.
+  and removes each empty value. It raises `ArgumentError` for an empty
+  separator.
 - Add `Shoddy.Strings.truncate_bytes/2`. It shortens a string to a maximum
   number of bytes, and it never cuts a grapheme.
 - Add `Shoddy.Parse.float/2`. It converts text into a float only if the
@@ -113,7 +115,8 @@ The first release also contains these changes:
   default. The options `:true_values` and `:false_values` change the lists.
 - Add `Shoddy.Env` with `integer/2` and `boolean/2`. They read a value from
   an environment variable, for `config/runtime.exs`. They raise an
-  exception for a wrong value, and an empty value counts as absent.
+  exception for a wrong value or a wrong option, also if the variable is
+  absent. A blank value counts as absent.
 - Add `Shoddy.Numbers` with `ceil_div/2` and `clamp/3`. `ceil_div/2`
   divides two integers and rounds up, with no float. `clamp/3` keeps a
   number in a range.
@@ -124,17 +127,19 @@ The first release also contains these changes:
 - Add `Shoddy.Result.collect_map/1`. It converts a map of results into one
   result. For errors, it returns a map of each reason, with the same keys.
 - Add `Shoddy.Result.attempt/2`. It calls a function, and it converts the
-  exceptions of the option `:rescue` into an error result.
+  exceptions of the option `:rescue` into an error result. Each other
+  error continues as the original term.
 - Add `Shoddy.Maps.compact/1`, `increment/3`, `rename_key/3`,
   `stringify_keys/1`, `diff/2` and `invert/1`. The functions that change
   keys raise `ArgumentError` if an entry would go.
 - Add `Shoddy.Keywords.compact/1`. It removes each entry with `nil`.
 - Add `Shoddy.Lists.toggle/2`, `move/3`, `sorted?/2`, `cycle_next/2`,
-  `all_same_by?/2` and `join_by/4`.
+  `all_same_by?/2` and `join_by/4`. `sorted?/2` accepts each sorter of
+  `Enum.sort/2`.
 - Add `Shoddy.Strings.mask/2`, `ensure_prefix/2` and `ensure_suffix/2`.
-  `mask/2` never shows the full string.
+  `mask/2` never shows more than half of the string.
 - Add `Shoddy.Env.list/2`. It reads a list of strings from an environment
-  variable.
+  variable. A value without a list element counts as absent.
 - Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty
   list.
 - Add `Shoddy.DateTimes.stream/3`. It returns a stream of values one unit

@@ -26,12 +26,12 @@ Strings.mask("sk_live_abcdef", keep_first: 3, keep_last: 2)
 #=> "sk_*********ef"
 ```
 
-The function never shows the full string. For a string that is not longer
-than the visible parts, it hides each character:
+The function never shows more than half of the string. For a short string,
+such as a code of six digits, it hides each character:
 
 ```elixir
-Strings.mask("1234")
-#=> "****"
+Strings.mask("123456")
+#=> "******"
 ```
 
 The result has the same length as the secret. If the length is a secret

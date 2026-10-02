@@ -831,7 +831,7 @@ defmodule Shoddy.Result do
   """
   @spec collect_map(%{optional(key) => t()}) :: {:ok, %{optional(key) => any()}} | {:error, %{optional(key) => any()}}
         when key: any()
-  def collect_map(results) when is_map(results) and not is_struct(results) do
+  def collect_map(results) when is_non_struct_map(results) do
     {values, reasons} = Enum.reduce(results, {%{}, %{}}, &collect_entry/2)
     if map_size(reasons) == 0, do: {:ok, values}, else: {:error, reasons}
   end
@@ -849,6 +849,10 @@ defmodule Shoddy.Result do
   returns `{:error, exception}`. Each other exception continues with its
   stacktrace, as if no `try` were present.
 
+  An Erlang error, such as `:badarg`, is a term and not an exception. The
+  function converts it into an exception, such as `ArgumentError`, and
+  compares that exception with the list. An Erlang error that is not in the
+  list continues as the original term.
   The option `:rescue` is required. It is a list of exception modules, such
   as `[ArgumentError]`. This function never rescues each exception, because
   an unexpected exception is usually a defect in the program, and a result
@@ -880,11 +884,13 @@ defmodule Shoddy.Result do
 
     try do
       {:ok, fun.()}
-    rescue
-      exception ->
+    catch
+      :error, reason ->
+        exception = Exception.normalize(:error, reason, __STACKTRACE__)
+
         if exception.__struct__ in exceptions,
           do: {:error, exception},
-          else: reraise(exception, __STACKTRACE__)
+          else: :erlang.raise(:error, reason, __STACKTRACE__)
     end
   end
 

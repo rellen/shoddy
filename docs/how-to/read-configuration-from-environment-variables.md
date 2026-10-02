@@ -25,7 +25,7 @@ Shoddy.Env.integer("PORT", default: 4000)
 
 ## Require a variable
 
-Do not give the option `:default`. For an absent or empty variable, the
+Do not give the option `:default`. For an absent or blank variable, the
 function raises `System.EnvError`, as `System.fetch_env!/1` does:
 
 ```elixir
@@ -64,7 +64,9 @@ config :my_app, :hosts, Shoddy.Env.list("HOSTS", default: ["localhost"])
 
 For `HOSTS="a.example.com, b.example.com"`, the list is
 `["a.example.com", "b.example.com"]`. Give the option `:separator` for
-another separator.
+another separator. A value without a list element, such as `","`, counts
+as absent. The function then returns the default, or raises
+`System.EnvError` without a default.
 
 ## Read a string
 
