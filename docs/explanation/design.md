@@ -196,7 +196,9 @@ time. Thus the function returns a map of reasons with the same keys.
 defect, such as a `FunctionClauseError` from a wrong call, into an error
 result. The program would then continue with a wrong assumption, and the
 defect would be difficult to find. The list states which failures are
-expected. Each other exception continues with its stacktrace.
+expected. Each other exception continues with its stacktrace. An Erlang
+error, such as `:badarg`, continues as the original term. Thus a `catch`
+around the call matches it as if `attempt/2` were not present.
 
 ## Keyword lists in a separate module
 
@@ -628,11 +630,21 @@ started with a default in place of the wrong value, nobody would see the
 mistake until the setting had an effect. An exception stops the start, and
 its message tells the name of the variable.
 
-An empty value counts as an absent variable. A tool that starts a container
-often sets each variable of a template, also the variables with no value.
-Thus `""` usually means "not set". For an absent variable without a
-default, the functions raise `System.EnvError`, as `System.fetch_env!/1`
-does.
+A blank value counts as an absent variable. A blank value is empty or
+contains only whitespace. A tool that starts a container often sets each
+variable of a template, also the variables with no value. Thus `""`
+usually means "not set". A value of only whitespace usually comes from the
+same template, for example from a space after the `=`. For `list/2`, a
+value such as `","` gives no list element, so it also counts as absent. A
+required list thus never becomes an empty list with no message. For an
+absent variable without a default, the functions raise `System.EnvError`,
+as `System.fetch_env!/1` does.
+
+The functions check their options also if the variable is absent. A wrong
+option is a mistake in the code, not in the deployment. On the computer of
+a developer, the variable is often absent. If the functions checked the
+options only for a set variable, the mistake would pass each test. It
+would then stop the start in production.
 
 The functions do not examine the default. A default of `nil` can then mark
 an optional setting. A default outside the range of `:min` and `:max` can
@@ -692,10 +704,16 @@ would have to select one of them.
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person
-can tell two secrets apart in a log. The function never shows the full
-string. If the visible parts are as long as the string, it hides each
-character. A rule that showed a short secret completely would put that
-secret into the log.
+can tell two secrets apart in a log. The function never shows more than
+half of the string. If the visible parts are more than half of the string,
+it hides each character. With the default of four visible characters, it
+thus hides each string of seven characters or fewer.
+
+A simpler rule would hide a string only if the visible parts are as long as
+the string. That rule shows four of the five characters of a code such as
+`"12345"`. A secret that is almost visible is not hidden. The half is a
+simple limit: a reader of the log never sees more of the secret than is
+hidden.
 
 The result has the same length as the input, so a reader can see where a
 value is shorter than expected. Thus the result also tells the length of

@@ -479,7 +479,7 @@ defmodule Shoddy.DateTimes do
 
   defp round_with(value, unit, module) do
     start = floor(value, unit)
-    next = next_start(value, unit)
+    next = module.add(start, 1, unit)
 
     if module.diff(value, start, :microsecond) * 2 >= module.diff(next, start, :microsecond),
       do: next,

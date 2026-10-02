@@ -107,7 +107,8 @@ defmodule Shoddy.Numbers do
   raises `ArithmeticError` for an empty list, so code must check it first.
 
   Each element must be a number. For another element, this function raises
-  `ArithmeticError`.
+  `ArithmeticError`. The function also raises `ArithmeticError` if the sum
+  of the integers is too large for a float, such as `10 ** 400`.
 
   ## Examples
 

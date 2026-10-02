@@ -247,6 +247,11 @@ defmodule Shoddy.ListsTest do
       assert sorted?([~D[2024-02-01], ~D[2024-01-31]], {:desc, Date})
     end
 
+    test "accepts a module as an ascending sorter, as Enum.sort/2 does" do
+      assert sorted?([~D[2024-01-31], ~D[2024-02-01]], Date)
+      refute sorted?([~D[2024-02-01], ~D[2024-01-31]], Date)
+    end
+
     test "accepts a function of arity 2" do
       assert sorted?(["bb", "a", "ccc"], &(byte_size(&1) <= byte_size(&2))) == false
       assert sorted?(["a", "bb", "ccc"], &(byte_size(&1) <= byte_size(&2)))
@@ -257,7 +262,8 @@ defmodule Shoddy.ListsTest do
     end
 
     test "raises ArgumentError for a sorter in another form or a module without compare/2" do
-      assert_raise ArgumentError, ~r/invalid sorter/, fn -> sorted?([1], :up) end
+      assert_raise ArgumentError, ~r/the module :up does not export compare\/2/, fn -> sorted?([1], :up) end
+      assert_raise ArgumentError, ~r/invalid sorter/, fn -> sorted?([1], "asc") end
       assert_raise ArgumentError, ~r/invalid sorter/, fn -> sorted?([1], {:up, Date}) end
       assert_raise ArgumentError, ~r/does not export compare\/2/, fn -> sorted?([1], {:asc, Enum}) end
     end

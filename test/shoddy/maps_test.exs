@@ -144,6 +144,14 @@ defmodule Shoddy.MapsTest do
       test "#{function}/3 raises KeyError for a key that is not a field, also for nil" do
         assert_raise KeyError, fn -> apply(Shoddy.Maps, unquote(function), [%URI{}, :hots, nil]) end
       end
+
+      test "#{function}/3 raises KeyError for the key :__struct__, also for nil" do
+        for value <- [Date, nil] do
+          assert_raise KeyError, "the key :__struct__ is not a field of the struct URI", fn ->
+            apply(Shoddy.Maps, unquote(function), [%URI{}, :__struct__, value])
+          end
+        end
+      end
     end
 
     test "put_if/3 raises KeyError for a key that is not a field, also for false" do
@@ -357,6 +365,7 @@ defmodule Shoddy.MapsTest do
       assert put_path(%{uri: %URI{}}, [:uri, :host], "example.com").uri.host == "example.com"
       assert_raise KeyError, fn -> put_path(%{uri: %URI{}}, [:uri, :nope], 1) end
       assert_raise KeyError, fn -> put_path(%URI{}, [:nope, :a], 1) end
+      assert_raise KeyError, fn -> put_path(%{uri: %URI{}}, [:uri, :__struct__], Date) end
     end
 
     test "raises FunctionClauseError for an empty path and for a first argument that is not a map" do
@@ -465,7 +474,15 @@ defmodule Shoddy.MapsTest do
       assert_raise ArgumentError, ~r/same new key: "1"/, fn -> stringify_keys(%{1 => :a, "1" => :b}) end
     end
 
-    test "raises Protocol.UndefinedError for a key that is not a string, an atom or a number" do
+    test "converts a charlist key into a string" do
+      assert stringify_keys(%{~c"a" => 1}) == %{"a" => 1}
+    end
+
+    test "raises ArgumentError for a list key that is not a charlist" do
+      assert_raise ArgumentError, ~r/cannot convert the given list/, fn -> stringify_keys(%{[:a] => 1}) end
+    end
+
+    test "raises Protocol.UndefinedError for a tuple key" do
       assert_raise Protocol.UndefinedError, fn -> stringify_keys(%{{:a} => 1}) end
     end
 

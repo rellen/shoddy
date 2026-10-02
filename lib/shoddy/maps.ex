@@ -18,6 +18,9 @@ defmodule Shoddy.Maps do
   syntax `%{struct | key: value}` does. `put_if/3` and `put_present/3` raise
   this error also if they do not put the value. Thus a wrong key always
   causes an error.
+
+  The key `:__struct__` is not a field. A new value for it would change the
+  type of the struct, so these functions raise `KeyError` for it too.
   """
 
   @doc """
@@ -244,22 +247,15 @@ defmodule Shoddy.Maps do
   end
 
   defp ensure_no_struct_name!(mapping) do
-    mapping
-    |> Map.values()
-    |> Enum.member?(:__struct__)
-    |> Shoddy.then_if(fn true ->
+    if :__struct__ in Map.values(mapping) do
       raise ArgumentError, "a new name of the mapping cannot be :__struct__, because the result would then be a struct"
-    end)
+    end
   end
 
   defp ensure_unique_names!(mapping) do
-    mapping
-    |> Map.values()
-    |> Shoddy.Lists.has_duplicates?()
-    |> Shoddy.then_if(fn true ->
-      raise ArgumentError,
-            "more than one key of the mapping has the same new name: " <> describe_collisions(mapping)
-    end)
+    if mapping |> Map.values() |> Shoddy.Lists.has_duplicates?() do
+      raise ArgumentError, "more than one key of the mapping has the same new name: " <> describe_collisions(mapping)
+    end
   end
 
   defp describe_collisions(mapping) do
@@ -581,10 +577,16 @@ defmodule Shoddy.Maps do
   Converts each key of a map into a string, at the top level only.
 
   The function converts each key with `to_string/1`. Thus an atom, a number
-  and a string are correct keys. A key that does not implement `String.Chars`,
-  such as a tuple, raises `Protocol.UndefinedError`. If two keys give the same
-  string, such as `:a` and `"a"`, this function raises `ArgumentError`, as
-  `map_keys/2` does.
+  and a string are correct keys. For other keys, `to_string/1` gives these
+  results:
+
+  - A charlist becomes a string, such as `~c"a"` to `"a"`.
+  - Another list raises `ArgumentError`.
+  - A tuple, or another value that does not implement `String.Chars`, raises
+    `Protocol.UndefinedError`.
+
+  If two keys give the same string, such as `:a` and `"a"`, this function
+  raises `ArgumentError`, as `map_keys/2` does.
 
   The function does not change a nested map. The map must be a plain map.
   For a struct, it raises `FunctionClauseError`.
@@ -666,6 +668,13 @@ defmodule Shoddy.Maps do
       values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
       raise ArgumentError, "more than one key has the same value: #{inspect(values)}"
     end
+  end
+
+  defp put_when(struct, :__struct__, _value, _put?) when is_struct(struct) do
+    raise KeyError,
+      key: :__struct__,
+      term: struct,
+      message: "the key :__struct__ is not a field of the struct #{inspect(struct.__struct__)}"
   end
 
   defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do

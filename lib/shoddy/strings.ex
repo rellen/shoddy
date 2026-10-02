@@ -151,6 +151,10 @@ defmodule Shoddy.Strings do
   omission that is not a string, and for an omission that is longer than
   `max`.
 
+  The function checks the omission also for a string that it does not
+  shorten. Thus a wrong omission raises an exception for each string, not
+  only for a long one. For a `max` that can be 0, give `omission: ""`.
+
   ## Examples
 
       iex> Shoddy.Strings.truncate("Hello, world", 8)
@@ -230,7 +234,11 @@ defmodule Shoddy.Strings do
   empty value.
 
   The default separator is `","`. Give another string, or a list of
-  strings, as the separator. An empty separator is not accepted.
+  strings, as the separator. This function raises `ArgumentError` for these
+  separators:
+
+  - An empty string or an empty list.
+  - A list with a value that is not a string, or with an empty string.
 
   Use this function for a list in one field of a form or in one variable of
   the environment, such as `"red, green, ,blue"`.
@@ -252,12 +260,23 @@ defmodule Shoddy.Strings do
       ["red", " green", " ", "blue"]
   """
   @spec split_trim(String.t(), String.t() | [String.t(), ...]) :: [String.t()]
-  def split_trim(string, separator \\ ",")
-      when is_binary(string) and ((is_binary(separator) and separator != "") or is_list(separator)) do
+  def split_trim(string, separator \\ ",") when is_binary(string) and (is_binary(separator) or is_list(separator)) do
     string
-    |> String.split(separator)
+    |> String.split(separator!(separator))
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
+  end
+
+  defp separator!(separator) do
+    separators = List.wrap(separator)
+
+    if separators != [] and Enum.all?(separators, fn value -> is_non_empty_string(value) end) do
+      separator
+    else
+      raise ArgumentError,
+            "invalid separator: expected a non-empty string or a non-empty list of non-empty strings, " <>
+              "got: #{inspect(separator)}"
+    end
   end
 
   @doc """
@@ -312,8 +331,8 @@ defmodule Shoddy.Strings do
   result has the same number of graphemes as the input, so it shows the
   length of the string.
 
-  The function never shows the full string. If `:keep_first` and
-  `:keep_last` together are as long as the string, or longer, it hides each
+  The function never shows more than half of the string. If `:keep_first`
+  and `:keep_last` together are more than half of the length, it hides each
   grapheme. Thus a short secret stays hidden.
 
   ## Options
@@ -343,8 +362,8 @@ defmodule Shoddy.Strings do
 
   The function hides each grapheme of a short string:
 
-      iex> Shoddy.Strings.mask("1234")
-      "****"
+      iex> Shoddy.Strings.mask("123456")
+      "******"
   """
   @spec mask(String.t(), keyword()) :: String.t()
   def mask(string, opts \\ []) when is_binary(string) and is_list(opts) do
@@ -353,10 +372,11 @@ defmodule Shoddy.Strings do
     keep_last = count!(opts, :keep_last)
     char = char!(opts)
     graphemes = String.graphemes(string)
-    hidden = length(graphemes) - keep_first - keep_last
+    count = length(graphemes)
+    hidden = count - keep_first - keep_last
 
-    if hidden <= 0 do
-      String.duplicate(char, length(graphemes))
+    if hidden < keep_first + keep_last do
+      String.duplicate(char, count)
     else
       Enum.join(Enum.take(graphemes, keep_first)) <>
         String.duplicate(char, hidden) <> Enum.join(Enum.take(graphemes, -keep_last))

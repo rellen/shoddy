@@ -17,9 +17,11 @@ defmodule Shoddy.EnvTest do
       assert integer(name) == -12
     end
 
-    test "returns the default for an absent or an empty variable", %{name: name} do
+    test "returns the default for an absent, empty or blank variable", %{name: name} do
       assert integer(name, default: 1) == 1
       System.put_env(name, "")
+      assert integer(name, default: 1) == 1
+      System.put_env(name, " \t")
       assert integer(name, default: 1) == 1
     end
 
@@ -28,9 +30,11 @@ defmodule Shoddy.EnvTest do
       assert integer(name, default: :off, min: 1) == :off
     end
 
-    test "raises System.EnvError for an absent or empty variable without a default", %{name: name} do
+    test "raises System.EnvError for an absent, empty or blank variable without a default", %{name: name} do
       assert_raise System.EnvError, fn -> integer(name) end
       System.put_env(name, "")
+      assert_raise System.EnvError, fn -> integer(name) end
+      System.put_env(name, " ")
       assert_raise System.EnvError, fn -> integer(name) end
     end
 
@@ -47,6 +51,11 @@ defmodule Shoddy.EnvTest do
 
     test "raises ArgumentError for an unknown option", %{name: name} do
       assert_raise ArgumentError, fn -> integer(name, fallback: 1) end
+    end
+
+    test "raises ArgumentError for a wrong option also if the variable is absent", %{name: name} do
+      assert_raise ArgumentError, ~r/higher than/, fn -> integer(name, default: 1, min: 10, max: 1) end
+      assert_raise ArgumentError, ~r/expected an integer/, fn -> integer(name, default: 1, min: "1") end
     end
 
     test "raises FunctionClauseError from integer/2 itself for a name that is not a string" do
@@ -70,9 +79,11 @@ defmodule Shoddy.EnvTest do
       assert boolean(name, true_values: ["on"], false_values: ["off"]) == false
     end
 
-    test "returns the default for an absent or an empty variable", %{name: name} do
+    test "returns the default for an absent, empty or blank variable", %{name: name} do
       assert boolean(name, default: true) == true
       System.put_env(name, "")
+      assert boolean(name, default: false) == false
+      System.put_env(name, "  ")
       assert boolean(name, default: false) == false
     end
 
@@ -89,6 +100,12 @@ defmodule Shoddy.EnvTest do
       assert_raise ArgumentError, fn -> boolean(name, min: 1) end
     end
 
+    test "raises ArgumentError for a wrong option also if the variable is absent", %{name: name} do
+      assert_raise ArgumentError, ~r/in :true_values and in :false_values/, fn ->
+        boolean(name, default: false, true_values: ["x"], false_values: ["x"])
+      end
+    end
+
     test "raises FunctionClauseError from boolean/2 itself for a name that is not a string" do
       for args <- [[:debug, []], ["DEBUG", :default]] do
         error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, args) end
@@ -103,9 +120,12 @@ defmodule Shoddy.EnvTest do
       assert list(name, separator: ";") == ["a", "b"]
     end
 
-    test "returns an empty list for a value with no value between the separators", %{name: name} do
-      System.put_env(name, " , ")
-      assert list(name, default: ["x"]) == []
+    test "returns the default for a value without a list element, and raises without a default", %{name: name} do
+      for value <- [" , ", ",", " "] do
+        System.put_env(name, value)
+        assert list(name, default: ["x"]) == ["x"]
+        assert_raise System.EnvError, fn -> list(name) end
+      end
     end
 
     test "returns the default for an absent or empty variable, and raises without a default", %{name: name} do
@@ -117,6 +137,12 @@ defmodule Shoddy.EnvTest do
 
     test "raises ArgumentError for an unknown option", %{name: name} do
       assert_raise ArgumentError, fn -> list(name, sep: ";") end
+    end
+
+    test "raises ArgumentError for a wrong separator, also if the variable is absent", %{name: name} do
+      assert_raise ArgumentError, ~r/invalid separator/, fn -> list(name, default: [], separator: "") end
+      System.put_env(name, "a")
+      assert_raise ArgumentError, ~r/invalid separator/, fn -> list(name, default: [], separator: [";", ""]) end
     end
 
     test "raises FunctionClauseError from list/2 itself for a name that is not a string" do

@@ -802,6 +802,14 @@ defmodule Shoddy.ResultTest do
       assert_raise RuntimeError, fn -> attempt(fn -> raise "x" end, rescue: [ArgumentError]) end
     end
 
+    test "returns a listed Erlang error as its exception" do
+      assert {:error, %ArgumentError{}} = attempt(fn -> :erlang.error(:badarg) end, rescue: [ArgumentError])
+    end
+
+    test "raises an Erlang error that is not in the list again as the original term" do
+      assert catch_error(attempt(fn -> :erlang.error(:badarg) end, rescue: [KeyError])) == :badarg
+    end
+
     test "keeps the stacktrace of an exception that it does not rescue" do
       {error, [top | _]} =
         try do

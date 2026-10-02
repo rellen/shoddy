@@ -426,6 +426,7 @@ defmodule Shoddy.Lists do
     * `:asc` or `:desc` - The function compares with `<=` or `>=`.
     * `{:asc, module}` or `{:desc, module}` - The function compares with
       `module.compare/2`, for example for `Date` or `DateTime`.
+    * A module - The same as `{:asc, module}`.
     * A function of arity 2 - It returns `true` if its first argument can
       come before its second argument.
 
@@ -450,7 +451,7 @@ defmodule Shoddy.Lists do
       iex> Shoddy.Lists.sorted?([], :desc)
       true
   """
-  @spec sorted?(list(), :asc | :desc | {:asc | :desc, module()} | (any(), any() -> boolean())) :: boolean()
+  @spec sorted?(list(), :asc | :desc | module() | {:asc | :desc, module()} | (any(), any() -> boolean())) :: boolean()
   def sorted?(list, sorter \\ :asc) when is_list(list), do: pairs_in_order?(list, in_order_fun!(sorter))
 
   defp in_order_fun!(:asc), do: &<=/2
@@ -466,12 +467,13 @@ defmodule Shoddy.Lists do
     &(module.compare(&1, &2) != :lt)
   end
 
+  defp in_order_fun!(module) when is_atom(module), do: in_order_fun!({:asc, module})
   defp in_order_fun!(fun) when is_function(fun, 2), do: fun
 
   defp in_order_fun!(other) do
     raise ArgumentError,
-          "invalid sorter: expected :asc, :desc, {:asc, module}, {:desc, module} or a function of arity 2, " <>
-            "got: #{inspect(other)}"
+          "invalid sorter: expected :asc, :desc, a module, {:asc, module}, {:desc, module} " <>
+            "or a function of arity 2, got: #{inspect(other)}"
   end
 
   defp pairs_in_order?([first, second | rest], in_order),
