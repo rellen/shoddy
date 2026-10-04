@@ -5,10 +5,13 @@
 # Each job gives its own name to the cache. A job that compiles nothing, such
 # as the formatter, then does not save a cache with no build for the other jobs.
 #
-# The key holds the commit, so each run saves the build of its commit, and the
-# next run compiles only the files that changed after it. A run with no cache
-# of its commit reads the latest cache of the same `mix.lock`, and then the
-# latest cache of the job.
+# On main, the key holds the commit. Each run on main thus saves the build of
+# its commit, and the next run compiles only the files that changed after it.
+# For a pull request, the key holds the word `pull-request` in place of the
+# commit. The first run of the pull request saves a cache, and the next runs
+# read it and save no new cache. Thus a pull request with many commits does
+# not fill the storage of the caches. A run with no exact cache reads the
+# latest cache of the same `mix.lock`, and then the latest cache of the job.
 
 name: Set up Elixir
 description: Install Erlang and Elixir, read the cache, and get the dependencies.
@@ -37,7 +40,7 @@ runs:
           deps
           _build
           priv/plts
-        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
+        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.event_name == 'push' && github.sha || 'pull-request' }}
         restore-keys: |
           mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-
           mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-

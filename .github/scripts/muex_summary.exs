@@ -1,6 +1,7 @@
 # This script reads the JSON report of muex and writes a summary for GitHub
 # Actions. It also writes a warning annotation for each mutant that survives.
-# The script always exits with the status 0, so it cannot make a check fail.
+# The script always exits with the status 0, also for a report that it cannot
+# read. Thus it cannot make a check fail.
 #
 # The first argument is the path of the report. An optional second argument
 # is the path of a file. The script writes the same summary into that file,
@@ -15,9 +16,15 @@ defmodule MuexSummary do
     Process.put(:copy, copy)
 
     case File.read(path) do
-      {:ok, json} -> report(JSON.decode!(json))
+      {:ok, json} -> read_report(json)
       {:error, _reason} -> no_report()
     end
+  end
+
+  defp read_report(json) do
+    json |> JSON.decode!() |> report()
+  rescue
+    error -> unreadable_report(error)
   end
 
   defp report(%{"summary" => summary, "mutations" => mutations}) do
@@ -68,7 +75,7 @@ defmodule MuexSummary do
   end
 
   defp annotate(mutant) do
-    file = escape_property(mutant["location"]["file"])
+    file = escape_property(to_string(mutant["location"]["file"]))
     line = mutant["location"]["line"]
     message = escape_data("A mutant survived: #{mutant["description"]}")
     IO.puts("::warning file=#{file},line=#{line}::#{message}")
@@ -82,6 +89,17 @@ defmodule MuexSummary do
     """)
 
     IO.puts("::warning::Muex did not write a report.")
+  end
+
+  defp unreadable_report(error) do
+    write_summary("""
+    ## Mutation testing
+
+    This script cannot read the report of muex: #{Exception.message(error)}
+    Examine the log of the step that runs muex.
+    """)
+
+    IO.puts("::warning::#{escape_data("This script cannot read the report of muex: #{Exception.message(error)}")}")
   end
 
   defp write_summary(text) do
