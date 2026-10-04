@@ -45,9 +45,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the older run of the pull request.
+# Nothing cancels a run on main, so each deploy of the site can end.
 concurrency:
   group: check-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # The versions of `.tool-versions`.
@@ -150,6 +152,7 @@ jobs:
         run: mix test.mutation --format json --output _build/muex-report.json
       - name: Write the summary
         if: always()
+        continue-on-error: true
         run: elixir .github/scripts/muex_summary.exs _build/muex-report.json _build/muex-summary.md
       - name: Post the summary on the pull request
         if: always() && github.event_name == 'pull_request'
