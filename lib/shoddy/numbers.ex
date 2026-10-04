@@ -108,7 +108,8 @@ defmodule Shoddy.Numbers do
 
   Each element must be a number. For another element, this function raises
   `ArithmeticError`. The function also raises `ArithmeticError` if the sum
-  of the integers is too large for a float, such as `10 ** 400`.
+  of the numbers is too large for a float. Examples are `[10 ** 400]` and
+  `[1.0e308, 1.0e308]`.
 
   ## Examples
 

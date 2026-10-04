@@ -343,14 +343,15 @@ defmodule Shoddy.Strings do
     * `:keep_first` - The number of graphemes to show at the start. The
       default is `0`.
 
-    * `:char` - The string that replaces each hidden grapheme. The default
-      is `"*"`.
+    * `:char` - The grapheme that replaces each hidden grapheme. The default
+      is `"*"`. It must be a string of exactly one grapheme, so that the
+      result has the length of the input.
 
   This function raises `ArgumentError` for these options:
 
   - An unknown option.
   - A count that is not a non-negative integer.
-  - A `:char` that is not a string.
+  - A `:char` that is not a string of exactly one grapheme.
 
   ## Examples
 
@@ -396,9 +397,13 @@ defmodule Shoddy.Strings do
 
   defp char!(opts) do
     case Keyword.fetch!(opts, :char) do
-      char when is_binary(char) -> char
-      other -> raise ArgumentError, "invalid value for :char option: expected a string, got: #{inspect(other)}"
+      char when is_binary(char) -> if String.length(char) == 1, do: char, else: raise_char!(char)
+      other -> raise_char!(other)
     end
+  end
+
+  defp raise_char!(value) do
+    raise ArgumentError, "invalid value for :char option: expected a string of one grapheme, got: #{inspect(value)}"
   end
 
   @doc """

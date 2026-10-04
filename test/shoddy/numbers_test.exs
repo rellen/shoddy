@@ -66,6 +66,7 @@ defmodule Shoddy.NumbersTest do
 
     test "raises ArithmeticError for a sum that is too large for a float" do
       assert_raise ArithmeticError, fn -> mean([10 ** 400]) end
+      assert_raise ArithmeticError, fn -> mean([1.0e308, 1.0e308]) end
     end
 
     test "raises FunctionClauseError for an argument that is not a list" do

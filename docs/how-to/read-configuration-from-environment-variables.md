@@ -15,8 +15,10 @@ config :my_app, MyAppWeb.Endpoint,
   http: [port: Shoddy.Env.integer("PORT", default: 4000, min: 1, max: 65_535)]
 ```
 
-If `PORT` is `"8080"`, the port is `8080`. If `PORT` is absent or empty,
-the port is `4000`. If `PORT` is `"http"`, the application does not start:
+If `PORT` is `"8080"`, the port is `8080`. The function removes the
+whitespace at the start and at the end, so `" 8080\n"` also gives `8080`.
+If `PORT` is absent or blank, the port is `4000`. If `PORT` is `"http"`,
+the application does not start:
 
 ```elixir
 Shoddy.Env.integer("PORT", default: 4000)
@@ -25,12 +27,22 @@ Shoddy.Env.integer("PORT", default: 4000)
 
 ## Require a variable
 
-Do not give the option `:default`. For an absent or blank variable, the
-function raises `System.EnvError`, as `System.fetch_env!/1` does:
+Do not give the option `:default`. For an absent variable, the function
+raises `System.EnvError`, as `System.fetch_env!/1` does:
 
 ```elixir
 Shoddy.Env.integer("POOL_SIZE")
 #=> ** (System.EnvError) could not fetch environment variable "POOL_SIZE" because it is not set
+```
+
+For a blank value, the function raises `ArgumentError`, and the message
+tells the value. Thus the message does not say that a set variable is not
+set:
+
+```elixir
+# POOL_SIZE=" "
+Shoddy.Env.integer("POOL_SIZE")
+#=> ** (ArgumentError) the environment variable "POOL_SIZE" has no value: " "
 ```
 
 ## Read a feature flag
@@ -64,9 +76,9 @@ config :my_app, :hosts, Shoddy.Env.list("HOSTS", default: ["localhost"])
 
 For `HOSTS="a.example.com, b.example.com"`, the list is
 `["a.example.com", "b.example.com"]`. Give the option `:separator` for
-another separator. A value without a list element, such as `","`, counts
-as absent. The function then returns the default, or raises
-`System.EnvError` without a default.
+another separator. A value without a list element, such as `","`, is blank.
+The function then returns the default, or raises `ArgumentError` without a
+default.
 
 ## Read a string
 

@@ -853,6 +853,7 @@ defmodule Shoddy.Result do
   function converts it into an exception, such as `ArgumentError`, and
   compares that exception with the list. An Erlang error that is not in the
   list continues as the original term.
+
   The option `:rescue` is required. It is a list of exception modules, such
   as `[ArgumentError]`. This function never rescues each exception, because
   an unexpected exception is usually a defect in the program, and a result

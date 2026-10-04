@@ -82,6 +82,11 @@ defmodule Shoddy.ParseTest do
       assert float("7") == {:ok, 7.0}
     end
 
+    test "returns :not_a_float for a number that is too large for a float, and 0.0 for a number too close to zero" do
+      assert float("1e400", max: 10) == {:error, :not_a_float}
+      assert float("1e-400") == {:ok, 0.0}
+    end
+
     test "returns :not_a_float for text that is not only a number" do
       for text <- ["", "1.5 kg", " 1.5", ".5", "1.", "abc", "1,5"] do
         assert float(text) == {:error, :not_a_float}, "for #{inspect(text)}"

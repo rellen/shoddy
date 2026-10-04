@@ -270,6 +270,12 @@ has only some of its fields. Code that matches on the struct would then
 accept an incorrect value. Thus the function raises `ArgumentError` for that
 name, and the result is always a plain map.
 
+Each other function of `Shoddy.Maps` that puts a key into a plain map
+obeys the same rule. Examples are `put_if/3`, `put_path/3`,
+`rename_key/3`, `map_keys/2`, `increment/3` and `invert/1`. `Map.put/3` accepts the key
+`:__struct__`, but a library that makes a struct by mistake hides the cause
+of a later error. One private function makes the check for each of them.
+
 The mapping must be a plain map. The guard rejects a struct with
 `FunctionClauseError`, as for each other argument of the wrong type. Without
 the guard, most structs would cause `Protocol.UndefinedError`, because they
@@ -474,10 +480,10 @@ The two tools then agree: `presence/1` returns `nil` for a binary only if
 ## Why Parse examines the full text
 
 `Integer.parse/1` returns the start of the text as an integer, and it also
-returns the remaining text. The caller must check that the remaining text is
-empty. Code often omits this check, and then `"25 items"` becomes `25`.
-`Shoddy.Parse.integer/2` does the check, so an incorrect value never becomes
-a correct one.
+returns the rest of the text. The caller must check that the rest of the
+text is empty. Code often omits this check, and then `"25 items"` becomes
+`25`. `Shoddy.Parse.integer/2` does the check, so an incorrect value never
+becomes a correct one.
 
 The functions do not trim the text. A trim is a decision about the input,
 and different inputs need different rules. The caller makes this decision
@@ -605,7 +611,7 @@ functions lose it.
 more than 32 keys has no order that a program can use, so the groups of
 `Enum.group_by/2` can change their order. A list of `{key, elements}`
 tuples keeps the order of the first element of each key. Thus a sorted
-list stays sorted after the grouping.
+list stays sorted after the function makes the groups.
 
 `Shoddy.Lists.sort_by_keys/2` compares a date or a time with `compare/2` of
 its module. The operators `<` and `>` compare the fields of a struct in an
@@ -630,15 +636,26 @@ started with a default in place of the wrong value, nobody would see the
 mistake until the setting had an effect. An exception stops the start, and
 its message tells the name of the variable.
 
-A blank value counts as an absent variable. A blank value is empty or
-contains only whitespace. A tool that starts a container often sets each
-variable of a template, also the variables with no value. Thus `""`
-usually means "not set". A value of only whitespace usually comes from the
-same template, for example from a space after the `=`. For `list/2`, a
-value such as `","` gives no list element, so it also counts as absent. A
-required list thus never becomes an empty list with no message. For an
-absent variable without a default, the functions raise `System.EnvError`,
-as `System.fetch_env!/1` does.
+The functions remove the whitespace at the start and at the end of a value.
+An environment variable is configuration, not user input, so whitespace
+in it is never part of the value. A template can put a space after the
+`=`, and a secret that a file gives often ends with a newline. Thus
+`" 8080\n"` gives the port 8080. `Shoddy.Parse` is different, because it
+reads user input and examines the full text.
+
+A blank value is empty or contains only whitespace. For `list/2`, a value
+such as `","` gives no list element, so it is also blank. A tool that
+starts a container often sets each variable of a template, also the
+variables with no value. Thus a blank value usually means "not set", and
+the functions return the default for it.
+
+Without a default, the functions raise an exception for an absent or a
+blank variable. For an absent variable, they raise `System.EnvError`, as
+`System.fetch_env!/1` does. For a blank value, they raise `ArgumentError`.
+The message of `System.EnvError` says that the variable is not set. That
+message would send an operator to the wrong problem, because the variable
+is set. The message of `ArgumentError` tells the value instead. A required
+list thus never becomes an empty list with no message.
 
 The functions check their options also if the variable is absent. A wrong
 option is a mistake in the code, not in the deployment. On the computer of
@@ -701,6 +718,12 @@ an order whose user is gone. The keys of the second list must be unique.
 Otherwise one order would have more than one partner, and the function
 would have to select one of them.
 
+A `nil` key never matches, as `NULL` does not match in a database query.
+A record that is not saved yet often has the key `nil`. An order with no
+user has the user key `nil`. A match of the two would put the order with an
+unrelated record. Thus the function ignores each element of the second
+list with the key `nil`, and more than one such element is correct.
+
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person
@@ -711,14 +734,19 @@ thus hides each string of seven characters or fewer.
 
 A simpler rule would hide a string only if the visible parts are as long as
 the string. That rule shows four of the five characters of a code such as
-`"12345"`. A secret that is almost visible is not hidden. The half is a
-simple limit: a reader of the log never sees more of the secret than is
-hidden.
+`"12345"`. Such a rule does not hide a secret that is almost visible. The
+half is a simple limit: a reader of the log never sees more characters of
+the secret than the function hides.
 
 The result has the same length as the input, so a reader can see where a
 value is shorter than expected. Thus the result also tells the length of
 the secret. For a secret whose length must stay hidden, such as a password,
 do not log the value at all.
+
+The option `:char` must be exactly one grapheme, so that the result keeps
+the length of the input. An empty `:char` would remove the hidden part, and
+the visible end would look like a full short value. A `:char` of two
+graphemes would make the result longer than the secret.
 
 ## A result for an empty list in mean
 

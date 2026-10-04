@@ -224,14 +224,15 @@ defmodule Shoddy.StringsTest do
 
     test "uses another string for each hidden grapheme" do
       assert mask("abcdef", keep_last: 2, char: "•") == "••••ef"
-      assert mask("abcdef", keep_last: 2, char: "") == "ef"
     end
 
     test "raises ArgumentError for a wrong option" do
       assert_raise ArgumentError, fn -> mask("a", show: 1) end
       assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_last: -1) end
       assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_first: 1.0) end
-      assert_raise ArgumentError, ~r/expected a string/, fn -> mask("a", char: ?*) end
+      assert_raise ArgumentError, ~r/expected a string of one grapheme/, fn -> mask("a", char: ?*) end
+      assert_raise ArgumentError, ~r/one grapheme/, fn -> mask("abcdef", char: "") end
+      assert_raise ArgumentError, ~r/one grapheme/, fn -> mask("abcdef", char: "**") end
     end
 
     test "raises FunctionClauseError from mask/2 itself for an argument of the wrong type" do

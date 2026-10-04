@@ -21,6 +21,10 @@ defmodule Shoddy.Maps do
 
   The key `:__struct__` is not a field. A new value for it would change the
   type of the struct, so these functions raise `KeyError` for it too.
+
+  A plain map cannot get the key `:__struct__` from a function of this
+  module, because the map would then be a struct. Each function that puts a
+  key raises `ArgumentError` for that key, as `take_as/2` does.
   """
 
   @doc """
@@ -247,9 +251,7 @@ defmodule Shoddy.Maps do
   end
 
   defp ensure_no_struct_name!(mapping) do
-    if :__struct__ in Map.values(mapping) do
-      raise ArgumentError, "a new name of the mapping cannot be :__struct__, because the result would then be a struct"
-    end
+    if :__struct__ in Map.values(mapping), do: raise_struct_key!()
   end
 
   defp ensure_unique_names!(mapping) do
@@ -378,13 +380,19 @@ defmodule Shoddy.Maps do
   @spec map_keys(%{optional(key) => value}, (key -> new_key)) :: %{optional(new_key) => value}
         when key: any(), value: any(), new_key: any()
   def map_keys(map, fun) when is_non_struct_map(map) and is_function(fun, 1) do
-    result = Map.new(map, fn {key, value} -> {fun.(key), value} end)
+    entries = Enum.map(map, fn {key, value} -> {key, fun.(key), value} end)
+    result = Map.new(entries, fn {_key, new_key, value} -> {new_key, value} end)
 
-    if map_size(result) == map_size(map) do
-      result
-    else
-      mapping = Map.new(map, fn {key, _value} -> {key, fun.(key)} end)
-      raise ArgumentError, "more than one key has the same new key: " <> describe_collisions(mapping)
+    cond do
+      is_map_key(result, :__struct__) ->
+        raise_struct_key!()
+
+      map_size(result) == map_size(map) ->
+        result
+
+      true ->
+        mapping = Map.new(entries, fn {key, new_key, _value} -> {key, new_key} end)
+        raise ArgumentError, "more than one key has the same new key: " <> describe_collisions(mapping)
     end
   end
 
@@ -432,6 +440,8 @@ defmodule Shoddy.Maps do
   defp put_path_at(map, [key], value, _above), do: put_when(map, key, value, true)
 
   defp put_path_at(map, [key | rest], value, above) do
+    ensure_writable_key!(map, key)
+
     child =
       case map do
         %{^key => child} when is_map(child) ->
@@ -537,6 +547,7 @@ defmodule Shoddy.Maps do
   """
   @spec increment(%{optional(key) => number()}, key, number()) :: %{optional(key) => number()} when key: any()
   def increment(map, key, by \\ 1) when is_non_struct_map(map) and is_number(by) do
+    ensure_writable_key!(map, key)
     Map.update(map, key, by, &(&1 + by))
   end
 
@@ -568,6 +579,7 @@ defmodule Shoddy.Maps do
   def rename_key(map, old, new) when is_non_struct_map(map) do
     cond do
       old === new or not is_map_key(map, old) -> map
+      new == :__struct__ -> raise_struct_key!()
       is_map_key(map, new) -> raise ArgumentError, "the new key #{inspect(new)} is already in the map"
       true -> map |> Map.delete(old) |> Map.put(new, Map.fetch!(map, old))
     end
@@ -580,7 +592,8 @@ defmodule Shoddy.Maps do
   and a string are correct keys. For other keys, `to_string/1` gives these
   results:
 
-  - A charlist becomes a string, such as `~c"a"` to `"a"`.
+  - A list that contains only strings, code points and such lists becomes
+    one string. Thus `~c"a"` gives `"a"`, and `["a", "b"]` gives `"ab"`.
   - Another list raises `ArgumentError`.
   - A tuple, or another value that does not implement `String.Chars`, raises
     `Protocol.UndefinedError`.
@@ -662,25 +675,39 @@ defmodule Shoddy.Maps do
   def invert(map) when is_non_struct_map(map) do
     inverted = Map.new(map, fn {key, value} -> {value, key} end)
 
-    if map_size(inverted) == map_size(map) do
-      inverted
-    else
-      values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
-      raise ArgumentError, "more than one key has the same value: #{inspect(values)}"
+    cond do
+      is_map_key(inverted, :__struct__) ->
+        raise_struct_key!()
+
+      map_size(inverted) == map_size(map) ->
+        inverted
+
+      true ->
+        values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
+        raise ArgumentError, "more than one key has the same value: #{inspect(values)}"
     end
   end
 
-  defp put_when(struct, :__struct__, _value, _put?) when is_struct(struct) do
+  defp put_when(map, key, value, put?) do
+    ensure_writable_key!(map, key)
+    if put?, do: Map.put(map, key, value), else: map
+  end
+
+  defp ensure_writable_key!(struct, :__struct__) when is_struct(struct) do
     raise KeyError,
       key: :__struct__,
       term: struct,
       message: "the key :__struct__ is not a field of the struct #{inspect(struct.__struct__)}"
   end
 
-  defp put_when(struct, key, _value, _put?) when is_struct(struct) and not is_map_key(struct, key) do
+  defp ensure_writable_key!(struct, key) when is_struct(struct) and not is_map_key(struct, key) do
     raise KeyError, key: key, term: struct
   end
 
-  defp put_when(map, key, value, true), do: Map.put(map, key, value)
-  defp put_when(map, _key, _value, false), do: map
+  defp ensure_writable_key!(_map, :__struct__), do: raise_struct_key!()
+  defp ensure_writable_key!(_map, _key), do: :ok
+
+  defp raise_struct_key! do
+    raise ArgumentError, "a map cannot get the key :__struct__, because the map would then be a struct"
+  end
 end

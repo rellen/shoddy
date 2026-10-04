@@ -88,7 +88,7 @@ defmodule Shoddy.KeywordsTest do
       assert get_present([a: nil], :a, 0) == 0
     end
 
-    test "returns false and other falsy-looking values with no change" do
+    test "returns false and other values that look falsy with no change" do
       assert get_present([a: false], :a, true) == false
       assert get_present([a: 0], :a, 1) == 0
       assert get_present([a: ""], :a, "x") == ""

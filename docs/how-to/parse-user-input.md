@@ -22,7 +22,7 @@ Parse.integer("25 items")
 ```
 
 `Integer.parse/1` is different. It returns the start of the text as an
-integer, and it returns the remaining text. Thus a check on `{value, _rest}`
+integer, and it returns the rest of the text. Thus a check on `{value, _rest}`
 accepts `"25 items"`.
 
 ## Accept only a range of integers

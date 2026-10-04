@@ -32,7 +32,8 @@ The first release also contains these changes:
 - Breaking: `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise
   `KeyError` for a struct and a key that is not a field of the struct. They
   raise this error also if they do not put the value. The key `:__struct__`
-  is not a field.
+  is not a field. For a plain map, each function of `Shoddy.Maps` that puts
+  a key raises `ArgumentError` for the key `:__struct__`.
 - Add `Shoddy.Keywords` with `put_if/3` and `put_present/3`. They put a
   value into a keyword list with `Keyword.put/3`, which deletes each entry
   for the key.
@@ -116,7 +117,9 @@ The first release also contains these changes:
 - Add `Shoddy.Env` with `integer/2` and `boolean/2`. They read a value from
   an environment variable, for `config/runtime.exs`. They raise an
   exception for a wrong value or a wrong option, also if the variable is
-  absent. A blank value counts as absent.
+  absent. They remove the whitespace at the start and at the end of the
+  value. They return the default for a blank value, and they raise
+  `ArgumentError` for a blank value without a default.
 - Add `Shoddy.Numbers` with `ceil_div/2` and `clamp/3`. `ceil_div/2`
   divides two integers and rounds up, with no float. `clamp/3` keeps a
   number in a range.
@@ -135,11 +138,12 @@ The first release also contains these changes:
 - Add `Shoddy.Keywords.compact/1`. It removes each entry with `nil`.
 - Add `Shoddy.Lists.toggle/2`, `move/3`, `sorted?/2`, `cycle_next/2`,
   `all_same_by?/2` and `join_by/4`. `sorted?/2` accepts each sorter of
-  `Enum.sort/2`.
+  `Enum.sort/2`. In `join_by/4`, a `nil` key never matches.
 - Add `Shoddy.Strings.mask/2`, `ensure_prefix/2` and `ensure_suffix/2`.
-  `mask/2` never shows more than half of the string.
+  `mask/2` never shows more than half of the string, and its option
+  `:char` must be exactly one grapheme.
 - Add `Shoddy.Env.list/2`. It reads a list of strings from an environment
-  variable. A value without a list element counts as absent.
+  variable. A value without a list element is blank.
 - Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty
   list.
 - Add `Shoddy.DateTimes.stream/3`. It returns a stream of values one unit

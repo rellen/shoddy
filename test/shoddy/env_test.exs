@@ -30,12 +30,23 @@ defmodule Shoddy.EnvTest do
       assert integer(name, default: :off, min: 1) == :off
     end
 
-    test "raises System.EnvError for an absent, empty or blank variable without a default", %{name: name} do
+    test "raises System.EnvError for an absent variable without a default", %{name: name} do
       assert_raise System.EnvError, fn -> integer(name) end
-      System.put_env(name, "")
-      assert_raise System.EnvError, fn -> integer(name) end
-      System.put_env(name, " ")
-      assert_raise System.EnvError, fn -> integer(name) end
+    end
+
+    test "raises ArgumentError that tells the value for a blank variable without a default", %{name: name} do
+      for value <- ["", " "] do
+        System.put_env(name, value)
+
+        assert_raise ArgumentError, ~s[the environment variable "#{name}" has no value: #{inspect(value)}], fn ->
+          integer(name)
+        end
+      end
+    end
+
+    test "removes the whitespace at the start and at the end of the value", %{name: name} do
+      System.put_env(name, " 8080\n")
+      assert integer(name) == 8080
     end
 
     test "raises ArgumentError that tells the name, the value and the reason", %{name: name} do
@@ -45,8 +56,8 @@ defmodule Shoddy.EnvTest do
         integer(name, min: 1024)
       end
 
-      System.put_env(name, " 80")
-      assert_raise ArgumentError, ~r/:not_an_integer/, fn -> integer(name, default: 1) end
+      System.put_env(name, " 8 0 ")
+      assert_raise ArgumentError, ~r/: " 8 0 " \(:not_an_integer\)/, fn -> integer(name, default: 1) end
     end
 
     test "raises ArgumentError for an unknown option", %{name: name} do
@@ -91,6 +102,11 @@ defmodule Shoddy.EnvTest do
       assert_raise System.EnvError, fn -> boolean(name) end
     end
 
+    test "removes the whitespace at the start and at the end of the value", %{name: name} do
+      System.put_env(name, "true\n")
+      assert boolean(name) == true
+    end
+
     test "raises ArgumentError for a text that is not in the lists", %{name: name} do
       System.put_env(name, "yes")
       assert_raise ArgumentError, ~r/"yes" \(:not_a_boolean\)/, fn -> boolean(name, default: false) end
@@ -124,7 +140,7 @@ defmodule Shoddy.EnvTest do
       for value <- [" , ", ",", " "] do
         System.put_env(name, value)
         assert list(name, default: ["x"]) == ["x"]
-        assert_raise System.EnvError, fn -> list(name) end
+        assert_raise ArgumentError, ~r/has no value/, fn -> list(name) end
       end
     end
 
@@ -132,6 +148,8 @@ defmodule Shoddy.EnvTest do
       assert list(name, default: []) == []
       System.put_env(name, "")
       assert list(name, default: nil) == nil
+      assert_raise ArgumentError, ~r/has no value/, fn -> list(name) end
+      System.delete_env(name)
       assert_raise System.EnvError, fn -> list(name) end
     end
 
@@ -143,6 +161,8 @@ defmodule Shoddy.EnvTest do
       assert_raise ArgumentError, ~r/invalid separator/, fn -> list(name, default: [], separator: "") end
       System.put_env(name, "a")
       assert_raise ArgumentError, ~r/invalid separator/, fn -> list(name, default: [], separator: [";", ""]) end
+      assert_raise ArgumentError, ~r/:separator option/, fn -> list(name, default: [], separator: :comma) end
+      assert_raise ArgumentError, ~r/:separator option/, fn -> list(name, default: [], separator: nil) end
     end
 
     test "raises FunctionClauseError from list/2 itself for a name that is not a string" do

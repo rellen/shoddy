@@ -247,7 +247,7 @@ defmodule Shoddy.ListsTest do
       assert sorted?([~D[2024-02-01], ~D[2024-01-31]], {:desc, Date})
     end
 
-    test "accepts a module as an ascending sorter, as Enum.sort/2 does" do
+    test "accepts a module alone as the sorter {:asc, module}, as Enum.sort/2 does" do
       assert sorted?([~D[2024-01-31], ~D[2024-02-01]], Date)
       refute sorted?([~D[2024-02-01], ~D[2024-01-31]], Date)
     end
@@ -311,6 +311,13 @@ defmodule Shoddy.ListsTest do
       assert_raise ArgumentError, "more than one element has the same key: [1]", fn ->
         join_by([1], [1, 1], & &1, & &1)
       end
+    end
+
+    test "never matches a nil key, and accepts more than one nil key in the right list" do
+      orders = [%{id: 10, user_id: nil}]
+      users = [%{id: nil, name: "draft"}, %{id: nil, name: "new"}]
+
+      assert join_by(orders, users, & &1.user_id, & &1.id) == [{%{id: 10, user_id: nil}, nil}]
     end
 
     test "raises FunctionClauseError for an argument that is not a list" do
