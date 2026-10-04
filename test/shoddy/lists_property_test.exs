@@ -148,12 +148,15 @@ defmodule Shoddy.ListsPropertyTest do
   end
 
   describe "join_by/4" do
-    property "puts each left element with the right element of its key, or nil" do
+    property "puts each left element with the right element of its key, or nil, and never matches a nil key" do
       check all(
-              left <- list_of(integer(0..5), max_length: 10),
-              right <- map(list_of(integer(0..7), max_length: 8), &Enum.uniq/1)
+              left <- list_of(one_of([constant(nil), integer(0..5)]), max_length: 10),
+              right <- map(list_of(integer(0..7), max_length: 8), &Enum.uniq/1),
+              nils <- list_of(constant(nil), max_length: 2)
             ) do
-        assert Lists.join_by(left, right, & &1, & &1) == Enum.map(left, &{&1, if(&1 in right, do: &1)})
+        expected = Enum.map(left, &{&1, if(not is_nil(&1) and &1 in right, do: &1)})
+
+        assert Lists.join_by(left, nils ++ right, & &1, & &1) == expected
       end
     end
   end

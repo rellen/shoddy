@@ -11,9 +11,10 @@ defmodule Shoddy.EnvPropertyTest do
   end
 
   describe "integer/2" do
-    property "returns the integer of a set variable, and the default of an absent variable", %{name: name} do
-      check all(value <- one_of([constant(nil), integer()])) do
-        if value, do: System.put_env(name, Integer.to_string(value)), else: System.delete_env(name)
+    property "returns the integer of a set variable with any whitespace around it, and the default of an absent variable",
+             %{name: name} do
+      check all(value <- one_of([constant(nil), integer()]), pad <- member_of(["", " ", "\n", "\t "])) do
+        if value, do: System.put_env(name, pad <> Integer.to_string(value) <> pad), else: System.delete_env(name)
 
         assert Env.integer(name, default: :default) == (value || :default)
       end

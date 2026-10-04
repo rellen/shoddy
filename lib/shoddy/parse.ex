@@ -135,6 +135,10 @@ defmodule Shoddy.Parse do
   decimal point, such as `"3"`, gives a float too. This function returns
   `{:error, :not_a_float}` for other text.
 
+  A float has a limited range. A number that is too large for a float, such
+  as `"1e400"`, also gives `{:error, :not_a_float}`. A number that is too
+  close to zero, such as `"1e-400"`, gives `0.0`, as `Float.parse/1` does.
+
   ## Options
 
     * `:min` - The lowest number to accept. For a lower number, this

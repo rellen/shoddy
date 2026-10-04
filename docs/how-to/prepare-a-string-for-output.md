@@ -35,7 +35,13 @@ Strings.mask("123456")
 ```
 
 The result has the same length as the secret. If the length is a secret
-too, do not log the value.
+too, do not log the value. The option `:char` must be exactly one
+grapheme, so that the result keeps that length:
+
+```elixir
+Strings.mask("4111111111111111", char: "•")
+#=> "••••••••••••1111"
+```
 
 ## Add a scheme to a URL
 

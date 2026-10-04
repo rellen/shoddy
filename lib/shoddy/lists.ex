@@ -158,12 +158,16 @@ defmodule Shoddy.Lists do
   @spec index_by([element], (element -> key)) :: %{optional(key) => element}
         when element: var, key: var
   def index_by(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
-    index = Map.new(list, &{key_fun.(&1), &1})
+    list |> Enum.map(&{key_fun.(&1), &1}) |> index_pairs!()
+  end
 
-    if map_size(index) == length(list) do
+  defp index_pairs!(pairs) do
+    index = Map.new(pairs)
+
+    if map_size(index) == length(pairs) do
       index
     else
-      keys = list |> Enum.map(key_fun) |> duplicates()
+      keys = pairs |> Enum.map(&elem(&1, 0)) |> duplicates()
       raise ArgumentError, "more than one element has the same key: #{inspect(keys)}"
     end
   end
@@ -280,7 +284,7 @@ defmodule Shoddy.Lists do
 
   Each element of `keys` is one of these forms:
 
-    * `fun` - A function that returns the key. The direction is ascending.
+    * `fun` - A function that returns the key. The direction is `:asc`.
     * `{direction, fun}` - The direction is `:asc` or `:desc`.
     * `{direction, fun, module}` - The function compares the values with
       `module.compare/2`, for example `Date` or `DateTime`.
@@ -554,9 +558,13 @@ defmodule Shoddy.Lists do
   `right` has the key, the second element of the tuple is `nil`. An element
   of `right` with no partner is not in the result.
 
-  The keys of `right` must be unique. This function makes a map of `right`
-  with `index_by/2`, so it raises `ArgumentError` for a key that is not
-  unique. Each key of `left` can occur more than one time.
+  A `nil` key never matches, as `NULL` in a database query. Thus an element
+  with the key `nil`, such as a record that is not saved, has no partner.
+  The right list can contain more than one element with the key `nil`.
+
+  The other keys of `right` must be unique. This function raises
+  `ArgumentError` for such a key that is not unique, as `index_by/2` does.
+  Each key of `left` can occur more than one time.
 
   This function compares two keys with the strict equality operator `===/2`.
 
@@ -571,7 +579,12 @@ defmodule Shoddy.Lists do
         when left: var, right: var, key: var
   def join_by(left, right, left_key, right_key)
       when is_list(left) and is_list(right) and is_function(left_key, 1) and is_function(right_key, 1) do
-    index = index_by(right, right_key)
+    index =
+      right
+      |> Enum.map(&{right_key.(&1), &1})
+      |> Enum.reject(&match?({nil, _element}, &1))
+      |> index_pairs!()
+
     Enum.map(left, &{&1, Map.get(index, left_key.(&1))})
   end
 

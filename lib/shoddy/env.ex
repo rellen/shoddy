@@ -17,10 +17,12 @@ defmodule Shoddy.Env do
   application then does not start with a wrong configuration, and the
   message tells the name of the variable.
 
-  A blank value is empty or contains only whitespace. A blank value counts
-  as an absent variable. A variable that is set to `""` or `" "` thus gets
-  the default. For `list/2`, a value without a list element, such as
-  `","`, also counts as absent.
+  Each function removes the whitespace at the start and at the end of the
+  value before it converts the value. Thus `" 8080\\n"` gives `8080`.
+
+  A blank value is empty or contains only whitespace. For `list/2`, a
+  value without a list element, such as `","`, is also blank. A function
+  returns the default for a blank value, as for an absent variable.
 
   Each function checks its options also if the variable is absent. Thus a
   wrong option raises an exception in each environment, not only where the
@@ -30,8 +32,12 @@ defmodule Shoddy.Env do
 
   Each function accepts the option `:default`. The function returns it if
   the variable is absent or blank. The function does not examine the
-  default. If you do not give the option, the function raises
-  `System.EnvError` for an absent or blank variable.
+  default. If you do not give the option, the function raises an
+  exception:
+
+  - `System.EnvError` for an absent variable.
+  - `ArgumentError` for a blank value. The message tells the value, so an
+    operator can see that the variable is set.
   """
 
   alias Shoddy.Parse
@@ -41,11 +47,12 @@ defmodule Shoddy.Env do
   Reads an integer from an environment variable.
 
   The value must contain only the integer, as for `Shoddy.Parse.integer/2`.
+  Whitespace at the start and at the end is permitted.
 
   ## Options
 
     * `:default` - The value for an absent or blank variable. Without this
-      option, the function raises `System.EnvError` for such a variable.
+      option, the function raises an exception for such a variable.
 
     * `:min` and `:max` - The range of the integer, as for
       `Shoddy.Parse.integer/2`.
@@ -82,7 +89,7 @@ defmodule Shoddy.Env do
   ## Options
 
     * `:default` - The value for an absent or blank variable. Without this
-      option, the function raises `System.EnvError` for such a variable.
+      option, the function raises an exception for such a variable.
 
     * `:true_values` and `:false_values` - The texts that give `true` and
       `false`, as for `Shoddy.Parse.boolean/2`.
@@ -107,26 +114,36 @@ defmodule Shoddy.Env do
   end
 
   defp read(name, opts, parse) do
-    text = System.get_env(name, "")
-    result = parse.(text)
+    raw = System.get_env(name)
+    text = String.trim(raw || "")
 
-    if result == :absent or Strings.blank?(text),
-      do: default!(name, opts),
-      else: value!(result, name, text)
-  end
+    case parse.(text) do
+      _result when is_nil(raw) ->
+        default!(opts, System.EnvError.exception(env: name))
 
-  defp default!(name, opts) do
-    case Keyword.fetch(opts, :default) do
-      {:ok, default} -> default
-      :error -> raise System.EnvError, env: name
+      result when text == "" or result == :absent ->
+        default!(
+          opts,
+          ArgumentError.exception("the environment variable #{inspect(name)} has no value: #{inspect(raw)}")
+        )
+
+      result ->
+        value!(result, name, raw)
     end
   end
 
-  defp value!({:ok, value}, _name, _text), do: value
+  defp default!(opts, exception) do
+    case Keyword.fetch(opts, :default) do
+      {:ok, default} -> default
+      :error -> raise exception
+    end
+  end
 
-  defp value!({:error, reason}, name, text) do
+  defp value!({:ok, value}, _name, _raw), do: value
+
+  defp value!({:error, reason}, name, raw) do
     raise ArgumentError,
-          "invalid value for the environment variable #{inspect(name)}: #{inspect(text)} (#{inspect(reason)})"
+          "invalid value for the environment variable #{inspect(name)}: #{inspect(raw)} (#{inspect(reason)})"
   end
 
   @doc """
@@ -138,12 +155,13 @@ defmodule Shoddy.Env do
   ## Options
 
     * `:default` - The value for an absent or blank variable. Without this
-      option, the function raises `System.EnvError` for such a variable.
+      option, the function raises an exception for such a variable.
 
     * `:separator` - The string between two values. The default is `","`.
 
   This function raises `ArgumentError` for an unknown option, and for a
-  separator that `Shoddy.Strings.split_trim/2` does not accept.
+  separator that `Shoddy.Strings.split_trim/2` does not accept. A
+  separator must be a string or a list of strings.
 
   ## Examples
 
@@ -158,7 +176,7 @@ defmodule Shoddy.Env do
   @spec list(String.t(), keyword()) :: [String.t()] | default when default: any()
   def list(name, opts \\ []) when is_binary(name) and is_list(opts) do
     opts = Keyword.validate!(opts, [:default, separator: ","])
-    separator = Keyword.fetch!(opts, :separator)
+    separator = opts |> Keyword.fetch!(:separator) |> separator!()
 
     read(name, opts, fn text ->
       case Strings.split_trim(text, separator) do
@@ -166,5 +184,12 @@ defmodule Shoddy.Env do
         values -> {:ok, values}
       end
     end)
+  end
+
+  defp separator!(separator) when is_binary(separator) or is_list(separator), do: separator
+
+  defp separator!(other) do
+    raise ArgumentError,
+          "invalid value for :separator option: expected a string or a list of strings, got: #{inspect(other)}"
   end
 end

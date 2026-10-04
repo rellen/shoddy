@@ -211,7 +211,7 @@ defmodule Shoddy.MapsTest do
     end
 
     test "raises ArgumentError for the new name :__struct__" do
-      assert_raise ArgumentError, ~r/cannot be :__struct__/, fn ->
+      assert_raise ArgumentError, ~r/cannot get the key :__struct__/, fn ->
         take_as(%{"t" => Date, "y" => 2000}, %{"t" => :__struct__, "y" => :year})
       end
     end
@@ -366,6 +366,7 @@ defmodule Shoddy.MapsTest do
       assert_raise KeyError, fn -> put_path(%{uri: %URI{}}, [:uri, :nope], 1) end
       assert_raise KeyError, fn -> put_path(%URI{}, [:nope, :a], 1) end
       assert_raise KeyError, fn -> put_path(%{uri: %URI{}}, [:uri, :__struct__], Date) end
+      assert_raise KeyError, ~r/not a field/, fn -> put_path(%URI{}, [:__struct__, :x], 1) end
     end
 
     test "raises FunctionClauseError for an empty path and for a first argument that is not a map" do
@@ -474,8 +475,9 @@ defmodule Shoddy.MapsTest do
       assert_raise ArgumentError, ~r/same new key: "1"/, fn -> stringify_keys(%{1 => :a, "1" => :b}) end
     end
 
-    test "converts a charlist key into a string" do
+    test "converts a charlist key, or a list of strings, into one string" do
       assert stringify_keys(%{~c"a" => 1}) == %{"a" => 1}
+      assert stringify_keys(%{["a", "b"] => 1}) == %{"ab" => 1}
     end
 
     test "raises ArgumentError for a list key that is not a charlist" do
@@ -528,6 +530,27 @@ defmodule Shoddy.MapsTest do
 
     test "raises FunctionClauseError for a struct" do
       assert_raise FunctionClauseError, fn -> apply(&invert/1, [%URI{}]) end
+    end
+  end
+
+  describe "the key :__struct__ in a plain map" do
+    test "each function that puts a key raises ArgumentError, also if it does not put the value" do
+      calls = [
+        fn -> put_if(%{}, :__struct__, URI) end,
+        fn -> put_if(%{}, :__struct__, nil) end,
+        fn -> put_present(%{}, :__struct__, URI) end,
+        fn -> put_path(%{}, [:a, :__struct__], URI) end,
+        fn -> put_path(%{}, [:__struct__, :a], 1) end,
+        fn -> increment(%{}, :__struct__) end,
+        fn -> rename_key(%{a: URI}, :a, :__struct__) end,
+        fn -> map_keys(%{a: URI}, fn _key -> :__struct__ end) end,
+        fn -> invert(%{a: :__struct__}) end,
+        fn -> take_as(%{a: URI}, %{a: :__struct__}) end
+      ]
+
+      for call <- calls do
+        assert_raise ArgumentError, "a map cannot get the key :__struct__, because the map would then be a struct", call
+      end
     end
   end
 end

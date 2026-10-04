@@ -265,14 +265,13 @@ defmodule Shoddy.DateTimes do
       ~U[2024-01-01 14:00:00Z]
   """
   @spec ceil(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
-  def ceil(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units,
-    do: ceil_with(value, unit, &DateTime.add/3)
+  def ceil(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: ceil_with(value, unit, DateTime)
 
-  def ceil(%NaiveDateTime{} = value, unit) when unit in @units, do: ceil_with(value, unit, &NaiveDateTime.add/3)
+  def ceil(%NaiveDateTime{} = value, unit) when unit in @units, do: ceil_with(value, unit, NaiveDateTime)
 
-  defp ceil_with(value, unit, add) do
+  defp ceil_with(value, unit, module) do
     start = floor(value, unit)
-    if start == value, do: value, else: add.(start, 1, unit)
+    if start == value, do: value, else: module.add(start, 1, unit)
   end
 
   @doc """
@@ -363,10 +362,11 @@ defmodule Shoddy.DateTimes do
   """
   @spec next_start(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
   def next_start(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units,
-    do: value |> floor(unit) |> DateTime.add(1, unit)
+    do: next_start_with(value, unit, DateTime)
 
-  def next_start(%NaiveDateTime{} = value, unit) when unit in @units,
-    do: value |> floor(unit) |> NaiveDateTime.add(1, unit)
+  def next_start(%NaiveDateTime{} = value, unit) when unit in @units, do: next_start_with(value, unit, NaiveDateTime)
+
+  defp next_start_with(value, unit, module), do: value |> floor(unit) |> module.add(1, unit)
 
   @doc """
   Returns `true` if two periods have a value in common.

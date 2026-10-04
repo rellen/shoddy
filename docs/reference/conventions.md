@@ -190,10 +190,10 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
 | `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
-| `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that is not a charlist, for `Shoddy.Maps.stringify_keys/1`. |
+| `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
 | `ArgumentError` | A new key that is already in the map, for `Shoddy.Maps.rename_key/3`. |
 | `ArgumentError` | More than one key with the same value, for `Shoddy.Maps.invert/1`. |
-| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3` and `Shoddy.Numbers.mean/1`. A sum of integers that is too large for a float, for `Shoddy.Numbers.mean/1`. |
+| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3` and `Shoddy.Numbers.mean/1`. A sum that is too large for a float, for `Shoddy.Numbers.mean/1`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |
@@ -201,13 +201,14 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A sorter in a wrong form, or a module that does not export `compare/2`, for `Shoddy.Lists.sorted?/2`. An atom other than `:asc` and `:desc` counts as a module. |
 | `ArgumentError` | An index that is not in the list, for `Shoddy.Lists.move/3`. |
 | `ArgumentError` | An element that is not in the list, for `Shoddy.Lists.cycle_next/2`. |
-| `ArgumentError` | More than one element of the second list with the same key, for `Shoddy.Lists.join_by/4`. |
+| `ArgumentError` | More than one element of the second list with the same key, for `Shoddy.Lists.join_by/4`. This rule does not apply to the key `nil`. |
+| `ArgumentError` | The key `:__struct__` for a plain map, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.invert/1` and `Shoddy.Maps.take_as/2`. The map would then be a struct. |
 | `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
-| `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string, for `Shoddy.Strings.mask/2`. |
+| `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string of exactly one grapheme, for `Shoddy.Strings.mask/2`. |
 | `ArgumentError` | An empty separator, an empty list, or a list with a value that is not a non-empty string, for `Shoddy.Strings.split_trim/2`. |
-| `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. The function checks the options also if the variable is absent. |
-| `System.EnvError` | An absent or blank variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element also counts as absent. |
-| `KeyError` | A key that is not a field of the struct, including `:__struct__`, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
+| `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
+| `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. |
+| `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. The key `:__struct__` is not a field. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
 
 ## Names
