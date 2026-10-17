@@ -26,8 +26,17 @@ defmodule Shoddy.ParsePropertyTest do
   end
 
   describe "float/2" do
-    property "returns the float for its own text, and checks the limits" do
-      check all(value <- float(), min <- one_of([constant(nil), float()]), span <- float(min: 0.0, max: 1.0e6)) do
+    property "returns the float for its own text, checks the limits, and never raises for a long number" do
+      check all(
+              value <- float(),
+              min <- one_of([constant(nil), float()]),
+              span <- float(min: 0.0, max: 1.0e6),
+              digits <-
+                one_of([
+                  string(?0..?9, min_length: 1, max_length: 20),
+                  map(string(?0..?9, min_length: 308, max_length: 400), &("9" <> &1))
+                ])
+            ) do
         max = if min, do: min + span
 
         expected =
@@ -38,6 +47,7 @@ defmodule Shoddy.ParsePropertyTest do
           end
 
         assert Parse.float(Float.to_string(value), min: min, max: max) == expected
+        assert match?({:ok, _float}, Parse.float(digits)) or Parse.float(digits) == {:error, :not_a_float}
       end
     end
   end

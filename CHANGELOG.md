@@ -111,7 +111,8 @@ The first release also contains these changes:
   number of bytes, and it never cuts a grapheme.
 - Add `Shoddy.Parse.float/2`. It converts text into a float only if the
   text contains only the number. It takes `:min` and `:max`, as
-  `integer/2` does.
+  `integer/2` does. A number that is too large for a float gives
+  `{:error, :not_a_float}`.
 - Add `Shoddy.Parse.boolean/2`. It accepts `"true"` and `"false"` by
   default. The options `:true_values` and `:false_values` change the lists.
 - Add `Shoddy.Env` with `integer/2` and `boolean/2`. They read a value from

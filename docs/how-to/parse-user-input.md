@@ -65,6 +65,9 @@ Parse.float("2.5 kg")
 #=> {:error, :not_a_float}
 ```
 
+A number that is too large for a float also gives `{:error, :not_a_float}`,
+as text that is not a number does.
+
 For money, do not use a float, because a float cannot store each decimal
 fraction exactly. Use a library for decimal numbers.
 

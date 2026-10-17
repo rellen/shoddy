@@ -84,6 +84,8 @@ defmodule Shoddy.ParseTest do
 
     test "returns :not_a_float for a number that is too large for a float, and 0.0 for a number too close to zero" do
       assert float("1e400", max: 10) == {:error, :not_a_float}
+      assert float(String.duplicate("9", 309)) == {:error, :not_a_float}
+      assert float("-" <> String.duplicate("9", 400) <> ".5") == {:error, :not_a_float}
       assert float("1e-400") == {:ok, 0.0}
     end
 
