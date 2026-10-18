@@ -84,7 +84,7 @@ defmodule MuexSummary do
     Enum.each(gaps, &annotate/1)
   end
 
-  defp gaps_section([]), do: "\nEach mutant has a test that kills it.\n"
+  defp gaps_section([]), do: "\nNo mutant survived, and each mutant has a test that runs it.\n"
 
   defp gaps_section(gaps) do
     rows =
