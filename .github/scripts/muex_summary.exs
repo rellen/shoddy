@@ -1,7 +1,9 @@
 # This script reads the JSON report of muex and writes a summary for GitHub
-# Actions. It also writes a warning annotation for each mutant that survives.
+# Actions. It also writes a warning annotation for each mutant that survives
+# and for each mutant that no test runs.
+#
 # The script always exits with the status 0, also for a report that it cannot
-# read. Thus it cannot make a check fail.
+# read and for an error of its own. Thus it cannot make a check fail.
 #
 # The first argument is the path of the report. An optional second argument
 # is the path of a file. The script writes the same summary into that file,
@@ -10,108 +12,147 @@
 defmodule MuexSummary do
   @moduledoc false
 
-  def run([path]), do: run([path, nil])
+  @rows [
+    {"Killed", "killed"},
+    {"Survived", "survived"},
+    {"No coverage", "no_coverage"},
+    {"Invalid", "invalid"},
+    {"Timeout", "timeout"},
+    {"Equivalent", "equivalent"},
+    {"Total", "total"}
+  ]
 
-  def run([path, copy]) do
-    Process.put(:copy, copy)
+  @gaps %{"survived" => "survived", "no_coverage" => "has no test that runs it"}
 
+  def main(args) do
+    run(args)
+  rescue
+    error -> IO.puts("::warning::" <> escape_data("The summary script failed: " <> Exception.message(error)))
+  end
+
+  defp run([path]), do: run([path, nil])
+
+  defp run([path, copy]) do
     case File.read(path) do
-      {:ok, json} -> read_report(json)
-      {:error, _reason} -> no_report()
+      {:ok, json} -> json |> decode() |> report(copy)
+      {:error, _reason} -> write_note("Muex did not write a report.", copy)
     end
   end
 
-  defp read_report(json) do
-    json |> JSON.decode!() |> report()
-  rescue
-    error -> unreadable_report(error)
+  defp run(args) do
+    raise ArgumentError, "expected a path of a report and an optional path of a copy, got: #{inspect(args)}"
   end
 
-  defp report(%{"summary" => summary, "mutations" => mutations}) do
-    survived = Enum.filter(mutations, &(&1["status"] == "survived"))
+  defp decode(json) do
+    case JSON.decode(json) do
+      {:ok, %{"summary" => summary, "mutations" => mutations}} when is_map(summary) and is_list(mutations) ->
+        {:ok, summary, Enum.filter(mutations, &is_map/1)}
 
-    write_summary("""
-    ## Mutation testing
+      {:ok, _other} ->
+        {:error, "the report has no summary or no list of mutants"}
 
-    This check reports the result only. It does not make a check fail.
-
-    | Result | Count |
-    |---|---|
-    | Killed | #{summary["killed"]} |
-    | Survived | #{summary["survived"]} |
-    | Invalid | #{summary["invalid"]} |
-    | Timeout | #{summary["timeout"]} |
-    | Equivalent | #{summary["equivalent"]} |
-    | Total | #{summary["total"]} |
-
-    Mutation score: #{summary["mutation_score_low"]}%
-
-    Do not trust the invalid count. Muex sometimes reports a mutant as invalid,
-    although the mutant compiles and the tests kill it.
-    #{survived_section(survived)}
-    """)
-
-    Enum.each(survived, &annotate/1)
+      {:error, reason} ->
+        {:error, "the report is not valid JSON: #{inspect(reason)}"}
+    end
   end
 
-  defp survived_section([]), do: "\nNo mutant survived.\n"
+  defp report({:error, reason}, copy), do: write_note("This script cannot read the report of muex: #{reason}.", copy)
 
-  defp survived_section(survived) do
+  defp report({:ok, summary, mutations}, copy) do
+    gaps = Enum.filter(mutations, &Map.has_key?(@gaps, &1["status"]))
+    rows = Enum.map_join(@rows, "\n", fn {label, key} -> "| #{label} | #{cell(summary[key])} |" end)
+
+    write_summary(
+      """
+      ## Mutation testing
+
+      This check reports the result only. It does not make a check fail.
+
+      | Result | Count |
+      |---|---|
+      #{rows}
+
+      Mutation score: #{cell(summary["mutation_score_low"])}%
+
+      Do not trust the invalid count. Muex sometimes reports a mutant as invalid,
+      although the mutant compiles and the tests kill it.
+      #{gaps_section(gaps)}
+      """,
+      copy
+    )
+
+    Enum.each(gaps, &annotate/1)
+  end
+
+  defp gaps_section([]), do: "\nEach mutant has a test that kills it.\n"
+
+  defp gaps_section(gaps) do
     rows =
-      Enum.map_join(survived, "\n", fn m ->
-        "| `#{m["location"]["file"]}:#{m["location"]["line"]}` | #{m["description"]} |"
+      Enum.map_join(gaps, "\n", fn mutant ->
+        "| #{place(mutant)} | #{cell(@gaps[mutant["status"]])} | #{cell(mutant["description"])} |"
       end)
 
     """
 
-    ### Mutants that survived
+    ### Gaps in the tests
 
-    Each mutant below shows a gap in the tests.
+    No test kills the mutants below.
 
-    | Location | Change |
-    |---|---|
+    | Location | Result | Change |
+    |---|---|---|
     #{rows}
     """
   end
 
   defp annotate(mutant) do
-    file = escape_property(to_string(mutant["location"]["file"]))
-    line = mutant["location"]["line"]
-    message = escape_data("A mutant survived: #{mutant["description"]}")
-    IO.puts("::warning file=#{file},line=#{line}::#{message}")
+    message = escape_data("A mutant #{@gaps[mutant["status"]]}: #{mutant["description"]}")
+
+    case mutant["location"] do
+      %{"file" => file, "line" => line} ->
+        IO.puts("::warning file=#{escape_property(to_string(file))},line=#{line}::#{message}")
+
+      _other ->
+        IO.puts("::warning::#{message}")
+    end
   end
 
-  defp no_report do
-    write_summary("""
-    ## Mutation testing
-
-    Muex did not write a report. Examine the log of the step that runs muex.
-    """)
-
-    IO.puts("::warning::Muex did not write a report.")
+  defp place(mutant) do
+    case mutant["location"] do
+      %{"file" => file, "line" => line} -> "`#{cell(file)}:#{cell(line)}`"
+      _other -> "unknown"
+    end
   end
 
-  defp unreadable_report(error) do
-    write_summary("""
-    ## Mutation testing
+  defp write_note(note, copy) do
+    write_summary(
+      """
+      ## Mutation testing
 
-    This script cannot read the report of muex: #{Exception.message(error)}
-    Examine the log of the step that runs muex.
-    """)
+      #{note} Examine the log of the step that runs muex.
+      """,
+      copy
+    )
 
-    IO.puts("::warning::#{escape_data("This script cannot read the report of muex: #{Exception.message(error)}")}")
+    IO.puts("::warning::" <> escape_data(note))
   end
 
-  defp write_summary(text) do
+  defp write_summary(text, copy) do
     case System.get_env("GITHUB_STEP_SUMMARY") do
       nil -> IO.write(text)
       file -> File.write!(file, text, [:append])
     end
 
-    case Process.get(:copy) do
-      nil -> :ok
-      copy -> File.write!(copy, text)
+    if copy do
+      File.mkdir_p!(Path.dirname(copy))
+      File.write!(copy, text)
     end
+  end
+
+  defp cell(value) do
+    value
+    |> to_string()
+    |> String.replace("|", "\\|")
+    |> String.replace(~r/\s*\R\s*/, " ")
   end
 
   defp escape_data(text) do
@@ -129,4 +170,4 @@ defmodule MuexSummary do
   end
 end
 
-MuexSummary.run(System.argv())
+MuexSummary.main(System.argv())
