@@ -611,7 +611,7 @@ defmodule Shoddy.ResultTest do
       assert collect(@results, on_error: fn _error -> {:halt, :error} end) == :error
     end
 
-    test "a function is not called after it stops the list" do
+    test "the stream does not call a function after it stops the list" do
       on_error = fn error ->
         send(self(), {:received, error})
         {:halt, error}

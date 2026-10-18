@@ -5,9 +5,11 @@ defmodule Shoddy.EnvTest do
 
   doctest Shoddy.Env
 
+  @doctest_names ["SHODDY_DOC_PORT", "SHODDY_DOC_DEBUG", "SHODDY_DOC_HOSTS"]
+
   setup do
     name = "SHODDY_ENV_TEST_#{System.unique_integer([:positive])}"
-    on_exit(fn -> System.delete_env(name) end)
+    on_exit(fn -> Enum.each([name | @doctest_names], &System.delete_env/1) end)
     %{name: name}
   end
 

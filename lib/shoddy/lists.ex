@@ -559,7 +559,7 @@ defmodule Shoddy.Lists do
   of `right` with no partner is not in the result.
 
   A `nil` key never matches, as `NULL` in a database query. Thus an element
-  with the key `nil`, such as a record that is not saved, has no partner.
+  with the key `nil`, such as a new record with no ID yet, has no partner.
   The right list can contain more than one element with the key `nil`.
 
   The other keys of `right` must be unique. This function raises

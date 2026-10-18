@@ -12,7 +12,7 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 # below sets it. It stays empty when the usual installation succeeds.
 FALLBACK_BIN=""
 
-# Install mise, if it is not installed already.
+# Install mise, if the system does not have it yet.
 #
 # Use the official installer at mise.run. A direct download of a mise release
 # needs the version number first. The "releases/latest" page of github.com

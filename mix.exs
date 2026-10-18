@@ -33,8 +33,8 @@ defmodule Shoddy.MixProject do
         "cmd git config core.hooksPath hooks"
       ],
       # Run mutation testing with muex. The command mix check does not run
-      # this alias, so a mutation result cannot make a check fail. The option
-      # --fail-at 0 stops a low score from making this alias fail. Each module
+      # this alias, so a mutation result cannot make a check fail. With the option
+      # --fail-at 0, a low score does not make this alias fail. Each module
       # is small, and the default filter of muex skips a small module, so
       # --no-filter is necessary.
       "test.mutation": [

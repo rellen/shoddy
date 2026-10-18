@@ -154,3 +154,35 @@ above. A change that adds documentation in another style is not complete.
 - Make each feature branch from `main`.
 - Give each branch a descriptive name. Put the change type at the start of the
   name. For example: `feat/add-parser` or `fix/timeout-issue`.
+
+## Stacked Pull Requests
+
+- Split a change with more than one concern into a stack of pull requests.
+  A stack is a chain of branches. Each branch has one pull request, and the
+  base of that pull request is the branch below it. A reviewer then reads
+  the diff of one layer at a time.
+- Use the `gh stack` extension of the GitHub CLI. Install it with
+  `gh extension install github/gh-stack`.
+- Run `git config rerere.enabled true` and
+  `git config remote.pushDefault origin` one time in each clone.
+- Put the foundation at the bottom of the stack. Put each change that
+  depends on it in a layer above it.
+- Give each layer a branch name that obeys the section "Branch Strategy".
+- Run `mix format && mix check --no-retry` on each layer before you commit
+  it. Each layer must pass the checks alone.
+- An agent must not run a `gh stack` command that opens a prompt. Use only
+  these forms:
+  - `gh stack init <branch>...`
+  - `gh stack add <branch>`
+  - `gh stack submit --auto`
+  - `gh stack view --json`
+  - `gh stack merge <number> --yes`
+- To change a lower layer, check out that layer and commit the change. Then
+  run `gh stack rebase --upstack` and `gh stack push`.
+- Merge a stack with `gh stack merge`. The command `gh pr merge` cannot
+  merge a stack.
+- `gh stack submit` needs the GraphQL API of GitHub. If that API is not
+  available, open each pull request with the REST API. Set the base of each
+  pull request to the branch below it. Then link the pull requests with
+  `POST /repos/rellen/shoddy/stacks`. Give the numbers in the field
+  `pull_requests`, from the bottom to the top.

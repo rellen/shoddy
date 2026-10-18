@@ -719,10 +719,11 @@ Otherwise one order would have more than one partner, and the function
 would have to select one of them.
 
 A `nil` key never matches, as `NULL` does not match in a database query.
-A record that is not saved yet often has the key `nil`. An order with no
-user has the user key `nil`. A match of the two would put the order with an
-unrelated record. Thus the function ignores each element of the second
-list with the key `nil`, and more than one such element is correct.
+A new record often has the key `nil` until the database gives it an ID.
+An order with no user has the user key `nil`. A match of the two would put
+the order with an unrelated record. Thus the function ignores each element
+of the second list with the key `nil`, and more than one such element is
+correct.
 
 ## What mask shows
 
