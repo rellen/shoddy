@@ -762,6 +762,11 @@ mean of no numbers is not defined, and 0 would be a wrong answer. An
 average rating of 0 is a different fact from no ratings. A result makes the
 caller decide, for example with `Shoddy.Result.unwrap/2`.
 
+The function adds the numbers first, and then it divides the sum by the
+length. That order gives the most exact result. A sum of large numbers can
+be too large for a float, although the mean is not. Only for that case,
+the function divides each number first, and then it adds the results.
+
 ## A stream of time values
 
 `Shoddy.DateTimes.stream/3` returns a stream, not a range. A `Range` holds

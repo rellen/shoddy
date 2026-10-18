@@ -193,7 +193,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
 | `ArgumentError` | A new key that is already in the map, for `Shoddy.Maps.rename_key/3`. |
 | `ArgumentError` | More than one key with the same value, for `Shoddy.Maps.invert/1`. |
-| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3` and `Shoddy.Numbers.mean/1`. A sum that is too large for a float, for `Shoddy.Numbers.mean/1`. |
+| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3` and `Shoddy.Numbers.mean/1`. A mean that is too large for a float, for `Shoddy.Numbers.mean/1`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/2`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |

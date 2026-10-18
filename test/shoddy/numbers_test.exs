@@ -64,9 +64,18 @@ defmodule Shoddy.NumbersTest do
       assert_raise ArithmeticError, fn -> mean([1, "2"]) end
     end
 
-    test "raises ArithmeticError for a sum that is too large for a float" do
+    test "raises ArithmeticError for a mean that is too large for a float" do
       assert_raise ArithmeticError, fn -> mean([10 ** 400]) end
-      assert_raise ArithmeticError, fn -> mean([1.0e308, 1.0e308]) end
+    end
+
+    test "returns the mean if only the sum is too large for a float" do
+      assert mean([1.0e308, 1.0e308]) == {:ok, 1.0e308}
+      assert mean([10 ** 308, 10 ** 308, 10 ** 308]) == {:ok, 1.0e308}
+      assert mean([10 ** 400, -(10 ** 400)]) == {:ok, 0.0}
+    end
+
+    test "raises ArithmeticError for a large list with an element that is not a number" do
+      assert_raise ArithmeticError, fn -> mean([1.0e308, 1.0e308, "1"]) end
     end
 
     test "raises FunctionClauseError for an argument that is not a list" do

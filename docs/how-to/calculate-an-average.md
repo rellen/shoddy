@@ -12,6 +12,13 @@ Shoddy.Numbers.mean([4, 5, 3])
 #=> {:ok, 4.0}
 ```
 
+The function also accepts numbers whose sum is too large for a float:
+
+```elixir
+Shoddy.Numbers.mean([1.0e308, 1.0e308])
+#=> {:ok, 1.0e308}
+```
+
 ## Handle an empty list
 
 For an empty list, the function returns `{:error, :empty}`. The expression

@@ -147,7 +147,7 @@ The first release also contains these changes:
 - Add `Shoddy.Env.list/2`. It reads a list of strings from an environment
   variable. A value without a list element is blank.
 - Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty
-  list.
+  list. It returns the mean also if the sum is too large for a float.
 - Add `Shoddy.DateTimes.stream/3`. It returns a stream of values one unit
   apart, from the first value and before the last value.
 - Add `Shoddy.DateTimes.round/2`. It rounds a value to the nearest start of
