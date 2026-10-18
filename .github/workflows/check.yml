@@ -12,8 +12,9 @@
 # - test: `mix test`
 #
 # A job compiles the project for one environment, so the tools that need the
-# same build share one job. The formatter compiles nothing, and it stays alone,
-# so a defect of format shows in a few seconds.
+# same build share one job. The formatter stays in a job of its own. Its
+# plugin Quokka compiles the dependencies and the project, so the job keeps
+# its own cache.
 #
 # The job `mutation` runs `mix test.mutation`, and it reports the result only.
 # It never makes the workflow fail. It runs only after the job `test`
@@ -46,9 +47,12 @@ permissions:
   contents: read
 
 # A new push to a pull request cancels the older run of the pull request.
-# Nothing cancels a run on main, so each deploy of the site can end.
+# Each push to main gets a group of its own commit. Thus a run on main never
+# waits for an earlier run, and nothing cancels it. The job `pages` has its
+# own group. A deploy waits for the deploy before it, and a newer deploy
+# replaces a deploy that still waits.
 concurrency:
-  group: check-${{ github.ref }}
+  group: check-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -161,15 +165,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           SHA: ${{ github.event.pull_request.head.sha }}
+          BASE: ${{ github.event.pull_request.base.ref }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           marker="<!-- muex-report -->"
           body="${marker}
           $(cat _build/muex-summary.md)
 
-          This comment shows the result for commit ${SHA}. [The run](${RUN_URL}) has the full report."
+          This comment shows the result for the commit ${SHA}, merged with the branch ${BASE} at the time of the run. [The run](${RUN_URL}) has the full report."
           id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
-            --jq ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n 1)
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"${marker}\"))) | .id" | head -n 1)
           if [ -n "$id" ]; then
             gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${id}" -f body="$body" > /dev/null
             echo "The job replaced the text of the comment ${id}."

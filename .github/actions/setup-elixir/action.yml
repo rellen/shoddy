@@ -2,8 +2,8 @@
 # Elixir of `.tool-versions`, the cache of the dependencies and of the build,
 # and `mix deps.get`.
 #
-# Each job gives its own name to the cache. A job that compiles nothing, such
-# as the formatter, then does not save a cache with no build for the other jobs.
+# Each job gives its own name to the cache. Each job compiles a different set
+# of files, so each job reads and saves its own build.
 #
 # On main, the key holds the commit. Each run on main thus saves the build of
 # its commit, and the next run compiles only the files that changed after it.
