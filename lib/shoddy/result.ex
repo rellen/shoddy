@@ -599,8 +599,8 @@ defmodule Shoddy.Result do
   Converts a list or a stream of results into one result.
 
   The first argument is a list, a stream, or another struct that implements
-  `Enumerable`. A map is not accepted, because its elements are key-value
-  tuples and not results.
+  `Enumerable`. The function does not accept a map, because the elements of a
+  map are key-value tuples and not results.
 
   If each element is ok, this function returns `{:ok, values}`. The list
   `values` contains the value of each element, in the order of the input. A
@@ -610,9 +610,9 @@ defmodule Shoddy.Result do
   default is `:halt`, which returns the first error with no change.
 
   Use this function after `Enum.map/2` with an operation that can fail. Use
-  it after `Stream.map/2` to stop the operation at the first error: with
-  `on_error: :halt`, this function reads no element after the first error,
-  so the stream does not call the operation for a later element. With
+  it after `Stream.map/2` to stop the operation at the first error. With
+  `on_error: :halt`, this function reads no element after the first error.
+  Thus the stream does not call the operation for a later element. With
   another value of `:on_error`, this function reads each element until a
   function of `:on_error` returns `{:halt, error}`. Thus the stream must be
   finite.

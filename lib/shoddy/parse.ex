@@ -129,8 +129,8 @@ defmodule Shoddy.Parse do
   @doc """
   Converts text into a float.
 
-  The text must contain only the number. A sign, a fractional part and an
-  exponent are accepted, as `Float.parse/1` accepts them. Text without a
+  The text must contain only the number. The function accepts a sign, a
+  fractional part and an exponent, as `Float.parse/1` does. Text without a
   decimal point, such as `"3"`, gives a float too. This function returns
   `{:error, :not_a_float}` for other text.
 

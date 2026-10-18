@@ -47,7 +47,7 @@ defmodule Shoddy.Env do
   Reads an integer from an environment variable.
 
   The value must contain only the integer, as for `Shoddy.Parse.integer/2`.
-  Whitespace at the start and at the end is permitted.
+  The function removes the whitespace at the start and at the end first.
 
   ## Options
 

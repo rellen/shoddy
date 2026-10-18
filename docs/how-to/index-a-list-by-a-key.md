@@ -43,7 +43,7 @@ Lists.join_by(orders, users, & &1.user_id, & &1.id)
 For a key with no partner, the second element of the tuple is `nil`. The
 keys of the second list, other than `nil`, must be unique, as for
 `Shoddy.Lists.index_by/2`. A `nil` key never matches, so an order with no user
-gets `nil`, also if the second list contains a user that is not saved:
+gets `nil`, also if the second list contains a new user with no ID yet:
 
 ```elixir
 Lists.join_by([%{user_id: nil}], [%{id: nil, name: "Draft"}], & &1.user_id, & &1.id)
