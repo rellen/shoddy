@@ -43,6 +43,9 @@ Strings.mask("4111111111111111", char: "•")
 #=> "••••••••••••1111"
 ```
 
+Do not give a combining accent or a flag letter as `:char`. Two copies of
+such a grapheme join into one, so the function raises `ArgumentError`.
+
 ## Add a scheme to a URL
 
 Use `Shoddy.Strings.ensure_prefix/2`. It adds the prefix only if the string

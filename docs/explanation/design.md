@@ -748,6 +748,13 @@ the length of the input. An empty `:char` would remove the hidden part, and
 the visible end would look like a full short value. A `:char` of two
 graphemes would make the result longer than the secret.
 
+One grapheme is not enough. Some graphemes join with a copy of themselves:
+two flag letters make one flag, and a combining accent attaches to the
+grapheme before it. Thus the function checks that two copies of `:char`
+stay two graphemes. A visible grapheme can also join with a hidden one,
+for example a lone accent after a line break. The function then hides each
+grapheme, because a shorter result would show a wrong length.
+
 ## A result for an empty list in mean
 
 `Shoddy.Numbers.mean/1` returns `{:error, :empty}` for an empty list. The

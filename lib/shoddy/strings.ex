@@ -335,6 +335,9 @@ defmodule Shoddy.Strings do
   and `:keep_last` together are more than half of the length, it hides each
   grapheme. Thus a short secret stays hidden.
 
+  A visible grapheme can join with a hidden grapheme, for example a lone
+  accent after a line break. The result would then be shorter than the
+  input. For such a string, this function hides each grapheme.
   ## Options
 
     * `:keep_last` - The number of graphemes to show at the end. The default
@@ -344,14 +347,15 @@ defmodule Shoddy.Strings do
       default is `0`.
 
     * `:char` - The grapheme that replaces each hidden grapheme. The default
-      is `"*"`. It must be a string of exactly one grapheme, so that the
-      result has the length of the input.
+      is `"*"`. It must be exactly one grapheme, and two copies of it must
+      stay two graphemes. A combining accent or a flag letter joins with a
+      copy of itself, so this function does not accept it.
 
   This function raises `ArgumentError` for these options:
 
   - An unknown option.
   - A count that is not a non-negative integer.
-  - A `:char` that is not a string of exactly one grapheme.
+  - A `:char` that is not one grapheme, or that joins with a copy of itself.
 
   ## Examples
 
@@ -376,11 +380,16 @@ defmodule Shoddy.Strings do
     count = length(graphemes)
     hidden = count - keep_first - keep_last
 
+    masked = String.duplicate(char, count)
+
     if hidden < keep_first + keep_last do
-      String.duplicate(char, count)
+      masked
     else
-      Enum.join(Enum.take(graphemes, keep_first)) <>
-        String.duplicate(char, hidden) <> Enum.join(Enum.take(graphemes, -keep_last))
+      result =
+        Enum.join(Enum.take(graphemes, keep_first)) <>
+          String.duplicate(char, hidden) <> Enum.join(Enum.take(graphemes, -keep_last))
+
+      if String.length(result) == count, do: result, else: masked
     end
   end
 
@@ -397,13 +406,14 @@ defmodule Shoddy.Strings do
 
   defp char!(opts) do
     case Keyword.fetch!(opts, :char) do
-      char when is_binary(char) -> if String.length(char) == 1, do: char, else: raise_char!(char)
+      char when is_binary(char) -> if String.length(char <> char) == 2, do: char, else: raise_char!(char)
       other -> raise_char!(other)
     end
   end
 
   defp raise_char!(value) do
-    raise ArgumentError, "invalid value for :char option: expected a string of one grapheme, got: #{inspect(value)}"
+    raise ArgumentError,
+          "invalid value for :char option: expected one grapheme that stays separate from a copy of itself, got: #{inspect(value)}"
   end
 
   @doc """
