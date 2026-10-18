@@ -68,6 +68,9 @@ defmodule Shoddy.DateTimes do
             when is_struct(value, DateTime) or is_struct(value, NaiveDateTime) or
                    is_struct(value, Time)
 
+  defguardp is_utc_or_naive(value)
+            when is_struct(value, NaiveDateTime) or (is_struct(value, DateTime) and value.time_zone == "Etc/UTC")
+
   @doc """
   Extends the precision of a time value.
 
@@ -195,8 +198,7 @@ defmodule Shoddy.DateTimes do
       %{~U[2024-01-01 09:00:00Z] => 2, ~U[2024-01-01 10:00:00Z] => 1}
   """
   @spec floor(t(), unit()) :: t()
-  def floor(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: floor_fields(value, unit)
-  def floor(%NaiveDateTime{} = value, unit) when unit in @units, do: floor_fields(value, unit)
+  def floor(value, unit) when is_utc_or_naive(value) and unit in @units, do: floor_fields(value, unit)
   def floor(%Time{} = value, unit) when unit in [:minute, :hour], do: floor_fields(value, unit)
 
   defp floor_fields(%{microsecond: {_, precision}} = value, :minute),
@@ -265,11 +267,7 @@ defmodule Shoddy.DateTimes do
       ~U[2024-01-01 14:00:00Z]
   """
   @spec ceil(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
-  def ceil(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: ceil_with(value, unit, DateTime)
-
-  def ceil(%NaiveDateTime{} = value, unit) when unit in @units, do: ceil_with(value, unit, NaiveDateTime)
-
-  defp ceil_with(value, unit, module) do
+  def ceil(%module{} = value, unit) when is_utc_or_naive(value) and unit in @units do
     start = floor(value, unit)
     if start == value, do: value, else: module.add(start, 1, unit)
   end
@@ -361,12 +359,8 @@ defmodule Shoddy.DateTimes do
       {~N[2024-12-31 00:00:00], ~N[2025-01-01 00:00:00]}
   """
   @spec next_start(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
-  def next_start(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units,
-    do: next_start_with(value, unit, DateTime)
-
-  def next_start(%NaiveDateTime{} = value, unit) when unit in @units, do: next_start_with(value, unit, NaiveDateTime)
-
-  defp next_start_with(value, unit, module), do: value |> floor(unit) |> module.add(1, unit)
+  def next_start(%module{} = value, unit) when is_utc_or_naive(value) and unit in @units,
+    do: value |> floor(unit) |> module.add(1, unit)
 
   @doc """
   Returns `true` if two periods have a value in common.
@@ -439,13 +433,8 @@ defmodule Shoddy.DateTimes do
       [{9, 0}, {10, 4}, {11, 0}]
   """
   @spec stream(value, value, unit()) :: Enumerable.t(value) when value: DateTime.t() | NaiveDateTime.t()
-  def stream(%DateTime{time_zone: "Etc/UTC"} = first, %DateTime{time_zone: "Etc/UTC"} = last, unit) when unit in @units,
-    do: stream_with(first, last, unit, DateTime)
-
-  def stream(%NaiveDateTime{} = first, %NaiveDateTime{} = last, unit) when unit in @units,
-    do: stream_with(first, last, unit, NaiveDateTime)
-
-  defp stream_with(first, last, unit, module) do
+  def stream(%module{} = first, %module{} = last, unit)
+      when is_utc_or_naive(first) and is_utc_or_naive(last) and unit in @units do
     first
     |> Stream.iterate(&module.add(&1, 1, unit))
     |> Stream.take_while(&before?(module, &1, last))
@@ -474,10 +463,7 @@ defmodule Shoddy.DateTimes do
       ~N[2025-01-01 00:00:00]
   """
   @spec round(value, unit()) :: value when value: DateTime.t() | NaiveDateTime.t()
-  def round(%DateTime{time_zone: "Etc/UTC"} = value, unit) when unit in @units, do: round_with(value, unit, DateTime)
-  def round(%NaiveDateTime{} = value, unit) when unit in @units, do: round_with(value, unit, NaiveDateTime)
-
-  defp round_with(value, unit, module) do
+  def round(%module{} = value, unit) when is_utc_or_naive(value) and unit in @units do
     start = floor(value, unit)
     next = module.add(start, 1, unit)
 

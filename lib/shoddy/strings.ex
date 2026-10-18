@@ -190,7 +190,7 @@ defmodule Shoddy.Strings do
 
     cond do
       not is_binary(omission) ->
-        raise ArgumentError, "invalid value for :omission option: expected a string, got: #{inspect(omission)}"
+        Shoddy.Option.invalid!(:omission, "a string", omission)
 
       String.length(omission) > max ->
         raise ArgumentError, "the :omission option #{inspect(omission)} is longer than the maximum length #{max}"
@@ -399,8 +399,7 @@ defmodule Shoddy.Strings do
         count
 
       other ->
-        raise ArgumentError,
-              "invalid value for #{inspect(name)} option: expected a non-negative integer, got: #{inspect(other)}"
+        Shoddy.Option.invalid!(name, "a non-negative integer", other)
     end
   end
 
@@ -411,10 +410,9 @@ defmodule Shoddy.Strings do
     end
   end
 
-  defp raise_char!(value) do
-    raise ArgumentError,
-          "invalid value for :char option: expected one grapheme that stays separate from a copy of itself, got: #{inspect(value)}"
-  end
+  @spec raise_char!(term()) :: no_return()
+  defp raise_char!(value),
+    do: Shoddy.Option.invalid!(:char, "one grapheme that stays separate from a copy of itself", value)
 
   @doc """
   Adds a prefix to a string, if the string does not start with it.

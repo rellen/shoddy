@@ -924,9 +924,7 @@ defmodule Shoddy.Result do
         fun
 
       value ->
-        raise ArgumentError,
-              "invalid value for :on_error option: expected :halt, :skip, :accumulate " <>
-                "or a function of arity 1, got: #{inspect(value)}"
+        Shoddy.Option.invalid!(:on_error, ":halt, :skip, :accumulate or a function of arity 1", value)
     end
   end
 

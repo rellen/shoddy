@@ -271,7 +271,7 @@ defmodule Shoddy.Lists do
     |> Keyword.fetch!(:at)
     |> case do
       at when at in [:end, :start] -> at
-      other -> raise ArgumentError, "invalid value for :at option: expected :end or :start, got: #{inspect(other)}"
+      other -> Shoddy.Option.invalid!(:at, ":end or :start", other)
     end
   end
 
