@@ -107,9 +107,12 @@ defmodule Shoddy.Numbers do
   raises `ArithmeticError` for an empty list, so code must check it first.
 
   Each element must be a number. For another element, this function raises
-  `ArithmeticError`. The function also raises `ArithmeticError` if the sum
-  of the numbers is too large for a float. Examples are `[10 ** 400]` and
-  `[1.0e308, 1.0e308]`.
+  `ArithmeticError`. The function also raises `ArithmeticError` if the mean
+  itself is too large for a float, such as for `[10 ** 400]`.
+
+  A sum can be too large for a float although the mean is not, such as for
+  `[1.0e308, 1.0e308]`. For such a list, the function divides each number
+  by the length first, and then it adds the results.
 
   ## Examples
 
@@ -126,5 +129,11 @@ defmodule Shoddy.Numbers do
   """
   @spec mean([number()]) :: {:ok, float()} | {:error, :empty}
   def mean([]), do: {:error, :empty}
-  def mean([_ | _] = list), do: {:ok, Enum.sum(list) / length(list)}
+  def mean([_ | _] = list), do: {:ok, mean_of(list, length(list))}
+
+  defp mean_of(list, count) do
+    Enum.sum(list) / count
+  rescue
+    ArithmeticError -> list |> Enum.map(&(&1 / count)) |> Enum.sum()
+  end
 end
