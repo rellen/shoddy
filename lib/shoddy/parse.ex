@@ -115,8 +115,7 @@ defmodule Shoddy.Parse do
         limit
 
       other ->
-        raise ArgumentError,
-              "invalid value for #{inspect(name)} option: expected #{describe(kind)} or nil, got: #{inspect(other)}"
+        Shoddy.Option.invalid!(name, "#{describe(kind)} or nil", other)
     end
   end
 
@@ -254,9 +253,8 @@ defmodule Shoddy.Parse do
     end
   end
 
-  defp raise_texts!(name, value) do
-    raise ArgumentError, "invalid value for #{inspect(name)} option: expected a list of strings, got: #{inspect(value)}"
-  end
+  @spec raise_texts!(atom(), term()) :: no_return()
+  defp raise_texts!(name, value), do: Shoddy.Option.invalid!(name, "a list of strings", value)
 
   @doc """
   Converts text into one atom from a list of allowed atoms.

@@ -356,19 +356,15 @@ defmodule Shoddy do
   defp boolean_option!(opts, key) do
     case Keyword.fetch!(opts, key) do
       value when is_boolean(value) -> value
-      value -> raise ArgumentError, option_message(key, "a boolean", value)
+      value -> Shoddy.Option.invalid!(key, "a boolean", value)
     end
   end
 
   defp list_option!(opts, key) do
     case Keyword.fetch!(opts, key) do
       value when is_list(value) -> value
-      value -> raise ArgumentError, option_message(key, "a list", value)
+      value -> Shoddy.Option.invalid!(key, "a list", value)
     end
-  end
-
-  defp option_message(key, expected, value) do
-    "invalid value for #{inspect(key)} option: expected #{expected}, got: #{inspect(value)}"
   end
 
   defp first_value(values, call_functions?, reject, default) do

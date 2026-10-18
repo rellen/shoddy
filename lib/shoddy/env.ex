@@ -188,8 +188,5 @@ defmodule Shoddy.Env do
 
   defp separator!(separator) when is_binary(separator) or is_list(separator), do: separator
 
-  defp separator!(other) do
-    raise ArgumentError,
-          "invalid value for :separator option: expected a string or a list of strings, got: #{inspect(other)}"
-  end
+  defp separator!(other), do: Shoddy.Option.invalid!(:separator, "a string or a list of strings", other)
 end
