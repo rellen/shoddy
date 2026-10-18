@@ -262,11 +262,12 @@ defmodule Shoddy.Maps do
 
   defp describe_collisions(mapping) do
     mapping
-    |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
-    |> Enum.filter(&match?({_new_key, [_, _ | _]}, &1))
+    |> Enum.to_list()
+    |> Shoddy.Lists.duplicates_by(&elem(&1, 1))
     |> Enum.sort()
-    |> Enum.map_join("; ", fn {new_key, keys} ->
-      "#{inspect(new_key)} for the keys #{inspect(Enum.sort(keys))}"
+    |> Enum.map_join("; ", fn {new_key, pairs} ->
+      keys = pairs |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+      "#{inspect(new_key)} for the keys #{inspect(keys)}"
     end)
   end
 
@@ -381,19 +382,13 @@ defmodule Shoddy.Maps do
         when key: any(), value: any(), new_key: any()
   def map_keys(map, fun) when is_non_struct_map(map) and is_function(fun, 1) do
     entries = Enum.map(map, fn {key, value} -> {key, fun.(key), value} end)
-    result = Map.new(entries, fn {_key, new_key, value} -> {new_key, value} end)
 
-    cond do
-      is_map_key(result, :__struct__) ->
-        raise_struct_key!()
-
-      map_size(result) == map_size(map) ->
-        result
-
-      true ->
-        mapping = Map.new(entries, fn {key, new_key, _value} -> {key, new_key} end)
-        raise ArgumentError, "more than one key has the same new key: " <> describe_collisions(mapping)
-    end
+    entries
+    |> Enum.map(fn {_key, new_key, value} -> {new_key, value} end)
+    |> new_map!(map_size(map), fn ->
+      mapping = Map.new(entries, fn {key, new_key, _value} -> {key, new_key} end)
+      "more than one key has the same new key: " <> describe_collisions(mapping)
+    end)
   end
 
   @doc """
@@ -455,7 +450,7 @@ defmodule Shoddy.Maps do
           %{}
       end
 
-    put_when(map, key, put_path_at(child, rest, value, [key | above]), true)
+    Map.put(map, key, put_path_at(child, rest, value, [key | above]))
   end
 
   @doc """
@@ -470,7 +465,10 @@ defmodule Shoddy.Maps do
   `Map.reject/2`.
 
   `Map.take/2` is different. It ignores each absent key, so the caller cannot
-  tell that a key is missing.
+  tell that a key is absent.
+
+  For a struct, this function reads only the fields. The key `:__struct__`
+  is not a field, so it is absent, and the result is always a plain map.
 
   ## Examples
 
@@ -489,11 +487,13 @@ defmodule Shoddy.Maps do
   @spec fetch_keys(map(), [key]) :: {:ok, %{optional(key) => any()}} | {:error, {:missing_keys, [key, ...]}}
         when key: any()
   def fetch_keys(map, keys) when is_map(map) and is_list(keys) do
+    fields = if is_struct(map), do: Map.from_struct(map), else: map
+
     keys
-    |> Enum.reject(&Map.has_key?(map, &1))
+    |> Enum.reject(&Map.has_key?(fields, &1))
     |> Enum.uniq()
     |> case do
-      [] -> {:ok, Map.take(map, keys)}
+      [] -> {:ok, Map.take(fields, keys)}
       missing -> {:error, {:missing_keys, missing}}
     end
   end
@@ -673,18 +673,21 @@ defmodule Shoddy.Maps do
   """
   @spec invert(%{optional(key) => value}) :: %{optional(value) => key} when key: any(), value: any()
   def invert(map) when is_non_struct_map(map) do
-    inverted = Map.new(map, fn {key, value} -> {value, key} end)
+    map
+    |> Enum.map(fn {key, value} -> {value, key} end)
+    |> new_map!(map_size(map), fn ->
+      values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
+      "more than one key has the same value: #{inspect(values)}"
+    end)
+  end
+
+  defp new_map!(pairs, size, describe) do
+    result = Map.new(pairs)
 
     cond do
-      is_map_key(inverted, :__struct__) ->
-        raise_struct_key!()
-
-      map_size(inverted) == map_size(map) ->
-        inverted
-
-      true ->
-        values = map |> Map.values() |> Shoddy.Lists.duplicates() |> Enum.sort()
-        raise ArgumentError, "more than one key has the same value: #{inspect(values)}"
+      is_map_key(result, :__struct__) -> raise_struct_key!()
+      map_size(result) == size -> result
+      true -> raise ArgumentError, describe.()
     end
   end
 

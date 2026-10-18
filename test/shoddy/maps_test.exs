@@ -376,6 +376,13 @@ defmodule Shoddy.MapsTest do
   end
 
   describe "fetch_keys/2" do
+    test "returns a plain map for a struct, and treats :__struct__ as absent" do
+      uri = %URI{host: "example.com"}
+
+      assert fetch_keys(uri, [:host]) == {:ok, %{host: "example.com"}}
+      assert fetch_keys(uri, [:__struct__, :host]) == {:error, {:missing_keys, [:__struct__]}}
+    end
+
     test "returns only the given keys" do
       assert fetch_keys(%{a: 1, b: 2, c: 3}, [:a, :c]) == {:ok, %{a: 1, c: 3}}
     end
