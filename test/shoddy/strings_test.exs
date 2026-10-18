@@ -213,6 +213,10 @@ defmodule Shoddy.StringsTest do
       assert mask("abcdefgh", keep_last: 0) == "********"
     end
 
+    test "hides each grapheme if a visible grapheme would join with a hidden grapheme" do
+      assert mask("abcde\n\u0301fghij", keep_last: 6) == String.duplicate("*", 12)
+    end
+
     test "hides each grapheme if the visible parts are more than half of the string" do
       assert mask("abcde") == "*****"
       assert mask("abcdefgh") == "****efgh"
@@ -230,9 +234,13 @@ defmodule Shoddy.StringsTest do
       assert_raise ArgumentError, fn -> mask("a", show: 1) end
       assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_last: -1) end
       assert_raise ArgumentError, ~r/non-negative integer/, fn -> mask("a", keep_first: 1.0) end
-      assert_raise ArgumentError, ~r/expected a string of one grapheme/, fn -> mask("a", char: ?*) end
+      assert_raise ArgumentError, ~r/expected one grapheme/, fn -> mask("a", char: ?*) end
       assert_raise ArgumentError, ~r/one grapheme/, fn -> mask("abcdef", char: "") end
       assert_raise ArgumentError, ~r/one grapheme/, fn -> mask("abcdef", char: "**") end
+
+      for char <- ["\u0301", "\u200d", "\u{1F1FA}"] do
+        assert_raise ArgumentError, ~r/separate from a copy of itself/, fn -> mask("abcdefghij", char: char) end
+      end
     end
 
     test "raises FunctionClauseError from mask/2 itself for an argument of the wrong type" do

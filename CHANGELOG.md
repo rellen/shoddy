@@ -142,7 +142,8 @@ The first release also contains these changes:
   `Enum.sort/2`. In `join_by/4`, a `nil` key never matches.
 - Add `Shoddy.Strings.mask/2`, `ensure_prefix/2` and `ensure_suffix/2`.
   `mask/2` never shows more than half of the string, and its option
-  `:char` must be exactly one grapheme.
+  `:char` must be one grapheme that stays separate from a copy of itself.
+  The result always has the length of the input.
 - Add `Shoddy.Env.list/2`. It reads a list of strings from an environment
   variable. A value without a list element is blank.
 - Add `Shoddy.Numbers.mean/1`. It returns `{:error, :empty}` for an empty

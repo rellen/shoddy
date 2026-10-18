@@ -109,7 +109,10 @@ defmodule Shoddy.StringsPropertyTest do
 
   describe "mask/2" do
     property "keeps the length, and shows the given graphemes only if they are at most half of the string" do
-      check all(string <- string(:printable, max_length: 12), first <- integer(0..4), last <- integer(0..4)) do
+      piece = member_of(["a", "b", "\n", "\u0301", "\u200d", "\u{1F1FA}", "\u{1F1F8}", "é", "*"])
+      text = one_of([string(:printable, max_length: 12), map(list_of(piece, max_length: 12), &Enum.join/1)])
+
+      check all(string <- text, first <- integer(0..4), last <- integer(0..4)) do
         result = Shoddy.Strings.mask(string, keep_first: first, keep_last: last, char: "*")
         graphemes = String.graphemes(string)
         count = length(graphemes)
@@ -119,8 +122,9 @@ defmodule Shoddy.StringsPropertyTest do
         if 2 * (first + last) > count do
           assert result == String.duplicate("*", count)
         else
-          assert String.starts_with?(result, Enum.join(Enum.take(graphemes, first)))
-          assert String.ends_with?(result, Enum.join(Enum.take(graphemes, -last)))
+          assert result == String.duplicate("*", count) or
+                   (String.starts_with?(result, Enum.join(Enum.take(graphemes, first))) and
+                      String.ends_with?(result, Enum.join(Enum.take(graphemes, -last))))
         end
       end
     end
