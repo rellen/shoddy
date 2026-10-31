@@ -5,8 +5,8 @@ document. `CLAUDE.md` gives the rules for a commit message and for prose.
 
 ## Get the tools
 
-The project uses Erlang 28.5.0.8 and Elixir 1.19.7. With Nix, start a shell
-that has Erlang 28 and Elixir 1.19:
+The project uses Erlang 28.5.0.8 and Elixir 1.20.5. With Nix, start a shell
+that has Erlang 28 and Elixir 1.20:
 
 ```sh
 devenv shell
