@@ -58,7 +58,7 @@ concurrency:
 env:
   # The versions of `.tool-versions`.
   OTP_VERSION: "28.5.0.8"
-  ELIXIR_VERSION: "1.19.7-otp-28"
+  ELIXIR_VERSION: "1.20.5-otp-28"
 
 jobs:
   format:
@@ -191,7 +191,7 @@ jobs:
           if-no-files-found: ignore
 
   all:
-    name: Erlang/OTP 28, Elixir 1.19
+    name: Erlang/OTP 28, Elixir 1.20
     if: always()
     needs: [format, lint, dialyzer, test]
     runs-on: ubuntu-latest
