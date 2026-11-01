@@ -455,6 +455,60 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "find_error/3" do
+    test "returns :ok if no element is bad, also for an empty enumerable" do
+      assert find_error([1, 2], &(&1 < 0), & &1) == :ok
+      assert find_error([], fn _ -> true end, & &1) == :ok
+    end
+
+    test "returns the reason of the first bad element" do
+      assert find_error([1, -2, -3], &(&1 < 0), &{:negative, &1}) == {:error, {:negative, -2}}
+    end
+
+    test "accepts a truthy value from the check and treats nil as good" do
+      assert find_error([:a, :b], &(&1 == :b && :yes), & &1) == {:error, :b}
+      assert find_error([:a], fn _ -> nil end, & &1) == :ok
+    end
+
+    test "finds a bad element that is nil or false" do
+      assert find_error([1, nil], &is_nil/1, &{:bad, &1}) == {:error, {:bad, nil}}
+      assert find_error([1, false], &(&1 == false), &{:bad, &1}) == {:error, {:bad, false}}
+    end
+
+    test "calls the reason function only for the first bad element" do
+      parent = self()
+
+      reason = fn element ->
+        send(parent, {:reason, element})
+        element
+      end
+
+      assert find_error([1, -1, -2], &(&1 < 0), reason) == {:error, -1}
+      assert_received {:reason, -1}
+      refute_received {:reason, -2}
+    end
+
+    test "stops at the first bad element of a stream" do
+      stream = Stream.iterate(1, &(&1 + 1))
+      assert find_error(stream, &(&1 > 3), & &1) == {:error, 4}
+    end
+
+    test "accepts a map, and gives each pair to the check" do
+      assert find_error(%{a: 1}, fn {_key, value} -> value > 0 end, fn {key, _value} -> key end) == {:error, :a}
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      for args <- [[[1], fn -> true end, & &1], [[1], & &1, fn -> :r end], [[1], nil, & &1]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&find_error/3, args) end
+        assert {error.module, error.function} == {Shoddy.Result, :find_error}
+      end
+    end
+
+    test "raises Protocol.UndefinedError for a first argument that is not enumerable" do
+      assert_raise Protocol.UndefinedError, fn -> find_error(42, & &1, & &1) end
+    end
+  end
+
   describe "ignore/1" do
     test "discards the value from an ok tuple" do
       assert ignore({:ok, 42}) == :ok
