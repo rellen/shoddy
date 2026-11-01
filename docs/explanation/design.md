@@ -516,6 +516,22 @@ Without the option, each such call must give the two lists. The default of
 `"true"` and `"false"` are correct. `Shoddy.Parse.boolean/2` has no such
 option, because a Phoenix form sends `"true"` and `"false"`.
 
+## Why Parse accepts a value of each type
+
+Most functions of Shoddy raise `FunctionClauseError` for an argument of the
+wrong type, because such an argument is a defect in the program. The
+functions of `Shoddy.Parse` return `{:error, :not_a_string}` for a value
+that is not a string.
+
+Their input often comes from outside the program. A user can forge a
+request. For example, the query string `?page[]=1` gives a list, and a
+LiveView event can contain a map. A data layer can also return a struct in
+the place of a value. Such input is not a defect in the program, so it
+gives an error result, as other incorrect input does.
+
+The functions check their options first. A wrong option is a defect in the
+program, so it raises `ArgumentError` for each input.
+
 ## Why index_by raises for a key that is not unique
 
 `Shoddy.Lists.index_by/2` makes a map, and a map has one value for each key.

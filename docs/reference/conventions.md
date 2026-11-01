@@ -132,6 +132,9 @@ bare `:error`.
 `Shoddy.Parse` also return a result: `{:ok, value}` or `{:error, reason}`.
 Thus the functions of `Shoddy.Result` accept their return values.
 
+The functions of `Shoddy.Parse` accept a value of each type as the text.
+For a value that is not a string, they return `{:error, :not_a_string}`.
+
 ## Equality
 
 These functions compare two values with the strict equality operator
