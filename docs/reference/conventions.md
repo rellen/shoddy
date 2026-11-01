@@ -13,7 +13,7 @@ of each module gives the full description of each function.
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
-| `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
+| `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.integer!/2`, `Shoddy.Parse.float!/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2`, `Shoddy.Env.one_of/3` |
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3`, `Shoddy.Numbers.mean/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
@@ -128,12 +128,16 @@ A bare `:ok` has the value `nil`, and a bare `:error` has the reason `nil`:
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
 bare `:error`.
 
-`Shoddy.Lists.single/1`, `Shoddy.Maps.fetch_keys/2` and the functions of
+`Shoddy.Lists.single/1`, `Shoddy.Maps.fetch_keys/2` and most functions of
 `Shoddy.Parse` also return a result: `{:ok, value}` or `{:error, reason}`.
 Thus the functions of `Shoddy.Result` accept their return values.
+`Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2` return the number, and
+they raise `ArgumentError` for an error.
 
 The functions of `Shoddy.Parse` accept a value of each type as the text.
 For a value that is not a string, they return `{:error, :not_a_string}`.
+`Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2` raise `ArgumentError`
+for such a value.
 
 ## Equality
 
@@ -186,6 +190,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option, an omission that is not a string, or an omission that is longer than the maximum, for `Shoddy.Strings.truncate/3`. The function checks the omission also for a string that it does not shorten. |
 | `ArgumentError` | An unknown option, a limit that is not an integer or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.integer/2`. |
 | `ArgumentError` | An unknown option, a limit that is not a number or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.float/2`. |
+| `ArgumentError` | Incorrect text, for `Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2`. The message gives the text and the reason. A wrong option, as for `Shoddy.Parse.integer/2` and `Shoddy.Parse.float/2`. |
 | `ArgumentError` | An unknown option, a value that is not a list of strings, or a text in the two lists, for `Shoddy.Parse.boolean/2`. |
 | `ArgumentError` | An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |

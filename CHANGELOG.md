@@ -169,3 +169,6 @@ The first release also contains these changes:
 - The functions of `Shoddy.Parse` return `{:error, :not_a_string}` for a
   value that is not a string. Before this change, they raised
   `FunctionClauseError`.
+- Add `Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2`. They return the
+  number, and they raise `ArgumentError` with the text and the reason for
+  incorrect text.
