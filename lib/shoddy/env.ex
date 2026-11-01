@@ -97,13 +97,23 @@ defmodule Shoddy.Env do
     * `:true_values` and `:false_values` - The texts that give `true` and
       `false`, as for `Shoddy.Parse.boolean/2`.
 
+    * `:digits` - If `true`, the function also accepts `"1"` for `true` and
+      `"0"` for `false`. It adds these texts to the two lists. The default is
+      `false`.
+
   This function raises `ArgumentError` for a value that is not in the
-  lists, and for an unknown option.
+  lists, and for an unknown option. It also raises `ArgumentError` for a
+  `:digits` that is not a boolean, and for a text that is in the two lists
+  after it adds the digits.
 
   ## Examples
 
       iex> System.put_env("SHODDY_DOC_DEBUG", "1")
-      iex> Shoddy.Env.boolean("SHODDY_DOC_DEBUG", true_values: ["1"], false_values: ["0"])
+      iex> Shoddy.Env.boolean("SHODDY_DOC_DEBUG", default: false, digits: true)
+      true
+
+      iex> System.put_env("SHODDY_DOC_DEBUG", "on")
+      iex> Shoddy.Env.boolean("SHODDY_DOC_DEBUG", true_values: ["on"], false_values: ["off"])
       true
 
       iex> System.put_env("SHODDY_DOC_DEBUG", "")
@@ -112,8 +122,25 @@ defmodule Shoddy.Env do
   """
   @spec boolean(String.t(), keyword()) :: boolean() | default when default: any()
   def boolean(name, opts \\ []) when is_binary(name) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default, :true_values, :false_values])
-    read(name, opts, &Parse.boolean(&1, Keyword.take(opts, [:true_values, :false_values])))
+    opts = Keyword.validate!(opts, [:default, true_values: ["true"], false_values: ["false"], digits: false])
+
+    lists =
+      case Keyword.fetch!(opts, :digits) do
+        false -> Keyword.take(opts, [:true_values, :false_values])
+        true -> [true_values: add_digit(opts, :true_values, "1"), false_values: add_digit(opts, :false_values, "0")]
+        other -> Shoddy.Option.invalid!(:digits, "a boolean", other)
+      end
+
+    read(name, opts, &Parse.boolean(&1, lists))
+  end
+
+  # Parse.boolean/2 checks each list. This function returns a value that is
+  # not a list with no change, so that Parse.boolean/2 raises its usual error.
+  defp add_digit(opts, name, digit) do
+    case Keyword.fetch!(opts, name) do
+      texts when is_list(texts) -> texts ++ [digit]
+      other -> other
+    end
   end
 
   @doc """

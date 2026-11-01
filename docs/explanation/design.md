@@ -510,6 +510,13 @@ expect. A text that is not in the list is often a mistake, for example a
 variable that a person set to `"ture"`. Thus the caller gives the other
 texts with the options `:true_values` and `:false_values`.
 
+`Shoddy.Env.boolean/2` has the option `:digits` for `"1"` and `"0"`, but it
+does not accept them by default. Many deployments set a flag to `"1"`.
+Without the option, each such call must give the two lists. The default of
+`false` keeps one rule for the two modules: without an option, only
+`"true"` and `"false"` are correct. `Shoddy.Parse.boolean/2` has no such
+option, because a Phoenix form sends `"true"` and `"false"`.
+
 ## Why index_by raises for a key that is not unique
 
 `Shoddy.Lists.index_by/2` makes a map, and a map has one value for each key.

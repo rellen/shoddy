@@ -159,3 +159,5 @@ The first release also contains these changes:
   and trims it. It treats a blank value as an absent value. The option
   `:min_bytes` rejects a short value, and its message does not contain the
   value.
+- Add the option `:digits` to `Shoddy.Env.boolean/2`. With `digits: true`,
+  the function also accepts `"1"` for `true` and `"0"` for `false`.
