@@ -53,8 +53,24 @@ texts:
 
 ```elixir
 config :my_app, :signups?,
-  Shoddy.Env.boolean("SIGNUPS", default: true, true_values: ["1", "true"], false_values: ["0", "false"])
+  Shoddy.Env.boolean("SIGNUPS", default: true, true_values: ["on"], false_values: ["off"])
 ```
+
+## Accept "1" and "0" for a flag
+
+Give the option `digits: true`. The function then also accepts `"1"` for
+`true` and `"0"` for `false`:
+
+```elixir
+if Shoddy.Env.boolean("PHX_SERVER", default: false, digits: true) do
+  config :my_app, MyAppWeb.Endpoint, server: true
+end
+```
+
+`mix phx.new` writes `if System.get_env("PHX_SERVER") do` for this flag.
+That check is wrong for `PHX_SERVER=false`, because each string is truthy.
+With `Shoddy.Env.boolean/2`, `"false"` and `"0"` give `false`, and a text
+such as `"TRUE"` stops the start.
 
 ## Use a default of nil
 

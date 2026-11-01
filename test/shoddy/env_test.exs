@@ -124,6 +124,64 @@ defmodule Shoddy.EnvTest do
       end
     end
 
+    test ~s(accepts "1" and "0" with digits: true, and keeps the default texts), %{name: name} do
+      for {value, expected} <- [{"1", true}, {" 0\n", false}, {"true", true}, {"false", false}] do
+        System.put_env(name, value)
+        assert boolean(name, digits: true) == expected
+      end
+    end
+
+    test "adds the digits to the lists of the options", %{name: name} do
+      opts = [digits: true, true_values: ["on"], false_values: ["off"]]
+
+      for {value, expected} <- [{"1", true}, {"0", false}, {"on", true}, {"off", false}] do
+        System.put_env(name, value)
+        assert boolean(name, opts) == expected
+      end
+
+      System.put_env(name, "true")
+      assert_raise ArgumentError, ~r/:not_a_boolean/, fn -> boolean(name, opts) end
+    end
+
+    test ~s(rejects "1" and "0" without digits: true), %{name: name} do
+      for value <- ["1", "0"] do
+        System.put_env(name, value)
+        assert_raise ArgumentError, ~r/:not_a_boolean/, fn -> boolean(name, default: false) end
+        assert_raise ArgumentError, ~r/:not_a_boolean/, fn -> boolean(name, default: false, digits: false) end
+      end
+    end
+
+    test "keeps the comparison case-sensitive with digits: true", %{name: name} do
+      System.put_env(name, "TRUE")
+      assert_raise ArgumentError, ~r/"TRUE" \(:not_a_boolean\)/, fn -> boolean(name, default: false, digits: true) end
+    end
+
+    test "returns the default for an absent or blank variable with digits: true", %{name: name} do
+      assert boolean(name, default: false, digits: true) == false
+      System.put_env(name, " ")
+      assert boolean(name, default: true, digits: true) == true
+    end
+
+    test "raises ArgumentError for a wrong :digits also if the variable is absent", %{name: name} do
+      for digits <- [nil, "true", 1] do
+        assert_raise ArgumentError, ~r/invalid value for :digits option: expected a boolean/, fn ->
+          boolean(name, default: false, digits: digits)
+        end
+      end
+    end
+
+    test "raises ArgumentError for a digit that is also in the other list", %{name: name} do
+      assert_raise ArgumentError, ~s[the text "1" is in :true_values and in :false_values], fn ->
+        boolean(name, default: false, digits: true, false_values: ["1"])
+      end
+    end
+
+    test "raises ArgumentError for a wrong list with digits: true", %{name: name} do
+      assert_raise ArgumentError, ~r/:true_values option: expected a list of strings/, fn ->
+        boolean(name, default: false, digits: true, true_values: "yes")
+      end
+    end
+
     test "raises FunctionClauseError from boolean/2 itself for a name that is not a string" do
       for args <- [[:debug, []], ["DEBUG", :default]] do
         error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, args) end
