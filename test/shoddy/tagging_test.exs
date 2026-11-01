@@ -101,7 +101,7 @@ defmodule Shoddy.TaggingTest do
 
     test "raises FunctionClauseError for a tag that is not an atom" do
       assert_raise FunctionClauseError, fn ->
-        tag(42, "not_an_atom")
+        apply(&tag/2, [42, "not_an_atom"])
       end
     end
   end
@@ -113,7 +113,7 @@ defmodule Shoddy.TaggingTest do
 
     test "raises FunctionClauseError for a tag that is not an atom" do
       assert_raise FunctionClauseError, fn ->
-        tag(:ok, %{}, "not_an_atom")
+        apply(&tag/3, [:ok, %{}, "not_an_atom"])
       end
     end
   end

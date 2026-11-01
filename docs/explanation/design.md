@@ -564,9 +564,12 @@ the start of the next day. A period that included its last value would need
 the last microsecond of the day, and that value depends on the precision.
 
 The function compares the values with the function `compare/2` of their
-module. The operators `<` and `>` compare the fields of a struct in an order
-that is not the order of time. For example, `~D[2024-02-01] < ~D[2024-01-31]`
-returns `true`.
+module. The operators `<` and `>`, and functions such as `Enum.max/1`, compare
+the fields of a struct in an order that is not the order of time. For
+example, `Enum.max([~D[2024-01-31], ~D[2024-02-01]])` returns
+`~D[2024-01-31]`. Elixir 1.20 warns about `<` and `>` for two structs,
+but it cannot warn about `Enum.max/1` and `Enum.sort/1`. Thus the type
+checker does not make this function unnecessary.
 
 The function returns `false` for a period in the wrong order, and it does
 not raise an exception. A name that ends in `?` tells that the function

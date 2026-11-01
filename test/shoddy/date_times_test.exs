@@ -75,19 +75,19 @@ defmodule Shoddy.DateTimesTest do
     end
 
     test "raises FunctionClauseError for :second, which can never change a value" do
-      assert_raise FunctionClauseError, fn -> extend_precision(~U[2024-01-01 00:00:00Z], :second) end
+      assert_raise FunctionClauseError, fn -> apply(&extend_precision/2, [~U[2024-01-01 00:00:00Z], :second]) end
     end
 
     test "raises FunctionClauseError for a precision that is not known" do
-      assert_raise FunctionClauseError, fn -> extend_precision(~U[2024-01-01 00:00:00Z], :nanosecond) end
+      assert_raise FunctionClauseError, fn -> apply(&extend_precision/2, [~U[2024-01-01 00:00:00Z], :nanosecond]) end
     end
 
     test "raises FunctionClauseError for a Date, which has no fractional part" do
-      assert_raise FunctionClauseError, fn -> extend_precision(~D[2024-01-01], :microsecond) end
+      assert_raise FunctionClauseError, fn -> apply(&extend_precision/2, [~D[2024-01-01], :microsecond]) end
     end
 
     test "raises FunctionClauseError for a value that is not a time value" do
-      assert_raise FunctionClauseError, fn -> extend_precision(42, :microsecond) end
+      assert_raise FunctionClauseError, fn -> apply(&extend_precision/2, [42, :microsecond]) end
     end
   end
 

@@ -302,10 +302,13 @@ defmodule Shoddy.DateTimes do
       iex> Shoddy.DateTimes.between?(~D[2024-01-03], ~D[2024-01-01], ~D[2024-01-03])
       false
 
-  The operator `<` gives a wrong result for two dates:
+  A comparison of two structs examines their fields and not the time.
+  Elixir 1.20 warns about the operators `<` and `>` for two structs. It does
+  not warn about a function such as `Enum.max/1`, which makes the same
+  comparison and gives a wrong result for two dates:
 
-      iex> ~D[2024-02-01] < ~D[2024-01-31]
-      true
+      iex> Enum.max([~D[2024-01-31], ~D[2024-02-01]])
+      ~D[2024-01-31]
 
       iex> Shoddy.DateTimes.between?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
       false

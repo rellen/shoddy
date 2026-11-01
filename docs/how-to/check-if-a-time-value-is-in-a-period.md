@@ -47,14 +47,16 @@ DateTimes.between?(~D[2024-07-04], arrival, departure)
 `date in Date.range(arrival, departure)` is different. The range includes
 the last date.
 
-## Do not compare with the operators < and >
+## Do not compare two structs directly
 
-The operators compare the fields of two structs, not the points in time.
-The result is often wrong:
+The operators `<` and `>`, and functions such as `Enum.max/1`, compare the
+fields of two structs, not the points in time. Elixir 1.20 warns about the
+operators for two structs, but not about `Enum.max/1`. The result is often
+wrong:
 
 ```elixir
-~D[2024-02-01] < ~D[2024-01-31]
-#=> true
+Enum.max([~D[2024-01-31], ~D[2024-02-01]])
+#=> ~D[2024-01-31]
 
 DateTimes.between?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
 #=> false

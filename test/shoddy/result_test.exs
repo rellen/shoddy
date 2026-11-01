@@ -378,7 +378,7 @@ defmodule Shoddy.ResultTest do
     end
 
     test "operates together with Map.get" do
-      assert Map.get(%{a: 1}, :b) |> from_nil(:missing) == {:error, :missing}
+      assert Map.new(a: 1) |> Map.get(:b) |> from_nil(:missing) == {:error, :missing}
       assert Map.get(%{a: 1}, :a) |> from_nil(:missing) == {:ok, 1}
     end
   end
@@ -795,7 +795,8 @@ defmodule Shoddy.ResultTest do
     end
 
     test "returns each listed exception as the reason" do
-      assert {:error, %KeyError{key: :a}} = attempt(fn -> Map.fetch!(%{}, :a) end, rescue: [ArgumentError, KeyError])
+      assert {:error, %KeyError{key: :a}} =
+               attempt(fn -> Keyword.fetch!([], :a) end, rescue: [ArgumentError, KeyError])
     end
 
     test "does not rescue an exception that is not in the list" do
@@ -813,7 +814,7 @@ defmodule Shoddy.ResultTest do
     test "keeps the stacktrace of an exception that it does not rescue" do
       {error, [top | _]} =
         try do
-          attempt(fn -> Map.fetch!(%{}, :a) end, rescue: [ArgumentError])
+          attempt(fn -> Keyword.fetch!([], :a) end, rescue: [ArgumentError])
         rescue
           error in KeyError -> {error, __STACKTRACE__}
         end

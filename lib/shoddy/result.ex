@@ -462,7 +462,7 @@ defmodule Shoddy.Result do
 
   Use the function in a pipeline:
 
-      iex> Map.get(%{a: 1}, :b) |> Shoddy.Result.from_nil(:key_missing)
+      iex> Map.new(a: 1) |> Map.get(:b) |> Shoddy.Result.from_nil(:key_missing)
       {:error, :key_missing}
   """
   @spec from_nil(a | nil, e) :: {:ok, a} | {:error, e} when a: any(), e: any()
