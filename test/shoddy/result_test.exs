@@ -509,6 +509,48 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "ok_if/2" do
+    test "returns :ok for a truthy condition, also 0 and an empty string" do
+      for condition <- [true, 0, "", [], :yes] do
+        assert ok_if(condition, :reason) == :ok
+      end
+    end
+
+    test "returns the reason in an error tuple for nil and false" do
+      assert ok_if(false, :reason) == {:error, :reason}
+      assert ok_if(nil, nil) == {:error, nil}
+    end
+
+    test "calls a reason function of arity 0 only for a falsy condition" do
+      assert ok_if(false, fn -> :built end) == {:error, :built}
+      assert ok_if(true, fn -> flunk("the function must not run") end) == :ok
+    end
+
+    test "puts a function of another arity into the error tuple with no call" do
+      reason = fn _x -> :never end
+      assert ok_if(false, reason) == {:error, reason}
+    end
+  end
+
+  describe "from_errors/2" do
+    test "calls the function and returns its value for an empty list" do
+      assert from_errors([], fn -> :built end) == {:ok, :built}
+      assert from_errors([], fn -> nil end) == {:ok, nil}
+    end
+
+    test "returns the errors and does not call the function for a list that is not empty" do
+      assert from_errors([:a, :b], fn -> flunk("the function must not run") end) == {:error, [:a, :b]}
+      assert from_errors([nil], fn -> :built end) == {:error, [nil]}
+    end
+
+    test "raises FunctionClauseError for a value that is not a list or a function of the wrong arity" do
+      for args <- [[nil, fn -> :x end], [%{}, fn -> :x end], [[], fn _ -> :x end], [[], :value]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&from_errors/2, args) end
+        assert {error.module, error.function} == {Shoddy.Result, :from_errors}
+      end
+    end
+  end
+
   describe "ignore/1" do
     test "discards the value from an ok tuple" do
       assert ignore({:ok, 42}) == :ok

@@ -145,6 +145,22 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
+## One constructor for each start
+
+`Shoddy.Result.from_errors/2` takes a list of errors and a function. It has
+no form with one argument. Such a form would return `:ok` or
+`{:error, errors}`, and `Shoddy.Result.ok_if/2` already does that:
+`ok_if(errors == [], errors)`. Two functions for the same result would make
+a reader ask which one is correct.
+
+Thus each constructor starts from one kind of input. `ok_if/2` starts from a
+condition, `ensure/3` from a value, `find_error/3` from an enumerable, and
+`from_errors/2` from a list of errors with a value to build.
+
+`ok_if/2` calls a reason that is a function of arity 0. Code often builds a
+message from parts, and the condition is usually true. The function form
+builds the message only for a falsy condition.
+
 ## A stream for collect, and traverse
 
 Code often calls an operation that can fail for each element of a list, and

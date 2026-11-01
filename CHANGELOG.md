@@ -180,3 +180,8 @@ The first release also contains these changes:
 - Add `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. They call a
   function that can fail for each element, and they stop at the first
   error. `traverse/2` returns the values, and `each_ok/2` returns `:ok`.
+- Add `Shoddy.Result.ok_if/2`. It returns `:ok` for a truthy condition, or
+  an error with the reason. A reason that is a function of arity 0 runs
+  only for a falsy condition.
+- Add `Shoddy.Result.from_errors/2`. For an empty list of errors, it builds
+  a value and returns it in an ok tuple. Otherwise, it returns the errors.
