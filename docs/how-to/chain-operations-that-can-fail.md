@@ -95,6 +95,19 @@ params
 | `%{"age" => "41"}` | `{:ok, 41}` |
 | `%{"age" => "12"}` | `{:error, :too_young}` |
 
+## Check each element of a list
+
+Use `Shoddy.Result.find_error/3`. It returns an error for the first element
+that fails the check, or `:ok`:
+
+```elixir
+Shoddy.Result.find_error([1, 0, 2], &(&1 < 1), &"the step #{&1} is less than 1")
+#=> {:error, "the step 0 is less than 1"}
+```
+
+Do not write a `case` on `Enum.find/2`. `Enum.find/2` returns `nil` also for
+a bad element that is `nil`, so the check passes for that element.
+
 ## Change the reason of an error
 
 Use `Shoddy.Result.map_error/2`. For example, change each reason to a

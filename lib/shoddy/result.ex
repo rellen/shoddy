@@ -29,6 +29,8 @@ defmodule Shoddy.Result do
   ## Constructors
 
   `from_nil/2` and `ensure/3` construct a result from a value and a check.
+  `find_error/3` constructs a result from a check of each element of an
+  enumerable.
   To put a value into a result tuple with no check, use `Shoddy.Tagging.ok/1`
   and `Shoddy.Tagging.error/1`.
   """
@@ -573,6 +575,42 @@ defmodule Shoddy.Result do
 
   def ensure(value, predicate, reason) when is_function(predicate, 1) do
     if predicate.(value), do: {:ok, value}, else: {:error, reason}
+  end
+
+  @doc """
+  Returns an error for the first element that fails a check, or `:ok`.
+
+  The function calls `check` with each element, in order. A truthy return
+  value marks the element as bad. For the first bad element, the function
+  calls `reason` with that element, and it returns `{:error, reason}`. It
+  examines no element after the first bad element. If no element is bad, it
+  returns `:ok`.
+
+  The first argument can be a list, a stream or another enumerable. A stream
+  stops at the first bad element.
+
+  `Enum.find/2` returns `nil` both for a found `nil` and for no element. This
+  function does not have that problem, so `nil` can be a bad element.
+
+  ## Examples
+
+      iex> Shoddy.Result.find_error([1, 2, 3], &(&1 < 1), &"the step \#{&1} is less than 1")
+      :ok
+
+      iex> Shoddy.Result.find_error([1, 0, -1], &(&1 < 1), &"the step \#{&1} is less than 1")
+      {:error, "the step 0 is less than 1"}
+
+  The function finds a bad element that is `nil`:
+
+      iex> Shoddy.Result.find_error([:start, nil], &is_nil/1, fn _command -> :missing_command end)
+      {:error, :missing_command}
+  """
+  @spec find_error(Enumerable.t(element), (element -> as_boolean(any())), (element -> e)) :: :ok | {:error, e}
+        when element: any(), e: any()
+  def find_error(enumerable, check, reason) when is_function(check, 1) and is_function(reason, 1) do
+    Enum.reduce_while(enumerable, :ok, fn element, :ok ->
+      if check.(element), do: {:halt, {:error, reason.(element)}}, else: {:cont, :ok}
+    end)
   end
 
   @doc """

@@ -175,3 +175,5 @@ The first release also contains these changes:
 - Add `Shoddy.Result.unwrap!/2`. For an error, it raises `ArgumentError`
   with a message that you give. The message can be a string or a function
   of the reason.
+- Add `Shoddy.Result.find_error/3`. It returns an error for the first
+  element of an enumerable that fails a check, or `:ok`.
