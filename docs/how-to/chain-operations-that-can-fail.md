@@ -171,6 +171,32 @@ Shoddy.Result.unwrap({:error, {"old", :invalid_age}}, 0)
 If an error is a defect in the program, use `Shoddy.Result.unwrap!/1`. It
 raises `ArgumentError` for an error.
 
+## Stop with a clear message for an error
+
+Give a message to `Shoddy.Result.unwrap!/2`. For an error, it raises
+`ArgumentError` with the message, a colon and the reason:
+
+```elixir
+Settings.load(path)
+|> Shoddy.Result.unwrap!("cannot load the settings")
+#=> ** (ArgumentError) cannot load the settings: :enoent
+```
+
+Give a function of arity 1 to write the full message. The function receives
+the reason:
+
+```elixir
+Settings.load(path)
+|> Shoddy.Result.unwrap!(fn reason ->
+  "cannot load the settings: #{:file.format_error(reason)}"
+end)
+#=> ** (ArgumentError) cannot load the settings: no such file or directory
+```
+
+For a reason that is an exception, the message contains the message of the
+exception. Thus `Shoddy.Result.unwrap!/2` fits after
+`Shoddy.Result.attempt/2`.
+
 If the default is expensive, use `Shoddy.Result.unwrap_lazy/2`. It calls the
 function only for an error:
 

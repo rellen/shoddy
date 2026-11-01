@@ -99,6 +99,7 @@ These functions do not use this rule:
 | `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
 | `Shoddy.Result.attempt/2` | The function to call. | 0 |
 | `Shoddy.Result.unwrap_lazy/2` | The function that returns the default for an error. | 0 |
+| `Shoddy.Result.unwrap!/2` | The function that returns the message. It receives the reason. | 1 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -116,8 +117,10 @@ These functions do not use this rule:
 
 A bare `:ok` has the value `nil`, and a bare `:error` has the reason `nil`:
 
-- `Shoddy.Result.unwrap/2`, `Shoddy.Result.unwrap_lazy/2` and
-  `Shoddy.Result.unwrap!/1` return `nil` for a bare `:ok`.
+- `Shoddy.Result.unwrap/2`, `Shoddy.Result.unwrap_lazy/2`,
+  `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2` return `nil` for a
+  bare `:ok`. `Shoddy.Result.unwrap!/2` gives the reason `nil` to its
+  function for a bare `:error`.
 - `Shoddy.Result.collect/2` puts `nil` into its list for a bare `:ok`.
 - `Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator for a bare
   `:ok`.
@@ -194,7 +197,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option, a value that is not a list of strings, or a text in the two lists, for `Shoddy.Parse.boolean/2`. |
 | `ArgumentError` | An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
-| `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1`. |
+| `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2`. A function of `Shoddy.Result.unwrap!/2` that returns a value that is not a string. |
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
 | `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |

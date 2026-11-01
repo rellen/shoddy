@@ -293,6 +293,52 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "unwrap!/2" do
+    test "returns the value of an ok result and does not call the function" do
+      fail = fn _reason -> flunk("the function must not run") end
+
+      assert unwrap!({:ok, 42}, "message") == 42
+      assert unwrap!({:ok, nil}, fail) == nil
+      assert unwrap!(:ok, "message") == nil
+      assert unwrap!(:ok, fail) == nil
+    end
+
+    test "raises ArgumentError with the string, a colon and the inspected reason" do
+      assert_raise ArgumentError, ~s[cannot load: {:enoent, "a.txt"}], fn ->
+        unwrap!({:error, {:enoent, "a.txt"}}, "cannot load")
+      end
+
+      assert_raise ArgumentError, "cannot load: nil", fn -> unwrap!(:error, "cannot load") end
+    end
+
+    test "gives the message of an exception that is the reason" do
+      assert_raise ArgumentError, "cannot load: boom", fn ->
+        unwrap!({:error, RuntimeError.exception("boom")}, "cannot load")
+      end
+    end
+
+    test "raises ArgumentError with the return value of the function" do
+      assert_raise ArgumentError, "no file a.txt", fn ->
+        unwrap!({:error, "a.txt"}, &"no file #{&1}")
+      end
+
+      assert_raise ArgumentError, "reason: nil", fn -> unwrap!(:error, &"reason: #{inspect(&1)}") end
+    end
+
+    test "raises ArgumentError if the function does not return a string" do
+      assert_raise ArgumentError, ~r/must return a string, got: :oops/, fn ->
+        unwrap!({:error, :fail}, fn _reason -> :oops end)
+      end
+    end
+
+    test "raises FunctionClauseError for a message that is not a string or a function of arity 1" do
+      for args <- [[{:ok, 1}, :message], [{:error, :fail}, fn -> "x" end], [{:error, :fail}, nil], [42, "x"]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&unwrap!/2, args) end
+        assert {error.module, error.function} == {Shoddy.Result, :unwrap!}
+      end
+    end
+  end
+
   describe "unwrap/2" do
     test "extracts the value from an ok tuple" do
       assert unwrap({:ok, 42}, 0) == 42
