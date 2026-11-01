@@ -145,23 +145,32 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
-## A stream for collect
+## A stream for collect, and traverse
 
 Code often calls an operation that can fail for each element of a list, and
-must stop at the first error. A function that takes the list and the
-operation would do this work. But `Stream.map/2` already applies the
-operation one element at a time, and only when the next step reads that
-element.
+must stop at the first error. `Stream.map/2` applies the operation one
+element at a time, and only when the next step reads that element.
 
-Thus `Shoddy.Result.collect/2` accepts a stream, and Shoddy has no second
-function for the same work. With `on_error: :halt`, the function reads no
-element after the first error. The stream then does not call the operation
-for a later element. The caller selects the behavior: `Enum.map/2` calls the
-operation for each element, and `Stream.map/2` stops at the first error.
+Thus `Shoddy.Result.collect/2` accepts a stream. With `on_error: :halt`, the
+function reads no element after the first error. The stream then does not
+call the operation for a later element. `Enum.map/2` calls the operation for
+each element before `collect/2` starts.
 
-The function does not accept a map. A map is enumerable, but its elements
-are key-value tuples. A map as the first argument is thus a mistake, and
-`FunctionClauseError` tells the caller at once.
+The two forms differ by one word, and the result is the same. Thus a reader
+can change `Stream.map/2` to `Enum.map/2` to make the code simpler, and the
+tests still pass. The operation then runs for each element after the first
+error, for example a write to a database. For this reason, Shoddy also has
+`Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. They take the
+operation, so the stop at the first error is part of the call. Use
+`collect/2` for results that already exist.
+
+The name `traverse` comes from functional programming. There, it names a
+map with a function that can fail, which returns one result for the whole
+list.
+
+`collect/2` does not accept a map. A map is enumerable, but its elements
+are key-value tuples, not results. A map as the first argument is thus a
+mistake, and `FunctionClauseError` tells the caller at once.
 
 ## A reduction that can fail
 

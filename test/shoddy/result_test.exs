@@ -861,6 +861,75 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "traverse/2" do
+    test "returns the values in the order of the input, and nil for a bare :ok" do
+      assert traverse([1, 2, 3], &{:ok, &1 * 10}) == {:ok, [10, 20, 30]}
+      assert traverse([1, 2], fn _ -> :ok end) == {:ok, [nil, nil]}
+      assert traverse([], fn _ -> flunk("the function must not run") end) == {:ok, []}
+    end
+
+    test "returns the first error with no change, also a bare :error" do
+      assert traverse([1, 2, 3], &if(&1 == 1, do: {:ok, &1}, else: {:error, &1})) == {:error, 2}
+      assert traverse([1, 2], fn _ -> :error end) == :error
+    end
+
+    test "calls the function for no element after the first error" do
+      parent = self()
+
+      fun = fn element ->
+        send(parent, {:called, element})
+        if element == 2, do: {:error, :bad}, else: {:ok, element}
+      end
+
+      assert traverse([1, 2, 3], fun) == {:error, :bad}
+      assert_received {:called, 2}
+      refute_received {:called, 3}
+    end
+
+    test "stops at the first error of an infinite stream" do
+      assert traverse(Stream.iterate(1, &(&1 + 1)), &if(&1 < 3, do: {:ok, &1}, else: {:error, &1})) == {:error, 3}
+    end
+
+    test "raises ArgumentError for a return value that is not a result" do
+      assert_raise ArgumentError, ~r/expected a result, got: 42/, fn -> traverse([1], fn _ -> 42 end) end
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      error = assert_raise FunctionClauseError, fn -> apply(&traverse/2, [[1], fn -> :ok end]) end
+      assert {error.module, error.function} == {Shoddy.Result, :traverse}
+    end
+  end
+
+  describe "each_ok/2" do
+    test "returns :ok if each call returns an ok result" do
+      assert each_ok([1, 2], fn _ -> :ok end) == :ok
+      assert each_ok([1, 2], &{:ok, &1}) == :ok
+      assert each_ok([], fn _ -> flunk("the function must not run") end) == :ok
+    end
+
+    test "returns the first error with no change, and stops there" do
+      parent = self()
+
+      fun = fn element ->
+        send(parent, {:called, element})
+        if element == 2, do: {:error, :bad}, else: :ok
+      end
+
+      assert each_ok([1, 2, 3], fun) == {:error, :bad}
+      assert each_ok([1], fn _ -> :error end) == :error
+      refute_received {:called, 3}
+    end
+
+    test "raises ArgumentError for a return value that is not a result" do
+      assert_raise ArgumentError, ~r/expected a result, got: nil/, fn -> each_ok([1], fn _ -> nil end) end
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      error = assert_raise FunctionClauseError, fn -> apply(&each_ok/2, [[1], fn -> :ok end]) end
+      assert {error.module, error.function} == {Shoddy.Result, :each_ok}
+    end
+  end
+
   describe "collect_map/1" do
     test "gives nil for a bare :ok and for a bare :error" do
       assert collect_map(%{a: :ok, b: {:ok, 1}}) == {:ok, %{a: nil, b: 1}}

@@ -268,18 +268,34 @@ sections below show each value.
 ## Stop the work at the first error
 
 `Enum.map/2` parses each element, also after the first error. To stop at the
-first error, use `Stream.map/2`. `Shoddy.Result.collect/2` reads no element
-after the first error, so the stream does not parse `"5"` and `"-1"`:
+first error, use `Shoddy.Result.traverse/2`. It calls the function for each
+element in order, and it calls the function for no element after the first
+error. Thus it does not parse `"5"` and `"-1"`:
 
 ```elixir
-["41", "old", "5", "-1"]
-|> Stream.map(&parse_age/1)
-|> Shoddy.Result.collect()
+Shoddy.Result.traverse(["41", "old", "5", "-1"], &parse_age/1)
 #=> {:error, {"old", :invalid_age}}
+
+Shoddy.Result.traverse(["41", "5"], &parse_age/1)
+#=> {:ok, [41, 5]}
 ```
 
-This applies only to the default `on_error: :halt`. With `:skip` or
-`:accumulate`, `Shoddy.Result.collect/2` reads each element.
+For a function that returns `:ok` or an error, such as a write, use
+`Shoddy.Result.each_ok/2`. It keeps no value, and it returns `:ok` or the
+first error:
+
+```elixir
+Shoddy.Result.each_ok(rows, &insert_row/1)
+#=> :ok, or the first error of insert_row/1
+```
+
+`Stream.map/2` with `Shoddy.Result.collect/2` also stops at the first error.
+But a change from `Stream.map/2` to `Enum.map/2` gives the same result and
+calls the function for each element. Thus `traverse/2` is safer for a
+function that changes data.
+
+[The design of Shoddy](../explanation/design.md#a-stream-for-collect-and-traverse)
+tells why Shoddy has both forms.
 
 ## Keep the values and skip the errors
 
