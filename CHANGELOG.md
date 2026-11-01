@@ -155,3 +155,7 @@ The first release also contains these changes:
   a unit, and a value at the middle rounds up.
 - Add `Shoddy.Result.unwrap_lazy/2`. It calls a function for the default of
   an error, and it does not call the function for an ok result.
+- Add `Shoddy.Env.string/2`. It reads a string from an environment variable
+  and trims it. It treats a blank value as an absent value. The option
+  `:min_bytes` rejects a short value, and its message does not contain the
+  value.

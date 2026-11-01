@@ -666,6 +666,14 @@ a developer, the variable is often absent. If the functions checked the
 options only for a set variable, the mistake would pass each test. It
 would then stop the start in production.
 
+`Shoddy.Env.string/2` returns the trimmed value, by the same rule. The
+message for a value that is shorter than `:min_bytes` tells the size, and
+not the value. The other messages of `Shoddy.Env` contain the value,
+because a wrong port or flag is easier to correct when the operator sees
+it. A string variable often holds a secret, and a message can go into a
+log. The message for a blank value still contains the value, because
+whitespace is not a secret.
+
 The functions do not examine the default. A default of `nil` can then mark
 an optional setting. A default outside the range of `:min` and `:max` can
 mark a special case, such as "no limit".

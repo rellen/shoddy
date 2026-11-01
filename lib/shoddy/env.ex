@@ -13,6 +13,9 @@ defmodule Shoddy.Env do
 
       config :my_app, :hosts, Shoddy.Env.list("HOSTS", default: ["localhost"])
 
+      config :my_app, MyAppWeb.Endpoint,
+        secret_key_base: Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
+
   Each function raises an exception for a value that is not correct. The
   application then does not start with a wrong configuration, and the
   message tells the name of the variable.
@@ -112,6 +115,71 @@ defmodule Shoddy.Env do
     opts = Keyword.validate!(opts, [:default, :true_values, :false_values])
     read(name, opts, &Parse.boolean(&1, Keyword.take(opts, [:true_values, :false_values])))
   end
+
+  @doc """
+  Reads a string from an environment variable.
+
+  The function removes the whitespace at the start and at the end, and it
+  returns the rest of the value. For example, a secret from a file often
+  ends with a newline, and the function removes that newline.
+
+  `System.get_env/1` and `System.fetch_env!/1` return a blank value with no
+  change. A check such as `System.get_env("SECRET") || raise "..."` thus
+  accepts `""`. This function treats a blank value as an absent value.
+
+  ## Options
+
+    * `:default` - The value for an absent or blank variable. Without this
+      option, the function raises an exception for such a variable.
+
+    * `:min_bytes` - The lowest number of bytes of the trimmed value. For a
+      shorter value, the function raises `ArgumentError`. The default is
+      `nil`, which sets no limit.
+
+  The message for a value that is too short does not contain the value. A
+  string variable often holds a secret, and a message can go into a log.
+
+  This function raises `ArgumentError` for an unknown option, and for a
+  `:min_bytes` that is not a non-negative integer or `nil`.
+
+  ## Examples
+
+      iex> System.put_env("SHODDY_DOC_HOST", " example.com\\n")
+      iex> Shoddy.Env.string("SHODDY_DOC_HOST")
+      "example.com"
+
+      iex> System.put_env("SHODDY_DOC_HOST", "")
+      iex> Shoddy.Env.string("SHODDY_DOC_HOST", default: "localhost")
+      "localhost"
+
+      iex> System.put_env("SHODDY_DOC_SECRET", "short")
+      iex> Shoddy.Env.string("SHODDY_DOC_SECRET", min_bytes: 64)
+      ** (ArgumentError) the environment variable "SHODDY_DOC_SECRET" has 5 bytes, but it must have at least 64 bytes
+  """
+  @spec string(String.t(), keyword()) :: String.t() | default when default: any()
+  def string(name, opts \\ []) when is_binary(name) and is_list(opts) do
+    opts = Keyword.validate!(opts, [:default, min_bytes: nil])
+    min_bytes = opts |> Keyword.fetch!(:min_bytes) |> min_bytes!()
+
+    read(name, opts, fn
+      "" -> :absent
+      text -> {:ok, check_size!(text, name, min_bytes)}
+    end)
+  end
+
+  defp min_bytes!(min_bytes) when is_nil(min_bytes) or (is_integer(min_bytes) and min_bytes >= 0), do: min_bytes
+
+  defp min_bytes!(other), do: Shoddy.Option.invalid!(:min_bytes, "a non-negative integer or nil", other)
+
+  # This function raises the error itself. The message of value! contains
+  # the value, and the value of a string variable can be a secret.
+  defp check_size!(text, name, min_bytes) when is_integer(min_bytes) and byte_size(text) < min_bytes do
+    raise ArgumentError,
+          "the environment variable #{inspect(name)} has #{byte_size(text)} bytes, " <>
+            "but it must have at least #{min_bytes} bytes"
+  end
+
+  defp check_size!(text, _name, _min_bytes), do: text
 
   defp read(name, opts, parse) do
     raw = System.get_env(name)

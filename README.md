@@ -42,9 +42,9 @@ params = %{"name" => "Ada", "email" => nil}
   prefix or a suffix if it is absent.
 - `Shoddy.Parse` converts text, such as user input, into an integer, a
   float, a boolean or an allowed atom. It returns a result.
-- `Shoddy.Env` reads an integer, a boolean or a list from an environment
-  variable, for `config/runtime.exs`. It raises an exception for a wrong
-  value.
+- `Shoddy.Env` reads an integer, a boolean, a list or a string from an
+  environment variable, for `config/runtime.exs`. It raises an exception for
+  a wrong value.
 - `Shoddy.Numbers` divides two integers and rounds up, keeps a number in a
   range, and calculates a mean.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
