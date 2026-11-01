@@ -192,3 +192,7 @@ The first release also contains these changes:
   `catch: [:exit]`, an exit, such as the exit of `GenServer.call/3`, gives
   `{:error, {:exit, reason}}`. The option `:rescue` is now optional, but
   the function needs `:rescue`, `:catch`, or both.
+- Add `Shoddy.Result.after_ok/2`. It calls a function of arity 0 after `:ok`
+  or an ok tuple, so a pipeline can continue after a bare `:ok`.
+- Add `Shoddy.Result.then_keep/2`. It calls a step that can fail, and it
+  returns the value before the step, or the error of the step.

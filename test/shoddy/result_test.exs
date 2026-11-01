@@ -230,6 +230,57 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "after_ok/2" do
+    test "calls the function after :ok and after an ok tuple" do
+      assert after_ok(:ok, fn -> {:ok, :next} end) == {:ok, :next}
+      assert after_ok({:ok, :ignored}, fn -> :ok end) == :ok
+      assert after_ok({:ok, 1}, fn -> {:error, :later} end) == {:error, :later}
+    end
+
+    test "returns an error with no change, and does not call the function" do
+      fail = fn -> flunk("the function must not run") end
+      assert after_ok({:error, :bad}, fail) == {:error, :bad}
+      assert after_ok(:error, fail) == :error
+    end
+
+    test "raises FunctionClauseError for a value that is not a result or a function of the wrong arity" do
+      for args <- [[42, fn -> :ok end], [:ok, fn _ -> :ok end], [{:ok, 1}, nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&after_ok/2, args) end
+        assert {error.module, error.function} == {Shoddy.Result, :after_ok}
+      end
+    end
+  end
+
+  describe "then_keep/2" do
+    test "returns the value before the step for each ok result of the step" do
+      for step_result <- [:ok, {:ok, :other}] do
+        assert then_keep({:ok, :order}, fn :order -> step_result end) == {:ok, :order}
+      end
+    end
+
+    test "returns the error of the step with no change" do
+      assert then_keep({:ok, 1}, fn _ -> {:error, :full} end) == {:error, :full}
+      assert then_keep({:ok, 1}, fn _ -> :error end) == :error
+    end
+
+    test "returns :ok and each error with no change, and does not call the function" do
+      fail = fn _value -> flunk("the function must not run") end
+
+      for result <- [:ok, :error, {:error, :bad}] do
+        assert then_keep(result, fail) == result
+      end
+    end
+
+    test "raises ArgumentError for a return value of the step that is not a result" do
+      assert_raise ArgumentError, ~r/expected a result, got: :done/, fn -> then_keep({:ok, 1}, fn _ -> :done end) end
+    end
+
+    test "raises FunctionClauseError for a value that is not a result" do
+      error = assert_raise FunctionClauseError, fn -> apply(&then_keep/2, [42, fn _ -> :ok end]) end
+      assert {error.module, error.function} == {Shoddy.Result, :then_keep}
+    end
+  end
+
   describe "recover/2" do
     test "calls the function with an error tuple as it is" do
       assert recover({:error, :miss}, fn error -> {:ok, error} end) == {:ok, {:error, :miss}}

@@ -80,6 +80,43 @@ params
 | `%{"age" => "old"}` | `{:error, {"old", :invalid_age}}` |
 | `%{}` | `{:error, :no_age}` |
 
+## Continue after a step that returns :ok
+
+`Shoddy.Result.then_ok/2` returns a bare `:ok` with no change, and it does
+not call its function. Use `Shoddy.Result.after_ok/2` for the next step. Its
+function takes no argument:
+
+```elixir
+user
+|> authorize(:update)
+|> Shoddy.Result.after_ok(fn -> load_order(order_id) end)
+#=> the result of load_order/1, or the error of authorize/2
+```
+
+The same function gives a new value after a bare `:ok`:
+
+```elixir
+record
+|> delete()
+|> Shoddy.Result.after_ok(fn -> {:ok, record} end)
+#=> {:ok, record}, or the error of delete/1
+```
+
+## Keep the value after a step that can fail
+
+Use `Shoddy.Result.then_keep/2` for a step that returns `:ok` or an error,
+where the pipeline must continue with the value before the step:
+
+```elixir
+order
+|> update_order()
+|> Shoddy.Result.then_keep(&write_audit_log/1)
+#=> {:ok, order}, or the error of update_order/1 or write_audit_log/1
+```
+
+`Shoddy.Result.then_ok/2` would return the `:ok` of the log, and
+`Shoddy.Result.tap_ok/2` would ignore an error of the log.
+
 ## Call an operation that cannot fail
 
 Use `Shoddy.Result.map_ok/2`. It puts the return value of the operation into
