@@ -5,7 +5,7 @@ defmodule Shoddy.EnvTest do
 
   doctest Shoddy.Env
 
-  @doctest_names ["SHODDY_DOC_PORT", "SHODDY_DOC_DEBUG", "SHODDY_DOC_HOSTS"]
+  @doctest_names ["SHODDY_DOC_PORT", "SHODDY_DOC_DEBUG", "SHODDY_DOC_HOSTS", "SHODDY_DOC_HOST", "SHODDY_DOC_SECRET"]
 
   setup do
     name = "SHODDY_ENV_TEST_#{System.unique_integer([:positive])}"
@@ -128,6 +128,79 @@ defmodule Shoddy.EnvTest do
       for args <- [[:debug, []], ["DEBUG", :default]] do
         error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, args) end
         assert {error.module, error.function} == {Shoddy.Env, :boolean}
+      end
+    end
+  end
+
+  describe "string/2" do
+    test "returns the value without the whitespace at the start and at the end", %{name: name} do
+      System.put_env(name, " secret value\n")
+      assert string(name) == "secret value"
+    end
+
+    test "returns the default for an absent, empty or blank variable", %{name: name} do
+      assert string(name, default: "x") == "x"
+      System.put_env(name, "")
+      assert string(name, default: nil) == nil
+      System.put_env(name, " \n")
+      assert string(name, default: "x") == "x"
+    end
+
+    test "raises System.EnvError for an absent variable without a default", %{name: name} do
+      assert_raise System.EnvError, fn -> string(name) end
+    end
+
+    test "raises ArgumentError for a blank variable without a default", %{name: name} do
+      System.put_env(name, " ")
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" has no value: " "], fn -> string(name) end
+    end
+
+    test "accepts a value with exactly :min_bytes bytes after the trim", %{name: name} do
+      System.put_env(name, " abcd ")
+      assert string(name, min_bytes: 4) == "abcd"
+      assert string(name, min_bytes: 0) == "abcd"
+    end
+
+    test "counts bytes and not characters for :min_bytes", %{name: name} do
+      System.put_env(name, "éé")
+      assert string(name, min_bytes: 4) == "éé"
+
+      assert_raise ArgumentError, ~r/has 4 bytes, but it must have at least 5 bytes/, fn ->
+        string(name, min_bytes: 5)
+      end
+    end
+
+    test "raises ArgumentError without the value for a value that is too short", %{name: name} do
+      System.put_env(name, " hunter2 ")
+
+      error = assert_raise ArgumentError, fn -> string(name, min_bytes: 64, default: "x") end
+
+      assert error.message == ~s[the environment variable "#{name}" has 7 bytes, but it must have at least 64 bytes]
+      refute error.message =~ "hunter2"
+    end
+
+    test "returns the default with no check of :min_bytes", %{name: name} do
+      assert string(name, default: "", min_bytes: 64) == ""
+      System.put_env(name, " ")
+      assert string(name, default: "", min_bytes: 64) == ""
+    end
+
+    test "raises ArgumentError for a wrong :min_bytes also if the variable is absent", %{name: name} do
+      for min_bytes <- [-1, 1.5, "64", :large] do
+        assert_raise ArgumentError, ~r/invalid value for :min_bytes option/, fn ->
+          string(name, default: "x", min_bytes: min_bytes)
+        end
+      end
+    end
+
+    test "raises ArgumentError for an unknown option", %{name: name} do
+      assert_raise ArgumentError, fn -> string(name, min: 1) end
+    end
+
+    test "raises FunctionClauseError from string/2 itself for a name that is not a string" do
+      for args <- [[:secret, []], ["SECRET", :default]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&string/2, args) end
+        assert {error.module, error.function} == {Shoddy.Env, :string}
       end
     end
   end

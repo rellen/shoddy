@@ -82,5 +82,35 @@ default.
 
 ## Read a string
 
-Use `System.get_env/2` or `System.fetch_env!/1`. A string needs no
-conversion.
+Use `Shoddy.Env.string/2`. It trims the value, and it treats a blank value
+as an absent value:
+
+```elixir
+config :my_app, MyApp.Repo, url: Shoddy.Env.string("DATABASE_URL")
+
+config :my_app, :mail_from_name, Shoddy.Env.string("MAIL_FROM_NAME", default: "Example")
+```
+
+Do not use `System.get_env/1` with `|| raise`, or `System.fetch_env!/1`.
+These forms accept a variable that is set to `""`, so a blank secret passes
+the check.
+
+## Require a minimum size for a secret
+
+Give the option `:min_bytes`. For a shorter value, the application does not
+start:
+
+```elixir
+config :my_app, MyAppWeb.Endpoint,
+  secret_key_base: Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
+```
+
+```elixir
+# SECRET_KEY_BASE="short"
+Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
+#=> ** (ArgumentError) the environment variable "SECRET_KEY_BASE" has 5 bytes, but it must have at least 64 bytes
+```
+
+The message does not contain the value. Plug needs at least 64 bytes for the
+secret key base of a cookie store. Without the option, a short key causes an
+error only at the first request that uses the session.

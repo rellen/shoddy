@@ -14,7 +14,7 @@ of each module gives the full description of each function.
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/2`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
-| `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2` |
+| `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` |
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3`, `Shoddy.Numbers.mean/1` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
@@ -206,8 +206,8 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
 | `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string of exactly one grapheme, for `Shoddy.Strings.mask/2`. |
 | `ArgumentError` | An empty separator, an empty list, or a list with a value that is not a non-empty string, for `Shoddy.Strings.split_trim/2`. |
-| `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
-| `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2` and `Shoddy.Env.list/2`. |
+| `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2` and `Shoddy.Env.string/2`. A value that is shorter than the option `:min_bytes`, for `Shoddy.Env.string/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
+| `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2` and `Shoddy.Env.string/2`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. The key `:__struct__` is not a field. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
 
