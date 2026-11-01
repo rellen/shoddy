@@ -33,6 +33,35 @@ Shoddy.Result.from_nil(params["age"], :no_age)
 #=> {:ok, "36"}
 ```
 
+## Start from a tuple with three elements
+
+Give the tuple to `Shoddy.Result.normalize/1` first. The other functions of
+`Shoddy.Result` do not accept it:
+
+```elixir
+"2026-10-01T12:00:00+02:00"
+|> DateTime.from_iso8601()
+|> Shoddy.Result.normalize()
+#=> {:ok, {~U[2026-10-01 10:00:00Z], 7200}}
+
+Shoddy.Result.normalize({:error, :email, "is not valid"})
+#=> {:error, {:email, "is not valid"}}
+```
+
+The function keeps each element. To keep only the value, call
+`Shoddy.Result.map_ok/2` next:
+
+```elixir
+"2026-10-01T12:00:00+02:00"
+|> DateTime.from_iso8601()
+|> Shoddy.Result.normalize()
+|> Shoddy.Result.map_ok(fn {datetime, _offset} -> datetime end)
+#=> {:ok, ~U[2026-10-01 10:00:00Z]}
+```
+
+Do not drop the third element when it needs more work. For example, the
+notifications of `{:ok, record, notifications}` from Ash must still be sent.
+
 ## Call an operation that can fail
 
 Use `Shoddy.Result.then_ok/2`. The operation must return an ok tuple or an

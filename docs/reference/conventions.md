@@ -40,7 +40,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.normalize/1`, the result or the tuple of three elements. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
@@ -138,6 +138,10 @@ A bare `:ok` has the value `nil`, and a bare `:error` has the reason `nil`:
 `Shoddy.Result.collect/2` receive the error as it is: `{:error, reason}` or a
 bare `:error`.
 
+`Shoddy.Result` does not accept a tuple with three elements, such as
+`{:ok, value, extra}`. Give such a tuple to `Shoddy.Result.normalize/1`
+first.
+
 `Shoddy.Lists.single/1`, `Shoddy.Maps.fetch_keys/2` and most functions of
 `Shoddy.Parse` also return a result: `{:ok, value}` or `{:error, reason}`.
 Thus the functions of `Shoddy.Result` accept their return values.
@@ -204,6 +208,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option, a value that is not a list of strings, or a text in the two lists, for `Shoddy.Parse.boolean/2`. |
 | `ArgumentError` | An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
+| `ArgumentError` | A value that is not a result and not a tuple of three elements with `:ok` or `:error` first, for `Shoddy.Result.normalize/1`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2`. A function of `Shoddy.Result.unwrap!/2` that returns a value that is not a string. |
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. |
 | `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
