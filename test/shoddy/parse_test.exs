@@ -67,11 +67,21 @@ defmodule Shoddy.ParseTest do
       assert_raise ArgumentError, ~r/higher than the option :max/, fn -> integer("1", min: 5, max: 1) end
     end
 
-    test "raises FunctionClauseError for text that is not a binary, from integer/2 itself" do
-      for args <- [[42, []], [nil, []], ["1", :min]] do
-        error = assert_raise FunctionClauseError, fn -> apply(&integer/2, args) end
-        assert {error.module, error.function} == {Shoddy.Parse, :integer}
+    test "returns :not_a_string for a value that is not a string" do
+      for value <- [42, nil, ["1"], %{"a" => "1"}, :"1", {"1"}] do
+        assert integer(value) == {:error, :not_a_string}
+        assert integer(value, min: 1, max: 9) == {:error, :not_a_string}
       end
+    end
+
+    test "raises ArgumentError for a wrong option also for a value that is not a string" do
+      assert_raise ArgumentError, ~r/higher than/, fn -> integer(nil, min: 5, max: 1) end
+      assert_raise ArgumentError, fn -> integer(42, minimum: 1) end
+    end
+
+    test "raises FunctionClauseError from integer/2 itself for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&integer/2, ["1", :min]) end
+      assert {error.module, error.function} == {Shoddy.Parse, :integer}
     end
   end
 
@@ -107,11 +117,17 @@ defmodule Shoddy.ParseTest do
       assert_raise ArgumentError, ~r/higher than/, fn -> float("1", min: 2.0, max: 1) end
     end
 
-    test "raises FunctionClauseError from float/2 itself for an argument of the wrong type" do
-      for args <- [[1.5, []], [nil, []], ["1", :min]] do
-        error = assert_raise FunctionClauseError, fn -> apply(&float/2, args) end
-        assert {error.module, error.function} == {Shoddy.Parse, :float}
+    test "returns :not_a_string for a value that is not a string" do
+      for value <- [1.5, 1, nil, ["1.5"], %{}] do
+        assert float(value) == {:error, :not_a_string}
       end
+
+      assert_raise ArgumentError, ~r/higher than/, fn -> float(1.5, min: 2.0, max: 1) end
+    end
+
+    test "raises FunctionClauseError from float/2 itself for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&float/2, ["1", :min]) end
+      assert {error.module, error.function} == {Shoddy.Parse, :float}
     end
   end
 
@@ -148,11 +164,19 @@ defmodule Shoddy.ParseTest do
       end
     end
 
-    test "raises FunctionClauseError from boolean/2 itself for an argument of the wrong type" do
-      for args <- [[true, []], [nil, []], ["true", :opts]] do
-        error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, args) end
-        assert {error.module, error.function} == {Shoddy.Parse, :boolean}
+    test "returns :not_a_string for a value that is not a string" do
+      for value <- [true, false, nil, ["true"], %{"x" => "true"}] do
+        assert boolean(value) == {:error, :not_a_string}
       end
+
+      assert_raise ArgumentError, ~r/in :true_values and in :false_values/, fn ->
+        boolean(nil, true_values: ["x"], false_values: ["x"])
+      end
+    end
+
+    test "raises FunctionClauseError from boolean/2 itself for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&boolean/2, ["true", :opts]) end
+      assert {error.module, error.function} == {Shoddy.Parse, :boolean}
     end
   end
 
@@ -202,8 +226,12 @@ defmodule Shoddy.ParseTest do
       end
     end
 
-    test "raises FunctionClauseError for text that is not a binary" do
-      assert_raise FunctionClauseError, fn -> apply(&one_of/2, [:a, [:a]]) end
+    test "returns :not_a_string for a value that is not a string, also for the atom itself" do
+      for value <- [:a, nil, ["a"], %{}] do
+        assert one_of(value, [:a, nil]) == {:error, :not_a_string}
+      end
+
+      assert_raise ArgumentError, ~r/must be a list of atoms/, fn -> one_of(:a, [:a, "b"]) end
     end
 
     test "raises FunctionClauseError for an allowed argument that is not a list" do

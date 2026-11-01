@@ -10,6 +10,12 @@ defmodule Shoddy.Parse do
   with a correct value and continues with other characters. It also does not
   trim the text. To accept spaces at the two ends, call `String.trim/1` first.
 
+  Each function accepts a value of each type as the text. For a value that is
+  not a string, it returns `{:error, :not_a_string}`. A forged request can
+  send a list or a map in the place of a string, and a data layer can return
+  a struct. The function checks its options first, so a wrong option raises
+  also for such a value.
+
   The module contains these functions:
 
   - `integer/2` converts text into an integer. It can also check a range.
@@ -57,6 +63,9 @@ defmodule Shoddy.Parse do
       iex> Shoddy.Parse.integer("")
       {:error, :not_an_integer}
 
+      iex> Shoddy.Parse.integer(["42"])
+      {:error, :not_a_string}
+
   The function does not trim the text:
 
       iex> Shoddy.Parse.integer(" 42")
@@ -81,15 +90,20 @@ defmodule Shoddy.Parse do
       ...> |> Shoddy.Result.unwrap(1)
       3
   """
-  @spec integer(String.t(), keyword()) :: {:ok, integer()} | {:error, :not_an_integer | :too_small | :too_large}
-  def integer(text, opts \\ []) when is_binary(text) and is_list(opts) do
+  @spec integer(term(), keyword()) ::
+          {:ok, integer()} | {:error, :not_a_string | :not_an_integer | :too_small | :too_large}
+  def integer(text, opts \\ []) when is_list(opts) do
     {min, max} = limits!(opts, :integer)
 
-    case Integer.parse(text) do
+    case parse_integer(text) do
       {value, ""} -> check_range(value, min, max)
+      :not_a_string -> {:error, :not_a_string}
       _other -> {:error, :not_an_integer}
     end
   end
+
+  defp parse_integer(text) when is_binary(text), do: Integer.parse(text)
+  defp parse_integer(_other), do: :not_a_string
 
   defp limits!(opts, kind) do
     opts = Keyword.validate!(opts, min: nil, max: nil)
@@ -168,18 +182,24 @@ defmodule Shoddy.Parse do
       iex> Shoddy.Parse.float("1.5 kg")
       {:error, :not_a_float}
 
+      iex> Shoddy.Parse.float(%{"value" => "1.5"})
+      {:error, :not_a_string}
+
       iex> Shoddy.Parse.float("0.5", min: 1)
       {:error, :too_small}
   """
-  @spec float(String.t(), keyword()) :: {:ok, float()} | {:error, :not_a_float | :too_small | :too_large}
-  def float(text, opts \\ []) when is_binary(text) and is_list(opts) do
+  @spec float(term(), keyword()) :: {:ok, float()} | {:error, :not_a_string | :not_a_float | :too_small | :too_large}
+  def float(text, opts \\ []) when is_list(opts) do
     {min, max} = limits!(opts, :number)
 
     case parse_float(text) do
       {value, ""} -> check_range(value, min, max)
+      :not_a_string -> {:error, :not_a_string}
       _other -> {:error, :not_a_float}
     end
   end
+
+  defp parse_float(text) when not is_binary(text), do: :not_a_string
 
   defp parse_float(text) do
     Float.parse(text)
@@ -220,14 +240,17 @@ defmodule Shoddy.Parse do
       iex> Shoddy.Parse.boolean("yes")
       {:error, :not_a_boolean}
 
+      iex> Shoddy.Parse.boolean(true)
+      {:error, :not_a_string}
+
   Give the lists for other texts, such as the value of an environment
   variable:
 
       iex> Shoddy.Parse.boolean("1", true_values: ["1", "true"], false_values: ["0", "false"])
       {:ok, true}
   """
-  @spec boolean(String.t(), keyword()) :: {:ok, boolean()} | {:error, :not_a_boolean}
-  def boolean(text, opts \\ []) when is_binary(text) and is_list(opts) do
+  @spec boolean(term(), keyword()) :: {:ok, boolean()} | {:error, :not_a_string | :not_a_boolean}
+  def boolean(text, opts \\ []) when is_list(opts) do
     opts = Keyword.validate!(opts, true_values: ["true"], false_values: ["false"])
     true_values = texts!(opts, :true_values)
     false_values = texts!(opts, :false_values)
@@ -237,6 +260,7 @@ defmodule Shoddy.Parse do
     end
 
     cond do
+      not is_binary(text) -> {:error, :not_a_string}
       text in true_values -> {:ok, true}
       text in false_values -> {:ok, false}
       true -> {:error, :not_a_boolean}
@@ -288,6 +312,9 @@ defmodule Shoddy.Parse do
       iex> Shoddy.Parse.one_of("DESC", [:asc, :desc])
       {:error, :not_allowed}
 
+      iex> Shoddy.Parse.one_of(:desc, [:asc, :desc])
+      {:error, :not_a_string}
+
   Give a keyword list to select another value for each text:
 
       iex> Shoddy.Parse.one_of("s3", local: MyApp.LocalStorage, s3: MyApp.S3Storage)
@@ -301,11 +328,15 @@ defmodule Shoddy.Parse do
       ...> |> Shoddy.Result.unwrap(:inserted_at)
       :name
   """
-  @spec one_of(String.t(), [atom()] | keyword()) :: {:ok, any()} | {:error, :not_allowed}
-  def one_of(text, allowed) when is_binary(text) and is_list(allowed) do
-    allowed
-    |> allowed_pairs!()
-    |> Enum.find_value({:error, :not_allowed}, fn {atom, value} ->
+  @spec one_of(term(), [atom()] | keyword()) :: {:ok, any()} | {:error, :not_a_string | :not_allowed}
+  def one_of(text, allowed) when is_list(allowed) do
+    pairs = allowed_pairs!(allowed)
+
+    if is_binary(text), do: find_allowed(pairs, text), else: {:error, :not_a_string}
+  end
+
+  defp find_allowed(pairs, text) do
+    Enum.find_value(pairs, {:error, :not_allowed}, fn {atom, value} ->
       if Atom.to_string(atom) == text, do: {:ok, value}
     end)
   end

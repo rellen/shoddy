@@ -166,3 +166,6 @@ The first release also contains these changes:
   allowed names.
 - `Shoddy.Parse.one_of/2` also accepts a keyword list. It then returns the
   value of the key that has the text as its name.
+- The functions of `Shoddy.Parse` return `{:error, :not_a_string}` for a
+  value that is not a string. Before this change, they raised
+  `FunctionClauseError`.

@@ -167,6 +167,27 @@ function of `Shoddy.Parse`, and combine the results:
 #=> {:ok, [3, 1, 2]}
 ```
 
+## Handle a parameter that is not a string
+
+A request can send a list or a map in the place of a string. For example,
+`?page[]=2` gives `%{"page" => ["2"]}`. Each function of `Shoddy.Parse`
+returns `{:error, :not_a_string}` for such a value, so the page does not
+fail:
+
+```elixir
+%{"page" => ["2"]}
+|> Map.get("page", "1")
+|> Parse.integer(min: 1)
+#=> {:error, :not_a_string}
+```
+
+Thus `Shoddy.Result.unwrap/2` returns the default for this value too. Do
+not call `String.trim/1` before the function for such input, because
+`String.trim/1` raises for a list.
+
+[The design of Shoddy](../explanation/design.md#why-parse-accepts-a-value-of-each-type)
+tells why the functions return an error and do not raise.
+
 ## Accept spaces around the value
 
 The functions do not trim the text. Call `String.trim/1` first:
