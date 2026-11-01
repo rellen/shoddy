@@ -1160,7 +1160,7 @@ defmodule Shoddy.Result do
   defp collect_entry({key, :error}, {values, reasons}), do: {values, Map.put(reasons, key, nil)}
 
   @doc """
-  Calls a function, and converts the given exceptions into an error result.
+  Calls a function, and converts the given exceptions and exits into an error result.
 
   If `fun` returns a value, this function returns `{:ok, value}`. If `fun`
   raises one of the exceptions in the option `:rescue`, this function
@@ -1172,17 +1172,33 @@ defmodule Shoddy.Result do
   compares that exception with the list. An Erlang error that is not in the
   list continues as the original term.
 
-  The option `:rescue` is required. It is a list of exception modules, such
-  as `[ArgumentError]`. This function never rescues each exception, because
-  an unexpected exception is usually a defect in the program, and a result
-  would hide it.
+  The option `:catch` is a list of classes. The only accepted class is
+  `:exit`. With `catch: [:exit]`, an exit of `fun` gives
+  `{:error, {:exit, reason}}`. An example is a call to a process that is
+  busy, stopped or absent: `GenServer.call/3` then exits with a reason such
+  as `{:timeout, {GenServer, :call, args}}`. Without the option, an exit
+  continues.
+
+  Give `:rescue`, `:catch`, or both. The option `:rescue` is a list of
+  exception modules, such as `[ArgumentError]`. This function catches only
+  the failures that you list, because an unexpected failure is usually a
+  defect in the program, and a result would hide it. A throw always
+  continues.
+
+  The function catches only an exit of the caller itself, for example from
+  `exit/1` or from `GenServer.call/3`. It does not catch an exit signal from
+  a linked process. Such a signal stops the caller, unless the caller traps
+  exits.
 
   This function puts each return value into an ok tuple, also a result. To
   remove the extra tuple, call `flatten/1` on the result.
 
-  This function raises `ArgumentError` for an unknown option, for an absent
-  or empty `:rescue`, and for a module in `:rescue` that is not an
-  exception.
+  This function raises `ArgumentError` for these options:
+
+  - An unknown option.
+  - No exception module in `:rescue` and no class in `:catch`.
+  - A module in `:rescue` that is not an exception.
+  - A class in `:catch` other than `:exit`.
 
   ## Examples
 
@@ -1196,10 +1212,22 @@ defmodule Shoddy.Result do
 
       iex> Shoddy.Result.attempt(fn -> raise "boom" end, rescue: [ArgumentError])
       ** (RuntimeError) boom
+
+  With `catch: [:exit]`, an exit gives an error tuple:
+
+      iex> Shoddy.Result.attempt(fn -> GenServer.call(:shoddy_doc_no_server, :status) end, catch: [:exit])
+      {:error, {:exit, {:noproc, {GenServer, :call, [:shoddy_doc_no_server, :status, 5000]}}}}
+
+  Use `map_error/2` to change the reason:
+
+      iex> fn -> GenServer.call(:shoddy_doc_no_server, :status) end
+      ...> |> Shoddy.Result.attempt(catch: [:exit])
+      ...> |> Shoddy.Result.map_error(fn {:exit, _reason} -> :not_running end)
+      {:error, :not_running}
   """
-  @spec attempt((-> value), keyword()) :: {:ok, value} | {:error, Exception.t()} when value: any()
+  @spec attempt((-> value), keyword()) :: {:ok, value} | {:error, Exception.t() | {:exit, any()}} when value: any()
   def attempt(fun, opts) when is_function(fun, 0) and is_list(opts) do
-    exceptions = exceptions!(opts)
+    {exceptions, classes} = attempt_options!(opts)
 
     try do
       {:ok, fun.()}
@@ -1210,22 +1238,42 @@ defmodule Shoddy.Result do
         if exception.__struct__ in exceptions,
           do: {:error, exception},
           else: :erlang.raise(:error, reason, __STACKTRACE__)
+
+      :exit, reason ->
+        if :exit in classes,
+          do: {:error, {:exit, reason}},
+          else: :erlang.raise(:exit, reason, __STACKTRACE__)
     end
   end
 
-  defp exceptions!(opts) do
-    Keyword.validate!(opts, [:rescue])
-    |> Keyword.fetch(:rescue)
-    |> case do
-      {:ok, [_ | _] = modules} ->
-        Enum.each(modules, &exception_module!/1)
-        modules
+  defp attempt_options!(opts) do
+    opts = Keyword.validate!(opts, rescue: [], catch: [])
+    exceptions = opts |> Keyword.fetch!(:rescue) |> exceptions!()
+    classes = opts |> Keyword.fetch!(:catch) |> classes!()
 
-      other ->
-        raise ArgumentError,
-              "the option :rescue must be a non-empty list of exception modules, got: #{inspect(other)}"
+    if exceptions == [] and classes == [] do
+      raise ArgumentError, "give a non-empty list in the option :rescue, in the option :catch, or in both"
     end
+
+    {exceptions, classes}
   end
+
+  defp exceptions!(modules) when is_list(modules) do
+    Enum.each(modules, &exception_module!/1)
+    modules
+  end
+
+  defp exceptions!(other), do: Shoddy.Option.invalid!(:rescue, "a list of exception modules", other)
+
+  # Only :exit is accepted. A throw is a jump in the control flow, not a
+  # failure, and :error is the class of the exceptions of :rescue.
+  defp classes!(classes) when is_list(classes) do
+    if Enum.all?(classes, &(&1 == :exit)),
+      do: classes,
+      else: Shoddy.Option.invalid!(:catch, "a list that contains only :exit", classes)
+  end
+
+  defp classes!(other), do: Shoddy.Option.invalid!(:catch, "a list that contains only :exit", other)
 
   defp exception_module!(module) do
     if not (is_atom(module) and Code.ensure_loaded?(module) and function_exported?(module, :exception, 1)) do

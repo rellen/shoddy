@@ -229,7 +229,7 @@ error has a meaning. A map has no order that a program can use, so a
 The usual map of results is a form, and a form shows each error at one
 time. Thus the function returns a map of reasons with the same keys.
 
-## Why attempt needs a list of exceptions
+## Why attempt needs a list of failures
 
 `Shoddy.Result.attempt/2` rescues only the exceptions in its option
 `:rescue`. A function that rescued each exception would also convert a
@@ -239,6 +239,18 @@ defect would be difficult to find. The list states which failures are
 expected. Each other exception continues with its stacktrace. An Erlang
 error, such as `:badarg`, continues as the original term. Thus a `catch`
 around the call matches it as if `attempt/2` were not present.
+
+An exit is a failure of another kind. Erlang puts each failure into one of
+three classes: `:error`, `:exit` and `:throw`. An exception has the class
+`:error`. A call to a process exits when the process does not answer, and
+the caller cannot prevent that. Thus `attempt/2` also has the option
+`:catch`, which names a class, in the same way as the clauses `rescue` and
+`catch` of `try`. Nothing is caught unless the caller names it. The only
+accepted class is `:exit`. A throw is a jump in the control flow, not a
+failure, and `:error` is the class of the exceptions in `:rescue`.
+
+An exit gives `{:error, {:exit, reason}}`, and an exception gives
+`{:error, exception}`. Thus `map_error/2` can tell the two kinds apart.
 
 ## The message of unwrap!
 

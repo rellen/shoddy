@@ -188,3 +188,7 @@ The first release also contains these changes:
 - Add `Shoddy.Result.normalize/1`. It converts `{:ok, value, extra}` into
   `{:ok, {value, extra}}` and `{:error, first, second}` into
   `{:error, {first, second}}`. It keeps each element.
+- Add the option `:catch` to `Shoddy.Result.attempt/2`. With
+  `catch: [:exit]`, an exit, such as the exit of `GenServer.call/3`, gives
+  `{:error, {:exit, reason}}`. The option `:rescue` is now optional, but
+  the function needs `:rescue`, `:catch`, or both.
