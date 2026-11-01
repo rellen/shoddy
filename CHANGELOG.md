@@ -185,3 +185,6 @@ The first release also contains these changes:
   only for a falsy condition.
 - Add `Shoddy.Result.from_errors/2`. For an empty list of errors, it builds
   a value and returns it in an ok tuple. Otherwise, it returns the errors.
+- Add `Shoddy.Result.normalize/1`. It converts `{:ok, value, extra}` into
+  `{:ok, {value, extra}}` and `{:error, first, second}` into
+  `{:error, {first, second}}`. It keeps each element.

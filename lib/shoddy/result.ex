@@ -24,6 +24,8 @@ defmodule Shoddy.Result do
   - `ok?/1` and `error?/1` always return a boolean. For an input that is not
     a result, they return `false`.
   - `flatten/1` returns an input that is not a result with no change.
+  - `normalize/1` converts a tuple with three elements into a result. It
+    raises `ArgumentError` for another value that is not a result.
   - `from_nil/2`, `ensure/3` and `ok_if/2` are constructors and accept all
     values.
 
@@ -513,6 +515,57 @@ defmodule Shoddy.Result do
   @spec flatten(t(t(a, e), e)) :: t(a, e) when a: any(), e: any()
   def flatten({:ok, inner}) when is_ok(inner) or is_error(inner), do: inner
   def flatten(other), do: other
+
+  @doc """
+  Converts a tuple with three elements into a result.
+
+  Some functions return a tuple with three elements. For example,
+  `DateTime.from_iso8601/1` returns `{:ok, datetime, offset}`. The other
+  functions of this module do not accept such a tuple. This function
+  converts it:
+
+  - `{:ok, value, extra}` becomes `{:ok, {value, extra}}`.
+  - `{:error, first, second}` becomes `{:error, {first, second}}`.
+
+  The function keeps each element, so it never loses data. For example, Ash
+  returns `{:ok, record, notifications}`, and the caller must send the
+  notifications later. To keep only the value, call `map_ok/2` after this
+  function.
+  - This function returns a result in one of the four forms with no change.
+
+  This function raises `ArgumentError` for another value.
+
+  ## Examples
+
+      iex> Shoddy.Result.normalize(DateTime.from_iso8601("2026-10-01T12:00:00+02:00"))
+      {:ok, {~U[2026-10-01 10:00:00Z], 7200}}
+
+      iex> Shoddy.Result.normalize({:error, :email, "is not valid"})
+      {:error, {:email, "is not valid"}}
+
+      iex> Shoddy.Result.normalize({:ok, 42})
+      {:ok, 42}
+
+      iex> Shoddy.Result.normalize(:error)
+      :error
+
+  Call `map_ok/2` to keep only the value:
+
+      iex> "2026-10-01T12:00:00+02:00"
+      ...> |> DateTime.from_iso8601()
+      ...> |> Shoddy.Result.normalize()
+      ...> |> Shoddy.Result.map_ok(fn {datetime, _offset} -> datetime end)
+      {:ok, ~U[2026-10-01 10:00:00Z]}
+  """
+  @spec normalize({:ok, a, x} | {:error, e1, e2} | t(a, e)) :: t(a | {a, x}, e | {e1, e2})
+        when a: any(), x: any(), e: any(), e1: any(), e2: any()
+  def normalize({:ok, value, extra}), do: {:ok, {value, extra}}
+  def normalize({:error, first, second}), do: {:error, {first, second}}
+  def normalize(result) when is_ok(result) or is_error(result), do: result
+
+  def normalize(other) do
+    raise ArgumentError, "expected a result or a tuple of three elements, got: #{inspect(other)}"
+  end
 
   @doc """
   Converts a value that can be `nil` into a result tuple.

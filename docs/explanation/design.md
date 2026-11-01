@@ -136,6 +136,21 @@ that is not a result. Such an input is a defect in the program. An error at
 the place of the defect is easier to find than a wrong value at a later
 place.
 
+A tuple with three elements, such as `{:ok, value, extra}`, is also not a
+result. Some functions return such a tuple, for example
+`DateTime.from_iso8601/1`. `Shoddy.Result.normalize/1` is the one function
+that accepts it. A strict rule in the other functions still finds a wrong
+input at its place. The caller converts a tuple with three elements on
+purpose, at one visible step.
+
+`normalize/1` keeps each element of the tuple. The third element of an ok
+tuple is sometimes only extra data, such as the offset of
+`DateTime.from_iso8601/1`. But Ash returns `{:ok, record, notifications}`,
+and the caller must send the notifications. A function that discarded the
+third element would lose them, and no error would tell the caller. A
+caller who does not need the element removes it with `map_ok/2`, at a
+visible step. The error side keeps both parts for the same reason.
+
 The predicates `Shoddy.Result.ok?/1` and `Shoddy.Result.error?/1` are
 different. They return `false` for each input that is not a result. Thus you
 can use them with `Enum.filter/2` on a list of any values.

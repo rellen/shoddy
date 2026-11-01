@@ -406,6 +406,31 @@ defmodule Shoddy.ResultTest do
     end
   end
 
+  describe "normalize/1" do
+    test "keeps the value and the third element of an ok tuple" do
+      assert normalize({:ok, :record, [:notification]}) == {:ok, {:record, [:notification]}}
+      assert normalize({:ok, nil, nil}) == {:ok, {nil, nil}}
+    end
+
+    test "puts the two parts of a reason into one tuple" do
+      assert normalize({:error, :email, "is not valid"}) == {:error, {:email, "is not valid"}}
+    end
+
+    test "returns each of the four forms of a result with no change" do
+      for result <- [:ok, {:ok, 1}, :error, {:error, :bad}] do
+        assert normalize(result) == result
+      end
+    end
+
+    test "raises ArgumentError for another value" do
+      for value <- [42, nil, {:ok}, {:ok, 1, 2, 3}, {:other, 1, 2}, {:error, 1, 2, 3}] do
+        assert_raise ArgumentError, ~r/expected a result or a tuple of three elements, got: /, fn ->
+          apply(&normalize/1, [value])
+        end
+      end
+    end
+  end
+
   describe "from_nil/2" do
     test "puts a value that is not nil into an ok tuple" do
       assert from_nil(42, :not_found) == {:ok, 42}
