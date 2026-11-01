@@ -63,8 +63,8 @@ defmodule Shoddy.MapsTest do
     end
 
     test "raises FunctionClauseError for a first argument that is not a map" do
-      assert_raise FunctionClauseError, fn -> put_if([a: 1], :b, 2) end
-      assert_raise FunctionClauseError, fn -> put_if(nil, :b, 2) end
+      assert_raise FunctionClauseError, fn -> apply(&put_if/3, [[a: 1], :b, 2]) end
+      assert_raise FunctionClauseError, fn -> apply(&put_if/3, [nil, :b, 2]) end
     end
   end
 
