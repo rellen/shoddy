@@ -40,7 +40,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3` and `Shoddy.Result.find_error/3`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
@@ -99,6 +99,7 @@ These functions do not use this rule:
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 | `Shoddy.Result.find_error/3` | The check, and the function that returns the reason for the bad element. | 1 |
 | `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
+| `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2` | The function to call with each element. It must return a result. | 1 |
 | `Shoddy.Result.attempt/2` | The function to call. | 0 |
 | `Shoddy.Result.unwrap_lazy/2` | The function that returns the default for an error. | 0 |
 | `Shoddy.Result.unwrap!/2` | The function that returns the message. It receives the reason. | 1 |
@@ -123,7 +124,8 @@ A bare `:ok` has the value `nil`, and a bare `:error` has the reason `nil`:
   `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2` return `nil` for a
   bare `:ok`. `Shoddy.Result.unwrap!/2` gives the reason `nil` to its
   function for a bare `:error`.
-- `Shoddy.Result.collect/2` puts `nil` into its list for a bare `:ok`.
+- `Shoddy.Result.collect/2` and `Shoddy.Result.traverse/2` put `nil` into
+  their list for a bare `:ok`.
 - `Shoddy.Result.reduce_ok/3` uses `nil` as the new accumulator for a bare
   `:ok`.
 - `Shoddy.Result.collect_map/1` gives the value `nil` for a bare `:ok`, and
@@ -200,7 +202,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Parse.one_of/2`. |
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2`. A function of `Shoddy.Result.unwrap!/2` that returns a value that is not a string. |
-| `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`. |
+| `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. |
 | `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
@@ -222,7 +224,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Env.one_of/3`. A value that is shorter than the option `:min_bytes`, for `Shoddy.Env.string/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
 | `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. The key `:__struct__` is not a field. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
-| `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3` or `Shoddy.Result.find_error/3` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
+| `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` or `Shoddy.Result.each_ok/2` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
 
 ## Names
 

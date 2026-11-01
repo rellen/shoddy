@@ -177,3 +177,6 @@ The first release also contains these changes:
   of the reason.
 - Add `Shoddy.Result.find_error/3`. It returns an error for the first
   element of an enumerable that fails a check, or `:ok`.
+- Add `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. They call a
+  function that can fail for each element, and they stop at the first
+  error. `traverse/2` returns the values, and `each_ok/2` returns `:ok`.

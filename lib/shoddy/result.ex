@@ -798,6 +798,10 @@ defmodule Shoddy.Result do
       iex> Shoddy.Result.collect(results, on_error: fn {:error, reason} -> {:halt, {:error, {:row, reason}}} end)
       {:error, {:row, :bad}}
 
+  To call an operation for each element and stop at the first error, use
+  `traverse/2`. Then a later change to the code cannot remove the stop by
+  mistake.
+
   Use the function after `Enum.map/2` or `Stream.map/2`. In the last
   example, the stream does not call `parse` for `"y"`:
 
@@ -889,6 +893,94 @@ defmodule Shoddy.Result do
         :ok -> {:cont, {:ok, nil}}
         error when is_error(error) -> {:halt, error}
         other -> raise ArgumentError, "invalid return value of the function: expected a result, got: #{inspect(other)}"
+      end
+    end)
+  end
+
+  @doc """
+  Calls a function that can fail for each element, and stops at the first error.
+
+  This function calls `fun` with each element, in order. `fun` must return a
+  result. If each call returns an ok result, this function returns the values
+  in an ok tuple, in the order of the input. A bare `:ok` gives the value
+  `nil`. For the first error, this function returns the error with no change,
+  and it calls `fun` for no further element.
+
+  The result is the same as `Enum.map/2` with `collect/1`, but the number of
+  calls is different. After `Enum.map/2`, `fun` has run for each element,
+  also after the first error. This difference is important when `fun` writes
+  to a database or sends a message. `Stream.map/2` with `collect/1` also
+  stops at the first error, but a reader can change `Stream` to `Enum` by
+  mistake.
+
+  The first argument can be a list, a stream or another enumerable.
+
+  This function raises `ArgumentError` if `fun` returns a value that is not
+  a result.
+
+  ## Examples
+
+      iex> Shoddy.Result.traverse(["1", "2"], &Shoddy.Parse.integer/1)
+      {:ok, [1, 2]}
+
+      iex> Shoddy.Result.traverse([], &Shoddy.Parse.integer/1)
+      {:ok, []}
+
+  The function stops at the first error. In this example, it does not call
+  the function for `"y"`:
+
+      iex> Shoddy.Result.traverse(["1", "x", "y"], fn text ->
+      ...>   text |> Shoddy.Parse.integer() |> Shoddy.Result.map_error(&{&1, text})
+      ...> end)
+      {:error, {:not_an_integer, "x"}}
+  """
+  @spec traverse(Enumerable.t(element), (element -> t(value, e))) :: {:ok, [value]} | :error | {:error, e}
+        when element: any(), value: any(), e: any()
+  def traverse(enumerable, fun) when is_function(fun, 1) do
+    case Enum.reduce_while(enumerable, [], &traverse_element(&1, &2, fun)) do
+      values when is_list(values) -> {:ok, Enum.reverse(values)}
+      {:halted, error} -> error
+    end
+  end
+
+  defp traverse_element(element, values, fun) do
+    case fun.(element) do
+      {:ok, value} -> {:cont, [value | values]}
+      :ok -> {:cont, [nil | values]}
+      error when is_error(error) -> {:halt, {:halted, error}}
+      other -> raise ArgumentError, "invalid return value of the function: expected a result, got: #{inspect(other)}"
+    end
+  end
+
+  @doc """
+  Calls a function that can fail for each element, and returns `:ok` or the first error.
+
+  This function does the same as `traverse/2`, but it keeps no value. If
+  each call returns an ok result, it returns `:ok`. For the first error, it
+  returns the error with no change, and it calls `fun` for no further
+  element.
+
+  Use this function when `fun` returns `:ok` or an error for each element,
+  for example a check or a write.
+
+  This function raises `ArgumentError` if `fun` returns a value that is not
+  a result.
+
+  ## Examples
+
+      iex> Shoddy.Result.each_ok([1, 2], fn n -> if n > 0, do: :ok, else: {:error, {:not_positive, n}} end)
+      :ok
+
+      iex> Shoddy.Result.each_ok([1, -2, -3], fn n -> if n > 0, do: :ok, else: {:error, {:not_positive, n}} end)
+      {:error, {:not_positive, -2}}
+  """
+  @spec each_ok(Enumerable.t(element), (element -> t(any(), e))) :: :ok | :error | {:error, e}
+        when element: any(), e: any()
+  def each_ok(enumerable, fun) when is_function(fun, 1) do
+    Enum.reduce_while(enumerable, :ok, fn element, :ok ->
+      case traverse_element(element, [], fun) do
+        {:cont, _values} -> {:cont, :ok}
+        {:halt, {:halted, error}} -> {:halt, error}
       end
     end)
   end
