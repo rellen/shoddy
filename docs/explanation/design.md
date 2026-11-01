@@ -160,6 +160,29 @@ The names of the functions end in `_ok` or `_error`, as in
 changes. An import of the module also does not bring a general name, such as
 `map`, into the scope.
 
+## Steps after an ok result
+
+A bare `:ok` has no value. `Shoddy.Result.map_ok/2` and
+`Shoddy.Result.then_ok/2` thus return it with no change, and they do not
+call their function. A function of arity 1 would need a value, and `nil`
+would hide that no value exists.
+
+Some steps need no value, for example a read after a check of a
+permission. `Shoddy.Result.after_ok/2` takes a function of arity 0, so it
+continues after a bare `:ok` and after an ok tuple. A separate function for
+a new value, such as `replace_ok/2`, is not necessary:
+`after_ok(result, fn -> {:ok, value} end)` does the same work.
+
+`Shoddy.Result.then_keep/2` keeps the value before a step. Three other
+functions do similar work, but each one loses something. `then_ok/2`
+returns the result of the step, so the pipeline loses the value.
+`map_ok/2` puts the result of the step into an ok tuple, so an error of the
+step becomes an ok value. `tap_ok/2` ignores the return value of the step,
+so the pipeline loses an error of the step.
+
+`then_keep/2` obeys the rule of `then_ok/2` for a bare `:ok`. It returns the
+`:ok` with no change, and it does not call the step.
+
 ## One constructor for each start
 
 `Shoddy.Result.from_errors/2` takes a list of errors and a function. It has

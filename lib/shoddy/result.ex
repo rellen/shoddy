@@ -13,9 +13,10 @@ defmodule Shoddy.Result do
 
   The functions accept the bare atoms `:ok` and `:error`, and also the tuples
   `{:ok, value}` and `{:error, reason}`. A bare `:ok` has no value. Thus
-  `map_ok/2` and `then_ok/2` return a bare `:ok` with no change, and
-  `unwrap!/1` and `unwrap/2` accept a bare `:ok` as a success and return
-  `nil`.
+  `map_ok/2`, `then_ok/2` and `then_keep/2` return a bare `:ok` with no
+  change, and `unwrap!/1` and `unwrap/2` accept a bare `:ok` as a success and
+  return `nil`. `after_ok/2` calls a function of arity 0, so it continues
+  after a bare `:ok`.
 
   Most of the functions raise `FunctionClauseError` if the input is not a
   result. A plain integer or an unrelated atom causes this error. These
@@ -266,6 +267,94 @@ defmodule Shoddy.Result do
   def then_ok(:ok, fun) when is_function(fun, 1), do: :ok
   def then_ok({:error, _} = error, fun) when is_function(fun, 1), do: error
   def then_ok(:error, fun) when is_function(fun, 1), do: :error
+
+  @doc """
+  Calls a function of arity 0 after an ok result.
+
+  For `:ok` or `{:ok, value}`, this function calls `fun` and returns its
+  return value. `fun` receives no value, so this function also continues
+  after a bare `:ok`. `then_ok/2` returns a bare `:ok` with no change, so it
+  cannot do this step. This function returns an error with no change, and
+  it does not call `fun`.
+
+  This function does not examine the return value of `fun`. Give a function
+  that returns a result, as for `then_ok/2`.
+
+  ## Examples
+
+      iex> Shoddy.Result.after_ok(:ok, fn -> {:ok, :loaded} end)
+      {:ok, :loaded}
+
+      iex> Shoddy.Result.after_ok({:error, :forbidden}, fn -> {:ok, :loaded} end)
+      {:error, :forbidden}
+
+  Use the function for a step that needs no value, such as a read after a
+  check:
+
+      iex> authorize = fn _user -> :ok end
+      iex> :admin
+      ...> |> authorize.()
+      ...> |> Shoddy.Result.after_ok(fn -> {:ok, [:order_1]} end)
+      {:ok, [:order_1]}
+
+  The function also gives a new value to an ok result:
+
+      iex> delete = fn _record -> :ok end
+      iex> record = %{id: 7}
+      iex> record |> delete.() |> Shoddy.Result.after_ok(fn -> {:ok, record} end)
+      {:ok, %{id: 7}}
+  """
+  @spec after_ok(t(any(), e), (-> t(b, e))) :: t(b, e) when b: any(), e: any()
+  def after_ok(result, fun) when is_ok(result) and is_function(fun, 0), do: fun.()
+  def after_ok({:error, _} = error, fun) when is_function(fun, 0), do: error
+  def after_ok(:error, fun) when is_function(fun, 0), do: :error
+
+  @doc """
+  Calls a step that can fail, and keeps the value before the step.
+
+  For `{:ok, value}`, this function calls `fun` with the value. `fun` must
+  return a result:
+
+  - For an ok result, this function returns `{:ok, value}` with the value
+    before the step. It discards the value of the step.
+  - For an error, this function returns the error with no change.
+
+  For `:ok` and for an error, this function returns the input with no change,
+  and it does not call `fun`. `then_ok/2` has the same rule.
+
+  Use this function for a step such as a write to a log, where the pipeline
+  must continue with the value before the step. `then_ok/2` returns the
+  result of the step, so it loses the value. `tap_ok/2` keeps the value, but
+  it ignores an error of the step.
+
+  This function raises `ArgumentError` if `fun` returns a value that is not
+  a result.
+
+  ## Examples
+
+      iex> write_log = fn _order -> :ok end
+      iex> Shoddy.Result.then_keep({:ok, %{id: 1}}, write_log)
+      {:ok, %{id: 1}}
+
+      iex> write_log = fn _order -> {:error, :log_full} end
+      iex> Shoddy.Result.then_keep({:ok, %{id: 1}}, write_log)
+      {:error, :log_full}
+
+      iex> Shoddy.Result.then_keep({:error, :not_found}, fn _order -> :ok end)
+      {:error, :not_found}
+  """
+  @spec then_keep(t(a, e), (a -> t(any(), e))) :: t(a, e) when a: any(), e: any()
+  def then_keep({:ok, value} = ok, fun) when is_function(fun, 1) do
+    case fun.(value) do
+      result when is_ok(result) -> ok
+      error when is_error(error) -> error
+      other -> raise ArgumentError, "invalid return value of the function: expected a result, got: #{inspect(other)}"
+    end
+  end
+
+  def then_keep(:ok, fun) when is_function(fun, 1), do: :ok
+  def then_keep({:error, _} = error, fun) when is_function(fun, 1), do: error
+  def then_keep(:error, fun) when is_function(fun, 1), do: :error
 
   @doc """
   Calls a function that returns a result, for an error.

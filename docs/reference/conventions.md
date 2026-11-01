@@ -97,6 +97,8 @@ These functions do not use this rule:
 | `Shoddy.coalesce/2` | A value in the list. The function calls it, and it examines the result. | 0 |
 | `Shoddy.Result.collect/2` | The value of the option `:on_error`. The function calls it for each error that it examines. | 1 |
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
+| `Shoddy.Result.after_ok/2` | The function to call after an ok result. | 0 |
+| `Shoddy.Result.then_keep/2` | The step to call with the value. It must return a result. | 1 |
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 | `Shoddy.Result.find_error/3` | The check, and the function that returns the reason for the bad element. | 1 |
 | `Shoddy.Result.ok_if/2` | The reason, if it is a function. `Shoddy.Result.ok_if/2` calls it only for a falsy condition. | 0 |
@@ -210,7 +212,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option or an unknown option value for `Shoddy.Result.collect/2`, or a return value of the function of `:on_error` that is not in its list. |
 | `ArgumentError` | A value that is not a result and not a tuple of three elements with `:ok` or `:error` first, for `Shoddy.Result.normalize/1`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2`. A function of `Shoddy.Result.unwrap!/2` that returns a value that is not a string. |
-| `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. |
+| `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.traverse/2`, `Shoddy.Result.each_ok/2` and `Shoddy.Result.then_keep/2`. |
 | `ArgumentError` | An unknown option, no exception module in `:rescue` and no class in `:catch`, a module in `:rescue` that is not an exception, or a class in `:catch` other than `:exit`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
