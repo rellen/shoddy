@@ -211,7 +211,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A value that is not a result and not a tuple of three elements with `:ok` or `:error` first, for `Shoddy.Result.normalize/1`. |
 | `ArgumentError` | An error result for `Shoddy.Result.unwrap!/1` and `Shoddy.Result.unwrap!/2`. A function of `Shoddy.Result.unwrap!/2` that returns a value that is not a string. |
 | `ArgumentError` | A return value of the function that is not a result, for `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`. |
-| `ArgumentError` | An unknown option, or an absent, empty or wrong option `:rescue`, for `Shoddy.Result.attempt/2`. |
+| `ArgumentError` | An unknown option, no exception module in `:rescue` and no class in `:catch`, a module in `:rescue` that is not an exception, or a class in `:catch` other than `:exit`, for `Shoddy.Result.attempt/2`. |
 | `ArgumentError` | More than one key of the argument `mapping` with the same new name, or the new name `:__struct__`, for `Shoddy.Maps.take_as/2`. |
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
 | `ArgumentError` | A new key that is already in the map, for `Shoddy.Maps.rename_key/3`. |

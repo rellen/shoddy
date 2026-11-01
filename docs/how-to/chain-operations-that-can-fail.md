@@ -453,6 +453,37 @@ Shoddy.Result.attempt(fn -> String.to_existing_atom("no_such_atom_xyz") end, res
 
 An exception that is not in the list continues, so a defect stays visible.
 
+## Turn the exit of a call to a process into an error
+
+A call to a process that is busy, stopped or absent makes the caller exit.
+Give `catch: [:exit]` to `Shoddy.Result.attempt/2`. For an exit, it returns
+`{:error, {:exit, reason}}`:
+
+```elixir
+fn -> GenServer.call(MyApp.Worker, :status, 1_000) end
+|> Shoddy.Result.attempt(catch: [:exit])
+|> Shoddy.Result.map_error(fn
+  {:exit, {:timeout, _call}} -> :timeout
+  {:exit, _reason} -> :not_running
+end)
+#=> {:ok, status}, {:error, :timeout} or {:error, :not_running}
+```
+
+The function can contain more than one call. It returns the first exit:
+
+```elixir
+Shoddy.Result.attempt(
+  fn ->
+    reservation = Worker.reserve(server, item)
+    Worker.confirm(server, reservation)
+  end,
+  catch: [:exit]
+)
+```
+
+Give `:rescue` and `:catch` together to convert an exception and an exit in
+one call.
+
 ## Accumulate a value with an operation that can fail
 
 If each step needs the result of the step before it, use

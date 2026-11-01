@@ -1060,15 +1060,77 @@ defmodule Shoddy.ResultTest do
       refute match?({Shoddy.Result, _function, _arity, _location}, top)
     end
 
-    test "does not catch a throw or an exit" do
+    test "does not catch a throw, and does not catch an exit without catch: [:exit]" do
       assert catch_throw(attempt(fn -> throw(:x) end, rescue: [ArgumentError])) == :x
+      assert catch_throw(attempt(fn -> throw(:x) end, catch: [:exit])) == :x
       assert catch_exit(attempt(fn -> exit(:x) end, rescue: [ArgumentError])) == :x
     end
 
-    test "raises ArgumentError for an absent, empty or wrong :rescue option" do
-      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, []) end
-      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, rescue: []) end
-      assert_raise ArgumentError, ~r/non-empty list/, fn -> attempt(fn -> 1 end, rescue: ArgumentError) end
+    test "converts an exit with catch: [:exit], also an exit with the reason :normal" do
+      assert attempt(fn -> exit(:boom) end, catch: [:exit]) == {:error, {:exit, :boom}}
+      assert attempt(fn -> exit(:normal) end, catch: [:exit]) == {:error, {:exit, :normal}}
+      assert attempt(fn -> :value end, catch: [:exit]) == {:ok, :value}
+    end
+
+    test "converts the exit of a GenServer.call/3 that times out" do
+      pid = spawn(fn -> Process.sleep(:infinity) end)
+      on_exit(fn -> Process.exit(pid, :kill) end)
+
+      assert {:error, {:exit, {:timeout, {GenServer, :call, [^pid, :status, 10]}}}} =
+               attempt(fn -> GenServer.call(pid, :status, 10) end, catch: [:exit])
+    end
+
+    test "converts the exit of a GenServer.call/3 to a stopped process" do
+      pid = spawn(fn -> :ok end)
+      ref = Process.monitor(pid)
+      assert_receive {:DOWN, ^ref, :process, ^pid, _reason}
+
+      assert {:error, {:exit, {:noproc, _call}}} = attempt(fn -> GenServer.call(pid, :status) end, catch: [:exit])
+    end
+
+    test "lets an exception continue with catch: [:exit] alone" do
+      assert_raise RuntimeError, "boom", fn -> attempt(fn -> raise "boom" end, catch: [:exit]) end
+    end
+
+    test "converts an exception of :rescue and an exit of :catch in one call" do
+      opts = [rescue: [KeyError], catch: [:exit]]
+
+      assert {:error, %KeyError{}} = attempt(fn -> Keyword.fetch!([], :a) end, opts)
+      assert attempt(fn -> exit(:down) end, opts) == {:error, {:exit, :down}}
+    end
+
+    test "keeps the stacktrace of an exit that it does not catch" do
+      {reason, [top | _]} =
+        try do
+          attempt(fn -> exit(:x) end, rescue: [ArgumentError])
+        catch
+          :exit, reason -> {reason, __STACKTRACE__}
+        end
+
+      assert reason == :x
+      refute match?({Shoddy.Result, :attempt, _arity, _location}, top)
+    end
+
+    test "raises ArgumentError without a module in :rescue and a class in :catch" do
+      for opts <- [[], [rescue: []], [catch: []], [rescue: [], catch: []]] do
+        assert_raise ArgumentError, ~r/give a non-empty list in the option :rescue, in the option :catch/, fn ->
+          attempt(fn -> 1 end, opts)
+        end
+      end
+    end
+
+    test "raises ArgumentError for a wrong :catch option" do
+      for value <- [[:throw], [:error], [:exit, :throw], :exit, nil] do
+        assert_raise ArgumentError, ~r/invalid value for :catch option: expected a list that contains only :exit/, fn ->
+          attempt(fn -> 1 end, catch: value)
+        end
+      end
+    end
+
+    test "raises ArgumentError for a wrong :rescue option" do
+      assert_raise ArgumentError, ~r/invalid value for :rescue option: expected a list of exception modules/, fn ->
+        attempt(fn -> 1 end, rescue: ArgumentError)
+      end
 
       assert_raise ArgumentError, ~r/Enum in the option :rescue is not an exception module/, fn ->
         attempt(fn -> 1 end, rescue: [Enum])
