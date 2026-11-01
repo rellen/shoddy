@@ -532,6 +532,17 @@ gives an error result, as other incorrect input does.
 The functions check their options first. A wrong option is a defect in the
 program, so it raises `ArgumentError` for each input.
 
+## Why integer! and float! raise an exception
+
+`Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2` raise `ArgumentError`
+for incorrect text. The other functions of `Shoddy.Parse` return a result.
+
+The text of these two functions comes from the program itself, for example
+from a test or from a file that the program writes. Incorrect text there is
+a defect, so the program must stop. The message gives the text and the
+reason. `Shoddy.Result.unwrap!/1` gives only the reason, so a test that
+fails with it does not show which text was wrong.
+
 ## Why index_by raises for a key that is not unique
 
 `Shoddy.Lists.index_by/2` makes a map, and a map has one value for each key.

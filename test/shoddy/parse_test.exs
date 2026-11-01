@@ -131,6 +131,56 @@ defmodule Shoddy.ParseTest do
     end
   end
 
+  describe "integer!/2" do
+    test "returns the integer for correct text" do
+      assert integer!("-7") == -7
+      assert integer!("100", min: 1, max: 100) == 100
+    end
+
+    test "raises ArgumentError with the text and the reason for incorrect text" do
+      for {text, opts, reason} <- [
+            {"12px", [], ":not_an_integer"},
+            {"0", [min: 1], ":too_small"},
+            {"9", [max: 5], ":too_large"}
+          ] do
+        assert_raise ArgumentError, "cannot parse #{inspect(text)} as an integer: #{reason}", fn ->
+          integer!(text, opts)
+        end
+      end
+    end
+
+    test "raises ArgumentError with the inspected value for a value that is not a string" do
+      assert_raise ArgumentError, ~s{cannot parse ["1"] as an integer: :not_a_string}, fn -> integer!(["1"]) end
+    end
+
+    test "raises ArgumentError for a wrong option" do
+      assert_raise ArgumentError, ~r/higher than/, fn -> integer!("1", min: 5, max: 1) end
+    end
+
+    test "raises FunctionClauseError from integer!/2 itself for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&integer!/2, ["1", :min]) end
+      assert {error.module, error.function} == {Shoddy.Parse, :integer!}
+    end
+  end
+
+  describe "float!/2" do
+    test "returns the float for correct text" do
+      assert float!("2.5e3") == 2500.0
+      assert float!("3", min: 0) == 3.0
+    end
+
+    test "raises ArgumentError with the text and the reason for incorrect text" do
+      assert_raise ArgumentError, ~s[cannot parse "12px" as a float: :not_a_float], fn -> float!("12px") end
+      assert_raise ArgumentError, ~s[cannot parse "0.5" as a float: :too_small], fn -> float!("0.5", min: 1) end
+      assert_raise ArgumentError, ~s[cannot parse nil as a float: :not_a_string], fn -> float!(nil) end
+    end
+
+    test "raises FunctionClauseError from float!/2 itself for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&float!/2, ["1", :min]) end
+      assert {error.module, error.function} == {Shoddy.Parse, :float!}
+    end
+  end
+
   describe "boolean/2" do
     test "accepts only true and false by default" do
       assert boolean("true") == {:ok, true}

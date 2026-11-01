@@ -71,6 +71,27 @@ as text that is not a number does.
 For money, do not use a float, because a float cannot store each decimal
 fraction exactly. Use a library for decimal numbers.
 
+## Read a number that must be correct
+
+Use `Shoddy.Parse.integer!/2` or `Shoddy.Parse.float!/2` for text that is
+not user input, such as an attribute in a test. They return the number,
+and they raise for incorrect text:
+
+```elixir
+Parse.float!("1.5")
+#=> 1.5
+
+Parse.float!("12px")
+#=> ** (ArgumentError) cannot parse "12px" as a float: :not_a_float
+```
+
+Do not write `{x, ""} = Float.parse(text)`. Its `MatchError` does not show
+the text in a clear form. `elem(Float.parse(text), 0)` is also wrong,
+because it accepts `"12px"`.
+
+[The design of Shoddy](../explanation/design.md#why-integer-and-float-raise-an-exception)
+tells why these two functions raise.
+
 ## Read a yes-or-no value
 
 Use `Shoddy.Parse.boolean/2`. By default, it accepts only `"true"` and

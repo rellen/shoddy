@@ -20,6 +20,8 @@ defmodule Shoddy.Parse do
 
   - `integer/2` converts text into an integer. It can also check a range.
   - `float/2` converts text into a float. It can also check a range.
+  - `integer!/2` and `float!/2` do the same work, but they raise an exception
+    for incorrect text.
   - `boolean/2` converts text into `true` or `false`.
   - `one_of/2` converts text into one atom from a list that you give, or into
     the value of a key of a keyword list. It does not make a new atom.
@@ -205,6 +207,61 @@ defmodule Shoddy.Parse do
     Float.parse(text)
   rescue
     ArgumentError -> :error
+  end
+
+  @doc """
+  Converts text into an integer, and raises for incorrect text.
+
+  The function accepts the same text and the same options as `integer/2`.
+  For an error, it raises `ArgumentError`, and the message gives the text
+  and the reason.
+
+  Use this function for text that must be correct, such as text in a test
+  or in a file of the program. For user input, use `integer/2`.
+
+  ## Examples
+
+      iex> Shoddy.Parse.integer!("42")
+      42
+
+      iex> Shoddy.Parse.integer!("12px")
+      ** (ArgumentError) cannot parse "12px" as an integer: :not_an_integer
+
+      iex> Shoddy.Parse.integer!("0", min: 1)
+      ** (ArgumentError) cannot parse "0" as an integer: :too_small
+  """
+  @spec integer!(term(), keyword()) :: integer()
+  def integer!(text, opts \\ []) when is_list(opts) do
+    text |> integer(opts) |> value!(text, "an integer")
+  end
+
+  @doc """
+  Converts text into a float, and raises for incorrect text.
+
+  The function accepts the same text and the same options as `float/2`.
+  For an error, it raises `ArgumentError`, and the message gives the text
+  and the reason.
+
+  Use this function for text that must be correct, such as text in a test
+  or in a file of the program. For user input, use `float/2`.
+
+  ## Examples
+
+      iex> Shoddy.Parse.float!("1.5")
+      1.5
+
+      iex> Shoddy.Parse.float!("12px")
+      ** (ArgumentError) cannot parse "12px" as a float: :not_a_float
+  """
+  @spec float!(term(), keyword()) :: float()
+  def float!(text, opts \\ []) when is_list(opts) do
+    text |> float(opts) |> value!(text, "a float")
+  end
+
+  defp value!({:ok, value}, _text, _kind), do: value
+
+  defp value!({:error, reason}, text, kind) do
+    raise ArgumentError, "cannot parse #{inspect(text)} as #{kind}: #{inspect(reason)}"
   end
 
   @doc """
