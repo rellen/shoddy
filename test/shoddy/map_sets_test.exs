@@ -126,7 +126,7 @@ defmodule Shoddy.MapSetsTest do
     test "raises FunctionClauseError for a second argument that is not a list" do
       assert_raise FunctionClauseError, fn -> apply(&toggle_all/2, [MapSet.new(), :a]) end
       assert_raise FunctionClauseError, fn -> apply(&toggle_all/2, [MapSet.new(), MapSet.new([:a])]) end
-      assert_raise FunctionClauseError, fn -> toggle_all(MapSet.new(), nil) end
+      assert_raise FunctionClauseError, fn -> apply(&toggle_all/2, [MapSet.new(), nil]) end
     end
 
     test "raises FunctionClauseError for a first argument that is not a map set" do
