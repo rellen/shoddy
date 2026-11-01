@@ -40,7 +40,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
-| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
+| `Shoddy.Result` | The result. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
@@ -63,6 +63,7 @@ use `Shoddy.Strings.presence/1`.
 | `Shoddy.Keywords.put_if/3` | The value to put into the keyword list. |
 | `Shoddy.Result.ensure/3` | The return value of the predicate. |
 | `Shoddy.Result.find_error/3` | The return value of the check. |
+| `Shoddy.Result.ok_if/2` | The first argument. |
 
 These functions do not use this rule:
 
@@ -98,6 +99,8 @@ These functions do not use this rule:
 | `Shoddy.Result.recover/2` | The function to call with an error. | 1 |
 | `Shoddy.Result.ensure/3` | The predicate. | 0 or 1 |
 | `Shoddy.Result.find_error/3` | The check, and the function that returns the reason for the bad element. | 1 |
+| `Shoddy.Result.ok_if/2` | The reason, if it is a function. `Shoddy.Result.ok_if/2` calls it only for a falsy condition. | 0 |
+| `Shoddy.Result.from_errors/2` | The function that builds the value for an empty list of errors. | 0 |
 | `Shoddy.Result.reduce_ok/3` | The function to call with each element and the accumulator. It must return a result. | 2 |
 | `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2` | The function to call with each element. It must return a result. | 1 |
 | `Shoddy.Result.attempt/2` | The function to call. | 0 |
@@ -183,7 +186,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A struct, or a value that is not a result, for `Shoddy.Result.collect_map/1`. |
 | `FunctionClauseError` | A divisor of zero, or a value that is not an integer, for `Shoddy.Numbers.ceil_div/2`. |
 | `FunctionClauseError` | A first argument of `Shoddy.Result.collect/2` that is not a list, a struct or a function of arity 2. A map is not accepted. |
-| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3` accept each value. |
+| `FunctionClauseError` | An input to a function of `Shoddy.Result` that is not a result, or an element of the first argument of `Shoddy.Result.collect/2` that is not a result. `Shoddy.Result.ok?/1`, `Shoddy.Result.error?/1`, `Shoddy.Result.flatten/1`, `Shoddy.Result.from_nil/2`, `Shoddy.Result.ensure/3` and `Shoddy.Result.ok_if/2` accept each value. `Shoddy.Result.from_errors/2` accepts only a list as its first argument. |
 | `FunctionClauseError` | The precision `:second` for `Shoddy.DateTimes.extend_precision/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time` with the unit `:day`, for `Shoddy.DateTimes.floor/2`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, or a `Time`, for `Shoddy.DateTimes.ceil/2`. |

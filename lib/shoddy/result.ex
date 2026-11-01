@@ -24,13 +24,18 @@ defmodule Shoddy.Result do
   - `ok?/1` and `error?/1` always return a boolean. For an input that is not
     a result, they return `false`.
   - `flatten/1` returns an input that is not a result with no change.
-  - `from_nil/2` and `ensure/3` are constructors and accept all values.
+  - `from_nil/2`, `ensure/3` and `ok_if/2` are constructors and accept all
+    values.
 
   ## Constructors
 
-  `from_nil/2` and `ensure/3` construct a result from a value and a check.
-  `find_error/3` constructs a result from a check of each element of an
-  enumerable.
+  These functions construct a result:
+
+  - `from_nil/2` and `ensure/3` from a value and a check.
+  - `ok_if/2` from a condition.
+  - `find_error/3` from a check of each element of an enumerable.
+  - `from_errors/2` from a list of errors.
+
   To put a value into a result tuple with no check, use `Shoddy.Tagging.ok/1`
   and `Shoddy.Tagging.error/1`.
   """
@@ -612,6 +617,72 @@ defmodule Shoddy.Result do
       if check.(element), do: {:halt, {:error, reason.(element)}}, else: {:cont, :ok}
     end)
   end
+
+  @doc """
+  Returns `:ok` for a truthy condition, or an error with the reason.
+
+  A truthy value is a value that is not `nil` and not `false`. For a falsy
+  condition, this function returns `{:error, reason}`.
+
+  The reason can be a function of arity 0. This function then calls the
+  reason only for a falsy condition, and it puts the return value into the
+  error tuple.
+  Use this form for a message that is expensive to build.
+
+  Use this function for a check that has no value to return. For a check of
+  a value, use `ensure/3`, which returns `{:ok, value}`.
+
+  ## Examples
+
+      iex> Shoddy.Result.ok_if(String.length(",") == 1, "the delimiter is one character")
+      :ok
+
+      iex> Shoddy.Result.ok_if(String.length(", ") == 1, "the delimiter is one character")
+      {:error, "the delimiter is one character"}
+
+  A function of arity 0 builds the reason only for a falsy condition:
+
+      iex> Shoddy.Result.ok_if(nil, fn -> "cannot find " <> inspect(:logo) end)
+      {:error, "cannot find :logo"}
+  """
+  @spec ok_if(as_boolean(any()), e | (-> e)) :: :ok | {:error, e} when e: any()
+  def ok_if(condition, _reason) when condition not in [nil, false], do: :ok
+  def ok_if(_condition, reason) when is_function(reason, 0), do: {:error, reason.()}
+  def ok_if(_condition, reason), do: {:error, reason}
+
+  @doc """
+  Builds a value only when a list of errors is empty.
+
+  For an empty list, this function calls `fun` and returns `{:ok, value}`.
+  For a list that is not empty, it returns `{:error, errors}`, and it does
+  not call `fun`. Thus `fun` can be expensive, or it can fail for input
+  that has errors.
+
+  Use this function after a validation that collects each error in a list.
+
+  ## Examples
+
+      iex> Shoddy.Result.from_errors([], fn -> %{name: "Ada"} end)
+      {:ok, %{name: "Ada"}}
+
+      iex> Shoddy.Result.from_errors([:name_missing, :age_missing], fn -> raise "not called" end)
+      {:error, [:name_missing, :age_missing]}
+
+  Collect the errors with `Enum.flat_map/2`:
+
+      iex> check = fn
+      ...>   {field, ""} -> [{field, :blank}]
+      ...>   _field -> []
+      ...> end
+      iex> fields = [name: "Ada", email: ""]
+      iex> fields
+      ...> |> Enum.flat_map(check)
+      ...> |> Shoddy.Result.from_errors(fn -> Map.new(fields) end)
+      {:error, [email: :blank]}
+  """
+  @spec from_errors([e], (-> value)) :: {:ok, value} | {:error, [e, ...]} when e: any(), value: any()
+  def from_errors([], fun) when is_function(fun, 0), do: {:ok, fun.()}
+  def from_errors([_ | _] = errors, fun) when is_function(fun, 0), do: {:error, errors}
 
   @doc """
   Converts `{:ok, value}` to the bare atom `:ok` and discards the value.

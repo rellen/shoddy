@@ -95,6 +95,42 @@ params
 | `%{"age" => "41"}` | `{:ok, 41}` |
 | `%{"age" => "12"}` | `{:error, :too_young}` |
 
+## Check a condition that has no value
+
+Use `Shoddy.Result.ok_if/2`. It returns `:ok` for a truthy condition, and an
+error tuple with the reason otherwise:
+
+```elixir
+Shoddy.Result.ok_if(String.length(delimiter) == 1, "the delimiter is one character")
+#=> :ok, or {:error, "the delimiter is one character"}
+```
+
+Give a function of arity 0 for a reason that is expensive to build. The
+function runs only for a falsy condition:
+
+```elixir
+Shoddy.Result.ok_if(found?, fn -> "cannot find #{inspect(name)}" end)
+```
+
+## Build a value after a validation
+
+Collect the errors in a list. Then give the list to
+`Shoddy.Result.from_errors/2`. It calls the function only for an empty list:
+
+```elixir
+fields
+|> Enum.flat_map(&check_field/1)
+|> Shoddy.Result.from_errors(fn -> build(fields) end)
+#=> {:ok, value}, or {:error, errors}
+```
+
+To return `:ok` with no value, use `Shoddy.Result.ok_if/2`:
+
+```elixir
+Shoddy.Result.ok_if(errors == [], errors)
+#=> :ok, or {:error, errors}
+```
+
 ## Check each element of a list
 
 Use `Shoddy.Result.find_error/3`. It returns an error for the first element
