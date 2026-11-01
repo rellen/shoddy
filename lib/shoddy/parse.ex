@@ -15,8 +15,8 @@ defmodule Shoddy.Parse do
   - `integer/2` converts text into an integer. It can also check a range.
   - `float/2` converts text into a float. It can also check a range.
   - `boolean/2` converts text into `true` or `false`.
-  - `one_of/2` converts text into one atom from a list that you give. It does
-    not make a new atom.
+  - `one_of/2` converts text into one atom from a list that you give, or into
+    the value of a key of a keyword list. It does not make a new atom.
   """
 
   @doc """
@@ -269,8 +269,13 @@ defmodule Shoddy.Parse do
   accepts the name of each atom that exists in the system, not only the
   atoms that the code expects.
 
-  This function raises `ArgumentError` if an element of `allowed` is not an
-  atom.
+  `allowed` can also be a keyword list. The function then compares the text
+  with the name of each key, and it returns the value of that key. Thus each
+  text can select another value, such as a module. If a key occurs more than
+  one time, the function returns the value of the first entry.
+
+  This function raises `ArgumentError` if `allowed` is not a list of atoms
+  and not a keyword list.
 
   ## Examples
 
@@ -283,6 +288,11 @@ defmodule Shoddy.Parse do
       iex> Shoddy.Parse.one_of("DESC", [:asc, :desc])
       {:error, :not_allowed}
 
+  Give a keyword list to select another value for each text:
+
+      iex> Shoddy.Parse.one_of("s3", local: MyApp.LocalStorage, s3: MyApp.S3Storage)
+      {:ok, MyApp.S3Storage}
+
   Use the function in a pipeline of results, with a default:
 
       iex> %{"sort" => "name"}
@@ -291,14 +301,25 @@ defmodule Shoddy.Parse do
       ...> |> Shoddy.Result.unwrap(:inserted_at)
       :name
   """
-  @spec one_of(String.t(), [atom()]) :: {:ok, atom()} | {:error, :not_allowed}
+  @spec one_of(String.t(), [atom()] | keyword()) :: {:ok, any()} | {:error, :not_allowed}
   def one_of(text, allowed) when is_binary(text) and is_list(allowed) do
-    if not Enum.all?(allowed, &is_atom/1) do
-      raise ArgumentError, "each element of the allowed list must be an atom, got: #{inspect(allowed)}"
-    end
-
-    Enum.find_value(allowed, {:error, :not_allowed}, fn atom ->
-      if Atom.to_string(atom) == text, do: {:ok, atom}
+    allowed
+    |> allowed_pairs!()
+    |> Enum.find_value({:error, :not_allowed}, fn {atom, value} ->
+      if Atom.to_string(atom) == text, do: {:ok, value}
     end)
+  end
+
+  defp allowed_pairs!(allowed) do
+    cond do
+      Enum.all?(allowed, &is_atom/1) ->
+        Enum.map(allowed, &{&1, &1})
+
+      Keyword.keyword?(allowed) ->
+        allowed
+
+      true ->
+        raise ArgumentError, "the allowed list must be a list of atoms or a keyword list, got: #{inspect(allowed)}"
+    end
   end
 end

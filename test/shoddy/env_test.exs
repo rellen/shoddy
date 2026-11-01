@@ -5,7 +5,15 @@ defmodule Shoddy.EnvTest do
 
   doctest Shoddy.Env
 
-  @doctest_names ["SHODDY_DOC_PORT", "SHODDY_DOC_DEBUG", "SHODDY_DOC_HOSTS", "SHODDY_DOC_HOST", "SHODDY_DOC_SECRET"]
+  @doctest_names [
+    "SHODDY_DOC_PORT",
+    "SHODDY_DOC_DEBUG",
+    "SHODDY_DOC_HOSTS",
+    "SHODDY_DOC_HOST",
+    "SHODDY_DOC_SECRET",
+    "SHODDY_DOC_LOG_FORMAT",
+    "SHODDY_DOC_STORAGE"
+  ]
 
   setup do
     name = "SHODDY_ENV_TEST_#{System.unique_integer([:positive])}"
@@ -259,6 +267,68 @@ defmodule Shoddy.EnvTest do
       for args <- [[:secret, []], ["SECRET", :default]] do
         error = assert_raise FunctionClauseError, fn -> apply(&string/2, args) end
         assert {error.module, error.function} == {Shoddy.Env, :string}
+      end
+    end
+  end
+
+  describe "one_of/3" do
+    test "returns the atom that has the trimmed value as its name", %{name: name} do
+      System.put_env(name, " json\n")
+      assert one_of(name, [:text, :json]) == :json
+    end
+
+    test "returns the value of the key for a keyword list", %{name: name} do
+      System.put_env(name, "s3")
+      assert one_of(name, local: Local, s3: S3) == S3
+    end
+
+    test "returns the default for an absent or blank variable", %{name: name} do
+      assert one_of(name, [:text, :json], default: :text) == :text
+      System.put_env(name, " ")
+      assert one_of(name, [:text, :json], default: nil) == nil
+    end
+
+    test "raises System.EnvError for an absent variable without a default", %{name: name} do
+      assert_raise System.EnvError, fn -> one_of(name, [:text]) end
+    end
+
+    test "raises ArgumentError for a blank variable without a default", %{name: name} do
+      System.put_env(name, "")
+      assert_raise ArgumentError, ~r/has no value: ""/, fn -> one_of(name, [:text]) end
+    end
+
+    test "raises ArgumentError that gives the allowed names for a value that is not allowed", %{name: name} do
+      System.put_env(name, "S3")
+
+      message =
+        ~s[invalid value for the environment variable "#{name}": "S3" (:not_allowed), expected one of: "local", "s3"]
+
+      assert_raise ArgumentError, message, fn -> one_of(name, [local: Local, s3: S3], default: Local) end
+      assert_raise ArgumentError, message, fn -> one_of(name, [:local, :s3]) end
+    end
+
+    test "does not make a new atom", %{name: name} do
+      text = "shoddy_env_test_#{System.unique_integer([:positive])}"
+      System.put_env(name, text)
+
+      assert_raise ArgumentError, ~r/:not_allowed/, fn -> one_of(name, [:a]) end
+      assert_raise ArgumentError, fn -> String.to_existing_atom(text) end
+    end
+
+    test "raises ArgumentError for a wrong list also if the variable is absent", %{name: name} do
+      assert_raise ArgumentError, ~r/must be a list of atoms or a keyword list/, fn ->
+        one_of(name, [:a, "b"], default: :a)
+      end
+    end
+
+    test "raises ArgumentError for an unknown option", %{name: name} do
+      assert_raise ArgumentError, fn -> one_of(name, [:a], fallback: :a) end
+    end
+
+    test "raises FunctionClauseError from one_of/3 itself for an argument of the wrong type" do
+      for args <- [[:format, [:a], []], ["FORMAT", MapSet.new([:a]), []], ["FORMAT", [:a], :default]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&one_of/3, args) end
+        assert {error.module, error.function} == {Shoddy.Env, :one_of}
       end
     end
   end

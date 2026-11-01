@@ -208,7 +208,9 @@ defmodule Shoddy.Env do
 
   defp check_size!(text, _name, _min_bytes), do: text
 
-  defp read(name, opts, parse) do
+  # The function `hint` returns a text for the end of the message for an
+  # invalid value. The function calls it only for such a value.
+  defp read(name, opts, parse, hint \\ fn -> "" end) do
     raw = System.get_env(name)
     text = String.trim(raw || "")
 
@@ -223,7 +225,7 @@ defmodule Shoddy.Env do
         )
 
       result ->
-        value!(result, name, raw)
+        value!(result, name, raw, hint)
     end
   end
 
@@ -234,11 +236,63 @@ defmodule Shoddy.Env do
     end
   end
 
-  defp value!({:ok, value}, _name, _raw), do: value
+  defp value!({:ok, value}, _name, _raw, _hint), do: value
 
-  defp value!({:error, reason}, name, raw) do
+  defp value!({:error, reason}, name, raw, hint) do
     raise ArgumentError,
-          "invalid value for the environment variable #{inspect(name)}: #{inspect(raw)} (#{inspect(reason)})"
+          "invalid value for the environment variable #{inspect(name)}: #{inspect(raw)} (#{inspect(reason)})" <> hint.()
+  end
+
+  @doc """
+  Reads one value from a fixed list of values.
+
+  The function compares the trimmed value with the name of each atom in
+  `allowed`, as `Shoddy.Parse.one_of/2` does. The comparison is
+  case-sensitive, and the function never makes a new atom.
+
+  `allowed` can be a list of atoms or a keyword list. For a list of atoms,
+  the function returns the atom. For a keyword list, the function compares
+  the value with the name of each key, and it returns the value of that key.
+
+  The message for a value that is not allowed gives the allowed names. Thus
+  an operator can correct the value from the message alone.
+
+  ## Options
+
+    * `:default` - The value for an absent or blank variable. Without this
+      option, the function raises an exception for such a variable.
+
+  This function raises `ArgumentError` for a value that is not allowed, and
+  for an unknown option. It also raises `ArgumentError` if `allowed` is not
+  a list of atoms and not a keyword list, also if the variable is absent.
+
+  ## Examples
+
+      iex> System.put_env("SHODDY_DOC_LOG_FORMAT", "json")
+      iex> Shoddy.Env.one_of("SHODDY_DOC_LOG_FORMAT", [:text, :json], default: :text)
+      :json
+
+      iex> System.put_env("SHODDY_DOC_STORAGE", "s3")
+      iex> Shoddy.Env.one_of("SHODDY_DOC_STORAGE", local: MyApp.LocalStorage, s3: MyApp.S3Storage)
+      MyApp.S3Storage
+
+      iex> System.put_env("SHODDY_DOC_LOG_FORMAT", "xml")
+      iex> Shoddy.Env.one_of("SHODDY_DOC_LOG_FORMAT", [:text, :json], default: :text)
+      ** (ArgumentError) invalid value for the environment variable "SHODDY_DOC_LOG_FORMAT": "xml" (:not_allowed), expected one of: "text", "json"
+  """
+  @spec one_of(String.t(), [atom()] | keyword(), keyword()) :: any()
+  def one_of(name, allowed, opts \\ []) when is_binary(name) and is_list(allowed) and is_list(opts) do
+    opts = Keyword.validate!(opts, [:default])
+    read(name, opts, &Parse.one_of(&1, allowed), fn -> ", expected one of: " <> allowed_names(allowed) end)
+  end
+
+  # Parse.one_of/2 checks the list before this function runs, so each element
+  # is an atom or a pair of an atom and a value.
+  defp allowed_names(allowed) do
+    Enum.map_join(allowed, ", ", fn
+      {key, _value} -> inspect(Atom.to_string(key))
+      atom -> inspect(Atom.to_string(atom))
+    end)
   end
 
   @doc """
