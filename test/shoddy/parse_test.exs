@@ -185,8 +185,21 @@ defmodule Shoddy.ParseTest do
       assert_raise ArgumentError, fn -> String.to_existing_atom(text) end
     end
 
-    test "raises ArgumentError if an element of the allowed list is not an atom" do
-      assert_raise ArgumentError, ~r/must be an atom/, fn -> one_of("a", [:a, "b"]) end
+    test "returns the value of the key for a keyword list" do
+      assert one_of("s3", local: Local, s3: S3) == {:ok, S3}
+      assert one_of("off", on: true, off: false) == {:ok, false}
+      assert one_of("none", none: nil) == {:ok, nil}
+      assert one_of("gcs", local: Local, s3: S3) == {:error, :not_allowed}
+    end
+
+    test "returns the value of the first entry for a key that occurs more than one time" do
+      assert one_of("a", a: 1, a: 2) == {:ok, 1}
+    end
+
+    test "raises ArgumentError for a list that is not a list of atoms and not a keyword list" do
+      for allowed <- [[:a, "b"], [:a, b: 1], [{"a", 1}], [{:a, 1, 2}]] do
+        assert_raise ArgumentError, ~r/must be a list of atoms or a keyword list/, fn -> one_of("a", allowed) end
+      end
     end
 
     test "raises FunctionClauseError for text that is not a binary" do

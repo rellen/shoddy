@@ -161,3 +161,8 @@ The first release also contains these changes:
   value.
 - Add the option `:digits` to `Shoddy.Env.boolean/2`. With `digits: true`,
   the function also accepts `"1"` for `true` and `"0"` for `false`.
+- Add `Shoddy.Env.one_of/3`. It reads one value from a list of atoms or a
+  keyword list. The message for a value that is not allowed gives the
+  allowed names.
+- `Shoddy.Parse.one_of/2` also accepts a keyword list. It then returns the
+  value of the key that has the text as its name.

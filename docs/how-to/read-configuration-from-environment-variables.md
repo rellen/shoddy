@@ -96,6 +96,34 @@ another separator. A value without a list element, such as `","`, is blank.
 The function then returns the default, or raises `ArgumentError` without a
 default.
 
+## Read one value from a fixed list
+
+Use `Shoddy.Env.one_of/3`. Give the allowed values as a list of atoms:
+
+```elixir
+config :my_app, :log_format, Shoddy.Env.one_of("LOG_FORMAT", [:text, :json], default: :text)
+```
+
+Give a keyword list to select another value, such as a module, for each
+text:
+
+```elixir
+config :my_app, :storage,
+  Shoddy.Env.one_of("STORAGE", [local: MyApp.Storage.Local, s3: MyApp.Storage.S3],
+    default: MyApp.Storage.Local
+  )
+```
+
+For a value that is not allowed, the message gives the allowed names:
+
+```elixir
+# STORAGE=S3
+#=> ** (ArgumentError) invalid value for the environment variable "STORAGE": "S3" (:not_allowed), expected one of: "local", "s3"
+```
+
+`Map.fetch!/2` on a map of texts raises `KeyError` for such a value. That
+message does not tell the name of the variable.
+
 ## Read a string
 
 Use `Shoddy.Env.string/2`. It trims the value, and it treats a blank value

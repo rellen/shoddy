@@ -41,10 +41,10 @@ params = %{"name" => "Ada", "email" => nil}
   of bytes, and it splits a list of values. It hides a secret, and it adds a
   prefix or a suffix if it is absent.
 - `Shoddy.Parse` converts text, such as user input, into an integer, a
-  float, a boolean or an allowed atom. It returns a result.
-- `Shoddy.Env` reads an integer, a boolean, a list or a string from an
-  environment variable, for `config/runtime.exs`. It raises an exception for
-  a wrong value.
+  float, a boolean or an allowed value. It returns a result.
+- `Shoddy.Env` reads an integer, a boolean, a list, a string or one allowed
+  value from an environment variable, for `config/runtime.exs`. It raises an
+  exception for a wrong value.
 - `Shoddy.Numbers` divides two integers and rounds up, keeps a number in a
   range, and calculates a mean.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a

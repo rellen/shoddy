@@ -495,13 +495,12 @@ a default with `Shoddy.Result.unwrap/2`. The options are different. An
 unknown option or a `:min` that is higher than `:max` is a defect in the
 program, so it raises `ArgumentError`.
 
-`Shoddy.Parse.one_of/2` returns an atom, but it never makes one. The runtime
-never removes an atom, and the number of atoms has a limit. If
-`String.to_atom/1` receives user input, a user can fill the table of atoms
-and stop the system. `String.to_existing_atom/1` is safe from this problem,
-but it accepts the name of each atom in the system, not only the atoms that
-the code expects. The list of allowed atoms is thus also a list of the
-correct values.
+`Shoddy.Parse.one_of/2` never makes an atom. The runtime never removes an
+atom, and the number of atoms has a limit. If `String.to_atom/1` receives
+user input, a user can fill the table of atoms and stop the system.
+`String.to_existing_atom/1` is safe from this problem, but it accepts the
+name of each atom in the system, not only the atoms that the code expects.
+The list of allowed atoms is thus also a list of the correct values.
 
 `Shoddy.Parse.boolean/2` accepts only `"true"` and `"false"` by default.
 Other programs use many other texts, such as `"1"`, `"on"`, `"yes"` and
@@ -680,6 +679,11 @@ because a wrong port or flag is easier to correct when the operator sees
 it. A string variable often holds a secret, and a message can go into a
 log. The message for a blank value still contains the value, because
 whitespace is not a secret.
+
+The message of `Shoddy.Env.one_of/3` gives the allowed names. A value that
+is not in a fixed list is usually a small mistake in the text, such as
+`"S3"` for `"s3"`. Thus an operator can correct the value from the
+message alone.
 
 The functions do not examine the default. A default of `nil` can then mark
 an optional setting. A default outside the range of `:min` and `:max` can

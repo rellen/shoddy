@@ -104,6 +104,13 @@ Parse.one_of("random", [:asc, :desc])
 #=> {:error, :not_allowed}
 ```
 
+Give a keyword list to select another value for each text:
+
+```elixir
+Parse.one_of("week", day: 1, week: 7)
+#=> {:ok, 7}
+```
+
 Do not call `String.to_atom/1` on user input. The runtime never removes an
 atom, and the number of atoms has a limit. `Shoddy.Parse.one_of/2` never
 makes a new atom.
