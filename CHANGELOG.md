@@ -172,3 +172,6 @@ The first release also contains these changes:
 - Add `Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2`. They return the
   number, and they raise `ArgumentError` with the text and the reason for
   incorrect text.
+- Add `Shoddy.Result.unwrap!/2`. For an error, it raises `ArgumentError`
+  with a message that you give. The message can be a string or a function
+  of the reason.

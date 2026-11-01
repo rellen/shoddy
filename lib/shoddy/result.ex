@@ -349,6 +349,70 @@ defmodule Shoddy.Result do
   def unwrap!(:error), do: raise(ArgumentError, "unwrap! called on error result: nil")
 
   @doc """
+  Extracts the value from an ok tuple, or raises with your message.
+
+  For an ok result, this function returns the value, as `unwrap!/1` does. It
+  returns `nil` for a bare `:ok`. It does not use the second argument.
+
+  For an error, this function raises `ArgumentError`. The second argument
+  gives the message:
+
+  - A string. The message is the string, a colon, a space and the reason.
+    For a reason that is an exception, the function gives
+    `Exception.message/1` of the reason. For another reason, it gives
+    `inspect/1` of the reason.
+  - A function of arity 1. The function receives the reason and returns the
+    message. A bare `:error` has the reason `nil`.
+
+  This function also raises `ArgumentError` if the function that you give
+  returns a value that is not a string.
+
+  ## Examples
+
+      iex> Shoddy.Result.unwrap!({:ok, 42}, "cannot load the settings")
+      42
+
+      iex> Shoddy.Result.unwrap!({:error, :enoent}, "cannot load the settings")
+      ** (ArgumentError) cannot load the settings: :enoent
+
+      iex> Shoddy.Result.unwrap!({:error, :enoent}, fn reason ->
+      ...>   "cannot load the settings: \#{:file.format_error(reason)}"
+      ...> end)
+      ** (ArgumentError) cannot load the settings: no such file or directory
+
+  For an exception, the message contains the message of the exception:
+
+      iex> fn -> File.read!("no-such-port.txt") end
+      ...> |> Shoddy.Result.attempt(rescue: [File.Error])
+      ...> |> Shoddy.Result.unwrap!("cannot read the port")
+      ** (ArgumentError) cannot read the port: could not read file "no-such-port.txt": no such file or directory
+  """
+  @spec unwrap!(t(a, e), String.t() | (e -> String.t())) :: a when a: any(), e: any()
+  def unwrap!({:ok, value}, message) when is_binary(message) or is_function(message, 1), do: value
+  def unwrap!(:ok, message) when is_binary(message) or is_function(message, 1), do: nil
+
+  def unwrap!({:error, reason}, message) when is_binary(message) or is_function(message, 1),
+    do: raise(ArgumentError, error_message(reason, message))
+
+  def unwrap!(:error, message) when is_binary(message) or is_function(message, 1),
+    do: raise(ArgumentError, error_message(nil, message))
+
+  defp error_message(reason, message) when is_binary(message), do: message <> ": " <> describe_reason(reason)
+
+  defp error_message(reason, fun) do
+    case fun.(reason) do
+      message when is_binary(message) ->
+        message
+
+      other ->
+        raise ArgumentError, "the message function of unwrap!/2 must return a string, got: #{inspect(other)}"
+    end
+  end
+
+  defp describe_reason(reason) when is_exception(reason), do: Exception.message(reason)
+  defp describe_reason(reason), do: inspect(reason)
+
+  @doc """
   Extracts the value from an ok tuple, or returns the default if the result is
   an error.
 

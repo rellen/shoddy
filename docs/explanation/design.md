@@ -200,6 +200,19 @@ expected. Each other exception continues with its stacktrace. An Erlang
 error, such as `:badarg`, continues as the original term. Thus a `catch`
 around the call matches it as if `attempt/2` were not present.
 
+## The message of unwrap!
+
+`Shoddy.Result.unwrap!/1` raises with a general message, such as
+`unwrap! called on error result: :enoent`. That message tells the reason,
+but not the operation that failed. `Shoddy.Result.unwrap!/2` adds the
+operation, for example `cannot load the settings`.
+
+For a reason that is an exception, `unwrap!/2` gives `Exception.message/1`
+of the reason, and not `inspect/1`. `Shoddy.Result.attempt/2` puts an
+exception into its error tuple. `inspect/1` of that exception shows the
+fields of a struct, and a person who reads the message needs the text of
+the exception.
+
 ## Keyword lists in a separate module
 
 `Access` reads maps and keyword lists in the same way, but a put is different.
