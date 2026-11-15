@@ -553,6 +553,50 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "get_or_put_lazy/3" do
+    test "returns the value and the same map for a present key, and does not call the function" do
+      map = %{a: 1}
+
+      assert get_or_put_lazy(map, :a, fn -> send(self(), :called) end) == {1, map}
+      refute_received :called
+    end
+
+    test "calls the function one time for an absent key, and puts its result into the map" do
+      fun = fn ->
+        send(self(), :called)
+        2
+      end
+
+      assert get_or_put_lazy(%{a: 1}, :b, fun) == {2, %{a: 1, b: 2}}
+      assert_received :called
+      refute_received :called
+    end
+
+    test "treats a key with the value nil as a present key" do
+      assert get_or_put_lazy(%{a: nil}, :a, fn -> 1 end) == {nil, %{a: nil}}
+    end
+
+    test "puts a result of nil for an absent key" do
+      assert get_or_put_lazy(%{}, :a, fn -> nil end) == {nil, %{a: nil}}
+    end
+
+    test "compares the key with the strict equality operator" do
+      assert get_or_put_lazy(%{1 => :int}, 1.0, fn -> :float end) == {:float, %{1 => :int, 1.0 => :float}}
+    end
+
+    test "raises ArgumentError for the key :__struct__, and does not call the function" do
+      assert_raise ArgumentError, fn -> get_or_put_lazy(%{}, :__struct__, fn -> send(self(), :called) end) end
+      refute_received :called
+    end
+
+    test "raises FunctionClauseError for a struct and for an argument of the wrong type" do
+      assert_raise FunctionClauseError, fn -> apply(&get_or_put_lazy/3, [%URI{}, :port, fn -> 80 end]) end
+      assert_raise FunctionClauseError, fn -> apply(&get_or_put_lazy/3, [[a: 1], :a, fn -> 1 end]) end
+      assert_raise FunctionClauseError, fn -> apply(&get_or_put_lazy/3, [%{}, :a, fn _key -> 1 end]) end
+      assert_raise FunctionClauseError, fn -> apply(&get_or_put_lazy/3, [%{}, :a, 1]) end
+    end
+  end
+
   describe "rename_key/3" do
     test "keeps the value and the other entries" do
       assert rename_key(%{a: 1, b: 2}, :a, :c) == %{c: 1, b: 2}
