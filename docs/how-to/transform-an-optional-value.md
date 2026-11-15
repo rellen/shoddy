@@ -3,7 +3,8 @@
 This guide shows how to apply a function to a value that can be `nil`. A
 direct call of a function such as `String.trim/1` raises
 `FunctionClauseError` for `nil`. Use `Shoddy.then_if/2` or
-`Shoddy.then_present/3` instead.
+`Shoddy.then_present/3` instead. The guide also shows how to apply a
+function only for a condition, with `Shoddy.then_when/3`.
 
 ## Transform a value only if it is present
 
@@ -30,6 +31,31 @@ Shoddy.then_if(false, &if(&1, do: "yes", else: "no"))
 
 Shoddy.then_present(false, &if(&1, do: "yes", else: "no"))
 #=> "no"
+```
+
+## Transform a value only if a separate condition is true
+
+Sometimes the condition is not the value itself, and the code already has
+the condition as a value. Use `Shoddy.then_when/3`. It calls the function
+only for a truthy condition:
+
+```elixir
+coupon_valid? = true
+
+%{total: 100}
+|> Shoddy.then_when(coupon_valid?, &Map.update!(&1, :total, fn total -> total - 10 end))
+#=> %{total: 90}
+```
+
+For a falsy condition, the function returns the value with no change. The
+call replaces `if coupon_valid?, do: change(order), else: order`.
+
+If the condition needs a calculation on the value, use `Shoddy.then_if/3`
+with a predicate:
+
+```elixir
+Shoddy.then_if(120, &(&1 > 100), &(&1 - 10))
+#=> 110
 ```
 
 ## Give a result for nil

@@ -56,6 +56,22 @@ the default for `false` too.
 [Build a map from optional data](../how-to/build-a-map-from-optional-data.md#keep-a-field-that-can-be-false)
 shows when to use each function.
 
+The suffix of a name tells which value the function tests. A suffix is the
+last part of a name. A function with the suffix `_if` tests a value that it
+also uses. `Shoddy.then_if/2` tests the value that it transforms, and
+`Shoddy.Maps.put_if/3` tests the value that it puts. A function with the
+suffix `_when` tests a condition that is a separate argument, as
+`Shoddy.then_when/3` does. Without this rule, a reader of
+`put_if(map, key, value)` could not tell if the last argument is the value
+or a condition.
+
+`Shoddy.then_when/3` is a separate function, and not a third form of
+`Shoddy.then_if/3`. `then_if/3` takes a predicate, and a function is also a
+truthy value. If one function accepted a predicate and a condition, it
+could not tell the two apart. Thus `then_when/3` raises
+`FunctionClauseError` for a function as the condition. That argument is
+usually a predicate that belongs to `then_if/3`.
+
 ## Why coalesce rejects only nil
 
 The expression `a || b` already returns the first truthy value.

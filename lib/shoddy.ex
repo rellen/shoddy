@@ -129,6 +129,52 @@ defmodule Shoddy do
   end
 
   @doc """
+  Applies a function to a value if a condition is truthy.
+
+  `condition` is a value that the caller already has, such as a boolean
+  variable. If the condition is truthy, this function calls `fun.(value)`. If
+  the condition is falsy, this function returns `value` with no change. A
+  truthy value is a value that is not `nil` and not `false`.
+
+  `then_if/3` is different: it takes a predicate, which is a function. Use
+  this function when the condition does not need a function. It replaces
+  `if condition, do: change(value), else: value`.
+
+  This function raises `FunctionClauseError` for a condition that is a
+  function. A function is always truthy, so a function in that place is
+  usually a predicate for `then_if/3`.
+
+  ## Examples
+
+      iex> Shoddy.then_when(10, true, &(&1 * 2))
+      20
+
+      iex> Shoddy.then_when(10, false, &(&1 * 2))
+      10
+
+      iex> Shoddy.then_when(10, nil, &(&1 * 2))
+      10
+
+  The function does not examine the value, so it calls `fun` also for `nil`:
+
+      iex> Shoddy.then_when(nil, true, &is_nil/1)
+      true
+
+  Use the function in a pipeline:
+
+      iex> gift? = true
+      iex> express? = false
+      iex> %{total: 100}
+      ...> |> Shoddy.then_when(gift?, &Map.put(&1, :wrap, :paper))
+      ...> |> Shoddy.then_when(express?, &Map.put(&1, :delivery, :express))
+      %{total: 100, wrap: :paper}
+  """
+  @spec then_when(value, as_boolean(any()), (value -> result)) :: value | result when value: any(), result: any()
+  def then_when(value, condition, fun) when not is_function(condition) and is_function(fun, 1) do
+    if condition, do: fun.(value), else: value
+  end
+
+  @doc """
   Applies a function to a value if the value is not `nil`.
 
   If `value` is `nil`, this function returns the value of the option
