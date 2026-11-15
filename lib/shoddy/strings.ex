@@ -15,6 +15,9 @@ defmodule Shoddy.Strings do
   - `presence/1` changes `""` to `nil`, and it returns each other value with
     no change. Then the functions that ignore `nil` also ignore `""`.
 
+  `join_present/3` uses the same rule: it joins the parts of a list that are
+  not `nil` and not `""`.
+
   Neither tool trims a string. Whitespace is a character such as a space, a
   tab or a newline. A string that contains only whitespace, such as `" "`, is
   not empty, so the two tools keep it. To treat such a string as empty, call
@@ -128,6 +131,64 @@ defmodule Shoddy.Strings do
   @spec presence(value) :: value | nil when value: any()
   def presence(""), do: nil
   def presence(value), do: value
+
+  @doc """
+  Joins the parts of a list that are present.
+
+  A part is present if it is not `nil` and not `""`. This is the rule of
+  `presence/1`. The function removes each other part, and it joins the
+  present parts with `separator` between them.
+
+  Use this function to build one line from optional parts, such as an
+  address or a full name.
+
+  The function does not trim a part, so it keeps a part that contains only
+  whitespace, as `presence/1` does.
+
+  ## Options
+
+    * `:default` - The value that this function returns if no part is
+      present. The default is `""`.
+
+  Each part must be a string or `nil`. This function raises `ArgumentError`
+  for another part, and for an option that is not in the list above.
+
+  ## Examples
+
+      iex> Shoddy.Strings.join_present(["12 Main Street", nil, "", "Springfield"], ", ")
+      "12 Main Street, Springfield"
+
+      iex> Shoddy.Strings.join_present(["Ada", nil], " ")
+      "Ada"
+
+      iex> Shoddy.Strings.join_present([nil, ""], ", ")
+      ""
+
+  The option `:default` gives the result for a list with no present part:
+
+      iex> Shoddy.Strings.join_present([nil, ""], ", ", default: "Not given")
+      "Not given"
+
+      iex> Shoddy.Strings.join_present([], ", ", default: nil)
+      nil
+  """
+  @spec join_present([String.t() | nil], String.t(), keyword()) :: String.t() | default when default: any()
+  def join_present(parts, separator, opts \\ []) when is_list(parts) and is_binary(separator) and is_list(opts) do
+    opts = Keyword.validate!(opts, default: "")
+
+    case Enum.filter(parts, &present_part!/1) do
+      [] -> Keyword.fetch!(opts, :default)
+      present -> Enum.join(present, separator)
+    end
+  end
+
+  defp present_part!(nil), do: false
+  defp present_part!(""), do: false
+  defp present_part!(part) when is_binary(part), do: true
+
+  defp present_part!(other) do
+    raise ArgumentError, "each part must be a string or nil, got: #{inspect(other)}"
+  end
 
   @doc """
   Shortens a string to a maximum number of graphemes.

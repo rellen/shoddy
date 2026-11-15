@@ -12,7 +12,7 @@ of each module gives the full description of each function.
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2`, `Shoddy.MapSets.put_or_delete/3` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3`, `Shoddy.Lists.key_get/3`, `Shoddy.Lists.wrap_when/2`, `Shoddy.Lists.compact/1`, `Shoddy.Lists.map_present/2` |
-| `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
+| `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.join_present/3`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.integer!/2`, `Shoddy.Parse.float!/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2`, `Shoddy.Env.one_of/3` |
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3`, `Shoddy.Numbers.mean/1` |
@@ -36,7 +36,7 @@ function can be a step of a pipeline.
 | `Shoddy.Keywords` | The keyword list. |
 | `Shoddy.MapSets` | The map set. |
 | `Shoddy.Lists` | The list. For `Shoddy.Lists.compare_by_keys/3`, the first of the two elements. For `Shoddy.Lists.join_by/4` and `Shoddy.Lists.group_join_by/4`, the list whose elements the result keeps. For `Shoddy.Lists.wrap_when/2`, the element. |
-| `Shoddy.Strings` | The value. |
+| `Shoddy.Strings` | The value. For `Shoddy.Strings.join_present/3`, the list of parts. |
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
@@ -79,6 +79,8 @@ These functions do not use this rule:
   `false`.
 - `Shoddy.Lists.compact/1` removes only `nil`, and
   `Shoddy.Lists.map_present/2` removes only a result that is `nil`.
+- `Shoddy.Strings.join_present/3` removes `nil` and an empty string, as
+  `Shoddy.Strings.presence/1` does.
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
   default of that option is `[nil]`.
 
@@ -233,6 +235,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option, the options `:default` and `:default_lazy` together, or a `:default_lazy` that is not a function of arity 0, for `Shoddy.then_present/3`. |
+| `ArgumentError` | A part that is not a string or `nil`, or an unknown option, for `Shoddy.Strings.join_present/3`. |
 | `ArgumentError` | An unknown option, an omission that is not a string, or an omission that is longer than the maximum, for `Shoddy.Strings.truncate/3`. The function checks the omission also for a string that it does not shorten. |
 | `ArgumentError` | An unknown option, a limit that is not an integer or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.integer/2`. |
 | `ArgumentError` | An unknown option, a limit that is not a number or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.float/2`. |

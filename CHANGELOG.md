@@ -222,3 +222,6 @@ The first release also contains these changes:
   keeps `false`.
 - Add `Shoddy.Lists.map_present/2`. It maps a list, and it removes each
   result that is `nil`.
+- Add `Shoddy.Strings.join_present/3`. It joins the parts of a list that are
+  not `nil` and not an empty string. The option `:default` gives the result
+  when no part is present.

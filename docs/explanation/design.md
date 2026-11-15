@@ -962,6 +962,14 @@ functions. `Enum.filter(list, & &1)` is different: it also removes `false`.
 `map_present/2` has no option that removes duplicate values. A call of
 `Enum.uniq/1` after it does that work in one visible step.
 
+`Shoddy.Strings.join_present/3` joins strings, so its rule for a present
+part is the rule of `Shoddy.Strings.presence/1`: not `nil` and not `""`. It
+keeps a part that contains only whitespace, as `presence/1` does. It
+accepts only a string or `nil` as a part. `Enum.join/2` converts each
+value to a string, so it would put `false` or an atom into an address with
+no error. The option `:default` gives a result such as `nil` when no part
+is present, so a template can hide the line.
+
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person
