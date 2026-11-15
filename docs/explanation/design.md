@@ -871,6 +871,15 @@ the order with an unrelated record. Thus the function ignores each element
 of the second list with the key `nil`, and more than one such element is
 correct.
 
+`Shoddy.Lists.group_join_by/4` is a separate function, and not an option
+of `join_by/4`. The two functions return different forms: `join_by/4`
+gives one partner or `nil`, and `group_join_by/4` gives a list of
+partners. A caller of `join_by/4` expects unique keys, so a second
+partner is an error there. A caller of `group_join_by/4` expects many
+partners, for example the lines of an order, so a key with more than one
+partner is correct. The rule for a `nil` key is the same in the two
+functions.
+
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person

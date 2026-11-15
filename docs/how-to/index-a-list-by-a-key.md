@@ -50,6 +50,26 @@ Lists.join_by([%{user_id: nil}], [%{id: nil, name: "Draft"}], & &1.user_id, & &1
 #=> [{%{user_id: nil}, nil}]
 ```
 
+## Join each record to all its partners in a second list
+
+Use `Shoddy.Lists.group_join_by/4` when one record of the first list can
+have many partners, such as each user and the orders of that user:
+
+```elixir
+orders = [%{user_id: 3, total: 12}, %{user_id: 1, total: 30}, %{user_id: 3, total: 5}]
+
+Lists.group_join_by(users, orders, & &1.id, & &1.user_id)
+#=> [
+#=>   {%{id: 1, name: "Ada"}, [%{user_id: 1, total: 30}]},
+#=>   {%{id: 2, name: "Grace"}, []},
+#=>   {%{id: 3, name: "Alan"}, [%{user_id: 3, total: 12}, %{user_id: 3, total: 5}]}
+#=> ]
+```
+
+A record with no partner gets an empty list. Each list of partners keeps
+the order of the second list. A `nil` key never matches, as for
+`Shoddy.Lists.join_by/4`.
+
 ## Find an error in data that must have unique keys
 
 `Shoddy.Lists.index_by/2` raises `ArgumentError` if more than one record has

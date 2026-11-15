@@ -641,6 +641,46 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Puts each element of `left` with each element of `right` that has the same
+  key.
+
+  `left_key` returns the key of an element of `left`, and `right_key`
+  returns the key of an element of `right`. The result is a list of tuples
+  `{left_element, right_elements}`, in the order of `left`. The list
+  `right_elements` keeps the order of `right`. If no element of `right` has
+  the key, the list is empty. An element of `right` with no partner is not
+  in the result.
+
+  Use this function to join each parent to its children, such as each order
+  to its lines. `join_by/4` is different: it joins each element to one
+  partner, and the keys of its second list must be unique.
+
+  A `nil` key never matches, as in `join_by/4`. Thus an element of `left`
+  with the key `nil` gets an empty list.
+
+  This function compares two keys with the strict equality operator `===/2`.
+
+  ## Examples
+
+      iex> orders = [%{id: 1}, %{id: 2}]
+      iex> lines = [%{order_id: 1, item: "pen"}, %{order_id: 3, item: "ink"}, %{order_id: 1, item: "cap"}]
+      iex> Shoddy.Lists.group_join_by(orders, lines, & &1.id, & &1.order_id)
+      [{%{id: 1}, [%{order_id: 1, item: "pen"}, %{order_id: 1, item: "cap"}]}, {%{id: 2}, []}]
+  """
+  @spec group_join_by([left], [right], (left -> key), (right -> key)) :: [{left, [right]}]
+        when left: var, right: var, key: var
+  def group_join_by(left, right, left_key, right_key)
+      when is_list(left) and is_list(right) and is_function(left_key, 1) and is_function(right_key, 1) do
+    groups =
+      right
+      |> Enum.map(&{right_key.(&1), &1})
+      |> Enum.reject(&match?({nil, _element}, &1))
+      |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+
+    Enum.map(left, &{&1, Map.get(groups, left_key.(&1), [])})
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator
