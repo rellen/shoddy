@@ -105,6 +105,24 @@ Use `Shoddy.Tagging.ok/1` or `Shoddy.Tagging.error/1` as the last step:
 #=> {:ok, "ADA"}
 ```
 
+## Return a second value with a result
+
+Some functions return a second value with the result, such as a number and
+the rest of the text after it. Use `Shoddy.Tagging.ok/2` and
+`Shoddy.Tagging.error/2`. The arguments have the order of the tuple:
+
+```elixir
+Shoddy.Tagging.ok(42, " apples")
+#=> {:ok, 42, " apples"}
+
+Shoddy.Tagging.error(:unterminated, ["a", "b"])
+#=> {:error, :unterminated, ["a", "b"]}
+```
+
+The functions of `Shoddy.Result` accept only a tuple of two elements.
+[Chain operations that can fail](chain-operations-that-can-fail.md#start-from-a-tuple-with-three-elements)
+shows how to convert a tuple of three elements.
+
 ## Use a different tag
 
 Use `Shoddy.Tagging.tag/2` for a tag that has no function of its own. The

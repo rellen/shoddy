@@ -225,3 +225,5 @@ The first release also contains these changes:
 - Add `Shoddy.Strings.join_present/3`. It joins the parts of a list that are
   not `nil` and not an empty string. The option `:default` gives the result
   when no part is present.
+- Add `Shoddy.Tagging.ok/2` and `Shoddy.Tagging.error/2`. They put two
+  values into a tagged tuple of three elements.

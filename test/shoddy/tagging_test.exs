@@ -19,6 +19,20 @@ defmodule Shoddy.TaggingTest do
     end
   end
 
+  describe "ok/2" do
+    test "puts a value and a second value into an :ok tagged tuple of three elements" do
+      assert ok(:priority, 3) == {:ok, :priority, 3}
+    end
+
+    test "takes the value from a pipeline" do
+      assert 42 |> ok(" apples") == {:ok, 42, " apples"}
+    end
+
+    test "accepts nil for each argument" do
+      assert ok(nil, nil) == {:ok, nil, nil}
+    end
+  end
+
   describe "error/1" do
     test "puts a value into an :error tuple" do
       assert error("reason") == {:error, "reason"}
@@ -26,6 +40,16 @@ defmodule Shoddy.TaggingTest do
 
     test "puts an atom reason into an :error tuple" do
       assert error(:not_found) == {:error, :not_found}
+    end
+  end
+
+  describe "error/2" do
+    test "puts a reason and a second value into an :error tagged tuple of three elements" do
+      assert error(:unterminated, ["a", "b"]) == {:error, :unterminated, ["a", "b"]}
+    end
+
+    test "takes the reason from a pipeline" do
+      assert :timeout |> error(%{attempts: 3}) == {:error, :timeout, %{attempts: 3}}
     end
   end
 
