@@ -10,7 +10,7 @@ of each module gives the full description of each function.
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_when/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
-| `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
+| `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2`, `Shoddy.MapSets.put_or_delete/3` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3`, `Shoddy.Lists.key_get/3`, `Shoddy.Lists.wrap_when/2` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.integer!/2`, `Shoddy.Parse.float!/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
@@ -184,7 +184,8 @@ These functions compare two values with the strict equality operator
 `===/2`. Thus the integer `1` and the float `1.0` are two different values.
 
 - `Shoddy.coalesce/2`, for the values in its option `:reject`.
-- `Shoddy.MapSets.toggle/2` and `Shoddy.MapSets.toggle_all/2`, for the
+- `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` and
+  `Shoddy.MapSets.put_or_delete/3`, for the
   elements of the map set.
 - `Shoddy.Lists.duplicates/1` and `Shoddy.Lists.has_duplicates?/1`, for the
   elements of the list.
@@ -207,6 +208,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
 | `FunctionClauseError` | A function as the condition of `Shoddy.then_when/3`. |
+| `FunctionClauseError` | A third argument of `Shoddy.MapSets.put_or_delete/3` that is not `true` or `false`. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |

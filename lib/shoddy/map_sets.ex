@@ -30,6 +30,11 @@ defmodule Shoddy.MapSets do
   Use this function for a selection that a user turns on and off. A set of
   filters in a user interface is an example.
 
+  Use this function only for an event that asks for a change. If the event
+  carries the new state, such as "the flag is now on", use
+  `put_or_delete/3`. The same state can arrive two times, and a second
+  toggle would then undo the first.
+
   This function uses `MapSet.member?/2` to find whether the element is a
   member. That function compares two elements with the strict equality
   operator `===/2`. Thus the integer `1` and the float `1.0` are two
@@ -83,6 +88,45 @@ defmodule Shoddy.MapSets do
       MapSet.put(map_set, element)
     end
   end
+
+  @doc """
+  Puts an element into a map set or deletes it, as a boolean tells.
+
+  If `member?` is `true`, this function puts the element into the map set.
+  If `member?` is `false`, it deletes the element. The result does not
+  depend on the membership before the call. Thus a second call with the
+  same arguments changes nothing.
+
+  Use this function for an event that carries the new state of an element,
+  such as "the flag is now on". `toggle/2` is wrong for such an event: if
+  the same event arrives two times, the second toggle deletes the element.
+
+  The third argument must be a boolean. This function raises
+  `FunctionClauseError` for another value, also for `nil`.
+
+  ## Examples
+
+      iex> Shoddy.MapSets.put_or_delete(MapSet.new([:dark_mode]), :beta, true)
+      MapSet.new([:beta, :dark_mode])
+
+      iex> Shoddy.MapSets.put_or_delete(MapSet.new([:dark_mode]), :dark_mode, false)
+      MapSet.new([])
+
+  A second call with the same arguments changes nothing:
+
+      iex> MapSet.new([:dark_mode])
+      ...> |> Shoddy.MapSets.put_or_delete(:beta, true)
+      ...> |> Shoddy.MapSets.put_or_delete(:beta, true)
+      MapSet.new([:beta, :dark_mode])
+
+      iex> MapSet.new([:dark_mode])
+      ...> |> Shoddy.MapSets.put_or_delete(:beta, false)
+      MapSet.new([:dark_mode])
+  """
+  @spec put_or_delete(MapSet.t(element), new_element, boolean()) :: MapSet.t(element | new_element)
+        when element: var, new_element: var
+  def put_or_delete(%MapSet{} = map_set, element, true), do: MapSet.put(map_set, element)
+  def put_or_delete(%MapSet{} = map_set, element, false), do: MapSet.delete(map_set, element)
 
   @doc """
   Toggles the membership of each element of a list in a map set.

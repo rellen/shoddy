@@ -27,6 +27,42 @@ def handle_event("toggle", %{"tag" => tag}, socket) do
 end
 ```
 
+## Set the membership from a new state
+
+Some events carry the new state of an element, and not a request for a
+change. An example is "the flag is now on". Do not toggle for such an
+event. The same event can arrive two times, for example after a
+reconnection, and the second toggle would delete the element.
+
+Use `Shoddy.MapSets.put_or_delete/3`. With `true`, it puts the element into
+the selection. With `false`, it deletes the element:
+
+```elixir
+enabled = MapSet.new(["dark_mode"])
+
+enabled
+|> Shoddy.MapSets.put_or_delete("beta", true)
+|> Shoddy.MapSets.put_or_delete("beta", true)
+#=> MapSet.new(["beta", "dark_mode"])
+
+Shoddy.MapSets.put_or_delete(enabled, "dark_mode", false)
+#=> MapSet.new([])
+```
+
+In a Phoenix LiveView, use the function in `handle_info/2`:
+
+```elixir
+def handle_info({:flag_changed, flag, enabled?}, socket) do
+  {:noreply, update(socket, :enabled, &Shoddy.MapSets.put_or_delete(&1, flag, enabled?))}
+end
+```
+
+The third argument must be a boolean. For another value, the function
+raises `FunctionClauseError`.
+
+[The design of Shoddy](../explanation/design.md#a-new-state-is-not-a-toggle)
+tells why the function does not accept each truthy value.
+
 ## Toggle each element of a list
 
 Use `Shoddy.MapSets.toggle_all/2`. It toggles each element of the list one

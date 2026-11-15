@@ -216,3 +216,5 @@ The first release also contains these changes:
   only for `nil`.
 - Add `Shoddy.Lists.wrap_when/2`. It returns a list of one element if a
   condition is truthy, or an empty list.
+- Add `Shoddy.MapSets.put_or_delete/3`. It puts an element into a map set
+  for `true`, and it deletes the element for `false`.
