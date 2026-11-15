@@ -954,6 +954,14 @@ and the `++/2` shows the cost of the copy to the reader. The function also
 has no form with a function of arity 0 for the element. An element that is
 expensive to build is not usual in a list of classes or of messages.
 
+`Shoddy.Lists.compact/1` and `Shoddy.Lists.map_present/2` remove only
+`nil`. They keep `false`, because `false` can be a value of a list. This is
+the rule of the suffix `_present` and of the two other `compact/1`
+functions. `Enum.filter(list, & &1)` is different: it also removes `false`.
+
+`map_present/2` has no option that removes duplicate values. A call of
+`Enum.uniq/1` after it does that work in one visible step.
+
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person

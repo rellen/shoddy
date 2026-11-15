@@ -218,3 +218,7 @@ The first release also contains these changes:
   condition is truthy, or an empty list.
 - Add `Shoddy.MapSets.put_or_delete/3`. It puts an element into a map set
   for `true`, and it deletes the element for `false`.
+- Add `Shoddy.Lists.compact/1`. It removes each `nil` from a list, and it
+  keeps `false`.
+- Add `Shoddy.Lists.map_present/2`. It maps a list, and it removes each
+  result that is `nil`.

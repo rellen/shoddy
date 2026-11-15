@@ -588,6 +588,70 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "compact/1" do
+    test "removes each nil, and keeps the order of the other elements" do
+      assert compact([nil, 1, nil, 2, nil]) == [1, 2]
+      assert compact([nil, nil]) == []
+      assert compact([]) == []
+    end
+
+    test "keeps false, 0, an empty string and an empty list" do
+      assert compact([false, 0, "", [], nil]) == [false, 0, "", []]
+    end
+
+    test "does not remove a nil inside an element" do
+      assert compact([[nil], {nil}, %{a: nil}]) == [[nil], {nil}, %{a: nil}]
+    end
+
+    test "raises FunctionClauseError from compact/1 itself for a value that is not a list" do
+      for value <- [%{a: nil}, nil, MapSet.new([nil])] do
+        error = assert_raise FunctionClauseError, fn -> apply(&compact/1, [value]) end
+        assert {error.module, error.function} == {Shoddy.Lists, :compact}
+      end
+    end
+  end
+
+  describe "map_present/2" do
+    test "returns each result that is not nil, in the order of the list" do
+      assert map_present([1, 2, 3, 4], &if(rem(&1, 2) == 0, do: &1 * 10)) == [20, 40]
+      assert map_present([1, 2], fn _element -> nil end) == []
+      assert map_present([], fn _element -> flunk("the function must not run") end) == []
+    end
+
+    test "keeps the result false, and a result that is a list" do
+      assert map_present([1, 2], &(&1 > 1)) == [false, true]
+      assert map_present([1, 2], &[&1]) == [[1], [2]]
+      assert map_present([1], fn _element -> [] end) == [[]]
+    end
+
+    test "gives the same result as Enum.map/2 and compact/1" do
+      fun = &if(rem(&1, 3) != 0, do: &1 * 2)
+      list = Enum.to_list(1..20)
+
+      assert map_present(list, fun) == list |> Enum.map(fun) |> compact()
+    end
+
+    test "calls the function one time for each element" do
+      parent = self()
+
+      map_present([1, 2], fn element ->
+        send(parent, {:called, element})
+        nil
+      end)
+
+      assert_received {:called, 1}
+      assert_received {:called, 2}
+      refute_received {:called, _element}
+    end
+
+    test "raises FunctionClauseError for an argument of the wrong type" do
+      for args <- [[%{a: 1}, & &1], [[1], fn -> 1 end], [[1], nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&map_present/2, args) end
+        assert {error.module, error.function} == {Shoddy.Lists, :map_present}
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])
