@@ -768,6 +768,46 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Returns the value of a key in a list of pairs.
+
+  A pair is a tuple of two elements: a key and a value. The function returns
+  the value of the first pair with the key. If no pair has the key, it
+  returns `default`. The default of `default` is `nil`.
+
+  The function accepts a key of each type. Thus it reads a list of pairs
+  with string keys, such as the attributes of an HTML element from a
+  parser. For a keyword list, `Keyword.get/3` does the same work.
+
+  A pair with the value `nil` is present, so the function returns `nil` for
+  it, and not the default. `Keyword.get/3` has the same rule.
+
+  This function compares the keys with the strict equality operator `===/2`.
+  An element of the list that is not a pair never matches.
+
+  ## Examples
+
+      iex> Shoddy.Lists.key_get([{"id", "main"}, {"class", "wide"}], "class")
+      "wide"
+
+      iex> Shoddy.Lists.key_get([{"id", "main"}], "class")
+      nil
+
+      iex> Shoddy.Lists.key_get([{"id", "main"}], "class", "")
+      ""
+
+  The function returns the value of the first pair with the key:
+
+      iex> Shoddy.Lists.key_get([{"class", "wide"}, {"class", "tall"}], "class")
+      "wide"
+  """
+  @spec key_get(list(), any(), default) :: any() | default when default: var
+  def key_get(list, key, default \\ nil) when is_list(list), do: find_pair(list, key, default)
+
+  defp find_pair([{pair_key, value} | _rest], key, _default) when pair_key === key, do: value
+  defp find_pair([_other | rest], key, default), do: find_pair(rest, key, default)
+  defp find_pair([], _key, default), do: default
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

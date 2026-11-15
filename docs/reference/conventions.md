@@ -11,7 +11,7 @@ of each module gives the full description of each function.
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
-| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3` |
+| `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3`, `Shoddy.Lists.key_get/3` |
 | `Shoddy.Strings` | The guard `Shoddy.Strings.is_non_empty_string/1`, `Shoddy.Strings.presence/1`, `Shoddy.Strings.blank?/1`, `Shoddy.Strings.truncate/3`, `Shoddy.Strings.truncate_bytes/2`, `Shoddy.Strings.split_trim/2`, `Shoddy.Strings.mask/2`, `Shoddy.Strings.ensure_prefix/2`, `Shoddy.Strings.ensure_suffix/2` |
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.integer!/2`, `Shoddy.Parse.float!/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2`, `Shoddy.Env.one_of/3` |
@@ -71,6 +71,8 @@ These functions do not use this rule:
 - `Shoddy.Keywords.put_present/3` ignores only `nil`.
 - `Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3` return the
   default only for an absent key and for `nil`. They return `false`.
+- `Shoddy.Lists.key_get/3` returns the default only for an absent key. It
+  returns the value `nil` of a pair that is present.
 - `Shoddy.then_present/3` ignores only `nil`. It calls the function for
   `false`.
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
@@ -171,8 +173,8 @@ These functions compare two values with the strict equality operator
 - `Shoddy.Lists.group_by_in_order/2` and `Shoddy.Lists.upsert_by/4`, for the
   keys of the elements.
 - `Shoddy.Lists.toggle/2` and `Shoddy.Lists.cycle_next/2`, for the elements.
-- `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4` and
-  `Shoddy.Lists.group_join_by/4`, for the keys.
+- `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`,
+  `Shoddy.Lists.group_join_by/4` and `Shoddy.Lists.key_get/3`, for the keys.
 - `Shoddy.Maps.map_keys/2`, for the new keys.
 - `Shoddy.Maps.fetch_keys/2`, for the keys to take.
 - `Shoddy.Maps.diff/2`, for the values.

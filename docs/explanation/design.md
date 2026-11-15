@@ -301,6 +301,16 @@ and the documentation of each function tells its effect on that type. The
 specifications stay exact: a map goes in and a map comes out, and a keyword
 list goes in and a keyword list comes out.
 
+`Shoddy.Lists.key_get/3` reads a list of pairs, and it is in `Shoddy.Lists`.
+A pair is a tuple of a key and a value. A keyword list is a list of pairs
+with atom keys, and the functions of `Keyword` and of `Shoddy.Keywords`
+accept only such keys. A parser of HTML returns pairs with string keys, so
+those functions do not apply. `List.keyfind/3` accepts each key, but it
+returns the pair, and it compares the keys with `==/2`. `key_get/3`
+returns the value, and it compares with `===/2`, as the other functions of
+Shoddy do. It returns `nil` for a pair with the value `nil`, as
+`Keyword.get/3` does, because the pair is present.
+
 ## Structs in Shoddy.Maps
 
 A struct is a map, so `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3`
