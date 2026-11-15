@@ -79,6 +79,49 @@ defmodule Shoddy.StringsTest do
     end
   end
 
+  describe "join_present/3" do
+    test "joins the parts that are not nil and not an empty string, in the order of the list" do
+      assert join_present(["a", nil, "", "b", "c"], "-") == "a-b-c"
+      assert join_present([nil, "a", ""], ", ") == "a"
+    end
+
+    test "keeps a part that contains only whitespace" do
+      assert join_present(["a", " ", "b"], ",") == "a, ,b"
+    end
+
+    test "returns an empty string by default if no part is present" do
+      assert join_present([nil, ""], ", ") == ""
+      assert join_present([], ", ") == ""
+    end
+
+    test "returns the default if no part is present, and ignores it otherwise" do
+      assert join_present([nil, ""], ", ", default: "none") == "none"
+      assert join_present([], ", ", default: nil) == nil
+      assert join_present(["a"], ", ", default: "none") == "a"
+    end
+
+    test "accepts an empty separator" do
+      assert join_present(["a", nil, "b"], "") == "ab"
+    end
+
+    test "raises ArgumentError for a part that is not a string or nil, also after a present part" do
+      for parts <- [[1], ["a", :b], [false], ["a", ["b"]], [nil, 1.5]] do
+        assert_raise ArgumentError, ~r/each part must be a string or nil, got: /, fn -> join_present(parts, ", ") end
+      end
+    end
+
+    test "raises ArgumentError for an unknown option, also if a part is present" do
+      assert_raise ArgumentError, fn -> join_present(["a"], ", ", defualt: "x") end
+    end
+
+    test "raises FunctionClauseError from join_present/3 itself for an argument of the wrong type" do
+      for args <- [["a", ", ", []], [nil, ", ", []], [["a"], :comma, []], [["a"], nil, []], [["a"], ", ", :default]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&join_present/3, args) end
+        assert {error.module, error.function} == {Shoddy.Strings, :join_present}
+      end
+    end
+  end
+
   describe "truncate/3" do
     test "returns a string of max graphemes or fewer with no change" do
       assert truncate("abc", 3) == "abc"

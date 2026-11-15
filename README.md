@@ -42,9 +42,10 @@ params = %{"name" => "Ada", "email" => nil}
   from a list or from the results of a map.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together, and a predicate that also treats whitespace as empty. It changes
-  an empty string to `nil`. It shortens a string for display or to a number
-  of bytes, and it splits a list of values. It hides a secret, and it adds a
-  prefix or a suffix if it is absent.
+  an empty string to `nil`, and it joins the parts of a list that are
+  present. It shortens a string for display or to a number of bytes, and it
+  splits a list of values. It hides a secret, and it adds a prefix or a
+  suffix if it is absent.
 - `Shoddy.Parse` converts text, such as user input, into an integer, a
   float, a boolean or an allowed value. It returns a result.
 - `Shoddy.Env` reads an integer, a boolean, a list, a string or one allowed
