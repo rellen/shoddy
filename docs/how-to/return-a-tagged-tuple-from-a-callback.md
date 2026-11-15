@@ -1,9 +1,10 @@
 # Return a tagged tuple from a callback
 
-This guide shows how to make the tagged tuples that a GenServer callback and
-`Enum.reduce_while/3` must return. A tagged tuple is a tuple with an atom as
-the first element. The functions of `Shoddy.Tagging` take the value first,
-so each function can be the last step of a pipeline.
+This guide shows how to make the tagged tuples that a GenServer callback,
+`Enum.reduce_while/3` and a hook of a Phoenix LiveView must return. A tagged
+tuple is a tuple with an atom as the first element. The functions of
+`Shoddy.Tagging` take the value first, so each function can be the last
+step of a pipeline.
 
 The examples use a state of `%{count: 1}`.
 
@@ -72,6 +73,25 @@ Enum.reduce_while([4, 5, 6, 7], 0, fn number, sum ->
   end
 end)
 #=> 9
+```
+
+## Continue or halt in a LiveView hook
+
+An `on_mount` hook of a Phoenix LiveView is a function that Phoenix calls
+before it mounts the LiveView. The hook must return a `:cont` tuple or a
+`:halt` tuple with the socket. Use `Shoddy.Tagging.cont/1` and
+`Shoddy.Tagging.halt/1`:
+
+```elixir
+def on_mount(:require_user, _params, _session, socket) do
+  if socket.assigns.current_user do
+    Shoddy.Tagging.cont(socket)
+  else
+    socket
+    |> Phoenix.LiveView.redirect(to: "/users/log-in")
+    |> Shoddy.Tagging.halt()
+  end
+end
 ```
 
 ## Put a value into an ok tuple
