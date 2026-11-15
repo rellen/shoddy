@@ -115,6 +115,8 @@ these steps in the commit that adds the function:
    belongs in a first lesson.
 5. Add a line to the part "Unreleased" of `CHANGELOG.md`. If the function
    changes what a module does, change its description in `README.md`.
+6. Usage rules: if an AI agent can use the function incorrectly, add one
+   rule to `usage-rules.md`. Keep that file short.
 
 ## The workflow
 
