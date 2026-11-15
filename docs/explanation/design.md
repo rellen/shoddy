@@ -29,6 +29,11 @@ A project that uses Shoddy gets no other package. Shoddy uses only the
 standard library of Elixir. Each dependency in `mix.exs` is for development
 or for tests only.
 
+`Shoddy.Tests` is in this library, although only a test uses it. The
+module needs ExUnit, but ExUnit is a part of Elixir, so a project gets no
+new package. Shoddy does not list ExUnit as an application that it needs.
+Thus a release of the project does not contain ExUnit.
+
 ## The value is the first argument
 
 The pipe operator `|>` puts a value into the first argument of the next
