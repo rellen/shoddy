@@ -737,8 +737,9 @@ call, and not only for a long string.
 database column or a protocol counts bytes. The function stops at the end
 of a grapheme, not at the end of a code point. A cut after a letter and
 before its accent would give a valid string, but it would show a different
-character. The function adds no omission, because the stored value is data,
-not text for a reader.
+character. The same rule keeps `"\r\n"` together, because Unicode defines
+these two characters as one grapheme. The function adds no omission,
+because the stored value is data, not text for a reader.
 
 ## Why between? excludes the last value
 

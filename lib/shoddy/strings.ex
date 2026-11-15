@@ -343,14 +343,15 @@ defmodule Shoddy.Strings do
   @doc """
   Shortens a string to a maximum number of bytes, and never cuts a grapheme.
 
-  A database column or a protocol can limit the size of a value in bytes. A
+  A database column or a protocol can limit the size of text in bytes. A
   character in UTF-8 can use more than one byte, so a cut at a byte position
   can make a string that is not valid. This function returns the longest
   start of the string that contains only full graphemes and has `max_bytes`
   bytes or fewer.
 
   This function adds no omission. For display, use `truncate/3`, which
-  counts graphemes.
+  counts graphemes. For binary data that is not text, use `binary_slice/3`,
+  which counts only bytes.
 
   ## Examples
 
@@ -367,6 +368,13 @@ defmodule Shoddy.Strings do
 
       iex> binary_part("Möbius", 0, 2) |> String.valid?()
       false
+
+  The function keeps a full grapheme or omits it. A letter and a combining
+  accent after it are one grapheme, and `"\\r\\n"` is also one grapheme. Thus
+  the result can omit a character that fits in `max_bytes`:
+
+      iex> Shoddy.Strings.truncate_bytes("ab\\r\\n", 3)
+      "ab"
   """
   @spec truncate_bytes(String.t(), non_neg_integer()) :: String.t()
   def truncate_bytes(string, max_bytes) when is_binary(string) and is_integer(max_bytes) and max_bytes >= 0 do
