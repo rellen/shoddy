@@ -207,3 +207,5 @@ The first release also contains these changes:
   unique. The default still raises `ArgumentError`.
 - Add `Shoddy.Lists.map_with_acc/3`. It maps a list with a function that
   also carries an accumulator, and it returns only the list of values.
+- Add `Shoddy.Lists.key_get/3`. It returns the value of a key in a list of
+  pairs, or a default. The key can be a string or a value of another type.

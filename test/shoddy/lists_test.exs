@@ -527,6 +527,47 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "key_get/3" do
+    test "returns the value of the first pair with the key" do
+      assert key_get([{"a", 1}, {"b", 2}, {"a", 3}], "a") == 1
+      assert key_get([{"a", 1}, {"b", 2}], "b") == 2
+    end
+
+    test "returns the default, or nil, if no pair has the key" do
+      assert key_get([{"a", 1}], "b") == nil
+      assert key_get([{"a", 1}], "b", :none) == :none
+      assert key_get([], "a", :none) == :none
+    end
+
+    test "returns the value nil or false of a present pair, and not the default" do
+      assert key_get([{"a", nil}], "a", :none) == nil
+      assert key_get([{"a", false}], "a", :none) == false
+    end
+
+    test "accepts a key of each type, also nil" do
+      assert key_get([{:a, 1}, {{:x, 1}, 2}, {nil, 3}], {:x, 1}) == 2
+      assert key_get([{:a, 1}, {nil, 3}], nil) == 3
+      assert key_get([a: 1, b: 2], :b) == 2
+    end
+
+    test "compares the keys with the strict equality operator" do
+      assert key_get([{1.0, :float}], 1, :none) == :none
+      assert key_get([{1.0, :float}, {1, :integer}], 1) == :integer
+    end
+
+    test "never matches an element that is not a tuple of two elements" do
+      assert key_get(["a", {"a"}, {"a", 1, 2}, ["a", 1]], "a", :none) == :none
+      assert key_get([{"a", 1, 2}, {"a", :pair}], "a") == :pair
+    end
+
+    test "raises FunctionClauseError from key_get/3 itself for a first argument that is not a list" do
+      for args <- [[%{"a" => 1}, "a", nil], [nil, "a", nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&key_get/3, args) end
+        assert {error.module, error.function} == {Shoddy.Lists, :key_get}
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])

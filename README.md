@@ -36,7 +36,7 @@ params = %{"name" => "Ada", "email" => nil}
   groups records in a fixed order, and it compares two records by the same
   keys. It maps a list with an accumulator. It replaces, adds, moves or
   toggles an element. It joins two lists by a key, and it gives each element
-  one partner or a list of partners.
+  one partner or a list of partners. It reads a value from a list of pairs.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together, and a predicate that also treats whitespace as empty. It changes
   an empty string to `nil`. It shortens a string for display or to a number
@@ -105,6 +105,7 @@ For one task, use a how-to guide:
 - [Sort and group records for display](docs/how-to/sort-and-group-records-for-display.md)
 - [Update a list of records](docs/how-to/update-a-list-of-records.md)
 - [Get the only element of a list](docs/how-to/get-the-only-element-of-a-list.md)
+- [Read a value from a list of pairs](docs/how-to/read-a-value-from-a-list-of-pairs.md)
 - [Compare time values of different precision](docs/how-to/compare-time-values-of-different-precision.md)
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
 - [Round a time value up](docs/how-to/round-a-time-value-up.md)
