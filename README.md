@@ -38,7 +38,8 @@ params = %{"name" => "Ada", "email" => nil}
   keys. It maps a list with an accumulator. It replaces, adds, moves or
   toggles an element. It joins two lists by a key, and it gives each element
   one partner or a list of partners. It reads a value from a list of pairs.
-  It makes a list of one element only for a condition.
+  It makes a list of one element only for a condition, and it removes `nil`
+  from a list or from the results of a map.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together, and a predicate that also treats whitespace as empty. It changes
   an empty string to `nil`. It shortens a string for display or to a number

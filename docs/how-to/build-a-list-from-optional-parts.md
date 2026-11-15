@@ -37,6 +37,36 @@ colors ++ Lists.wrap_when(highlight, highlight != nil)
 #=> ["red", "blue", "gold"]
 ```
 
+## Remove the parts that are nil
+
+Use `Shoddy.Lists.compact/1` when an absent part is `nil`. It removes each
+`nil`, and it keeps `false`:
+
+```elixir
+size = nil
+
+[size, "RGB", "8 bit"] |> Lists.compact() |> Enum.join(", ")
+#=> "RGB, 8 bit"
+```
+
+`Shoddy.Maps.compact/1` and `Shoddy.Keywords.compact/1` do the same for the
+values of a map and of a keyword list.
+
+## Get an optional field from each record
+
+Use `Shoddy.Lists.map_present/2`. It maps the list, and it removes each
+result that is `nil`:
+
+```elixir
+users = [%{email: "ada@example.com"}, %{email: nil}, %{email: "grace@example.com"}]
+
+Lists.map_present(users, & &1.email)
+#=> ["ada@example.com", "grace@example.com"]
+```
+
+To remove the values that occur more than one time, call `Enum.uniq/1` on
+the result.
+
 ## Collect the messages of a validation
 
 Put the parts into one list, and flatten the list:

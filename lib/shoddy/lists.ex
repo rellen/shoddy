@@ -851,6 +851,66 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Removes each `nil` from a list.
+
+  The function keeps `false` and each other value, and it keeps the order
+  of the list. `Shoddy.Maps.compact/1` and `Shoddy.Keywords.compact/1` have
+  the same rule for the values of their entries.
+
+  Use this function for a list of optional parts, before a join or a map.
+
+  ## Examples
+
+      iex> Shoddy.Lists.compact(["a", nil, false, "b", nil])
+      ["a", false, "b"]
+
+      iex> Shoddy.Lists.compact([])
+      []
+
+  Remove the absent parts before a join:
+
+      iex> size = nil
+      iex> [size, "RGB"] |> Shoddy.Lists.compact() |> Enum.join(", ")
+      "RGB"
+  """
+  @spec compact([element | nil]) :: [element] when element: var
+  def compact(list) when is_list(list), do: Enum.reject(list, &is_nil/1)
+
+  @doc """
+  Maps a list, and removes each result that is `nil`.
+
+  The function calls `fun` for each element, in order. It puts each return
+  value that is not `nil` into the result. It keeps `false`, as the other
+  functions with the suffix `_present` do.
+
+  The function is `Enum.map/2` and then `compact/1`. Use it to get a field
+  that can be absent from each record of a list.
+
+  ## Examples
+
+      iex> users = [%{email: "ada@example.com"}, %{email: nil}, %{email: "grace@example.com"}]
+      iex> Shoddy.Lists.map_present(users, & &1.email)
+      ["ada@example.com", "grace@example.com"]
+
+      iex> Shoddy.Lists.map_present([1, 2, 3], &if(&1 > 1, do: &1 * 10))
+      [20, 30]
+
+  The function keeps `false`:
+
+      iex> Shoddy.Lists.map_present([%{admin: false}, %{admin: nil}], & &1.admin)
+      [false]
+  """
+  @spec map_present([element], (element -> value | nil)) :: [value] when element: var, value: var
+  def map_present(list, fun) when is_list(list) and is_function(fun, 1) do
+    Enum.flat_map(list, fn element ->
+      case fun.(element) do
+        nil -> []
+        value -> [value]
+      end
+    end)
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator
