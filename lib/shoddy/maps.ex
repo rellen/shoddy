@@ -220,6 +220,44 @@ defmodule Shoddy.Maps do
   end
 
   @doc """
+  Returns the value at a path of keys, or a default if the value is absent or `nil`.
+
+  `path` is a list of keys. This function reads each key from the map or
+  the struct that the key before it gave. It returns `default` if a key is
+  absent, or if a value on the path is `nil` or is not a map. It returns
+  `false` with no change, as `get_present/3` does.
+
+  This function does not use the `Access` behaviour. Thus it also reads a
+  field of a struct, for which `get_in/2` raises an error.
+
+  ## Examples
+
+      iex> settings = %{"intro" => %{order: 2}, "end" => %{order: nil}}
+      iex> Shoddy.Maps.get_path_present(settings, ["intro", :order], 0)
+      2
+      iex> Shoddy.Maps.get_path_present(settings, ["end", :order], 0)
+      0
+      iex> Shoddy.Maps.get_path_present(settings, ["other", :order], 0)
+      0
+
+  The function reads a field of a struct on the path:
+
+      iex> Shoddy.Maps.get_path_present(%{site: %URI{port: 8080}}, [:site, :port], 443)
+      8080
+  """
+  @spec get_path_present(map(), [any(), ...], default) :: any() | default when default: any()
+  def get_path_present(map, [_ | _] = path, default) when is_map(map), do: get_path_at(map, path, default)
+
+  defp get_path_at(value, [], _default), do: value
+
+  defp get_path_at(map, [key | rest], default) do
+    case map do
+      %{^key => value} when not is_nil(value) -> get_path_at(value, rest, default)
+      _other -> default
+    end
+  end
+
+  @doc """
   Takes keys from a map, and gives each key a new name.
 
   `mapping` is a map from each key to take to its new name. The result

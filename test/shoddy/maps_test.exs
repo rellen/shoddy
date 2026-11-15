@@ -196,6 +196,49 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "get_path_present/3" do
+    test "returns the value at the path" do
+      assert get_path_present(%{a: %{b: %{c: 1}}}, [:a, :b, :c], 0) == 1
+    end
+
+    test "returns the default for an absent key at each level of the path" do
+      assert get_path_present(%{}, [:a, :b], 0) == 0
+      assert get_path_present(%{a: %{}}, [:a, :b], 0) == 0
+    end
+
+    test "returns the default for nil at each level of the path" do
+      assert get_path_present(%{a: nil}, [:a, :b], 0) == 0
+      assert get_path_present(%{a: %{b: nil}}, [:a, :b], 0) == 0
+    end
+
+    test "returns false at the end of the path with no change" do
+      assert get_path_present(%{a: %{b: false}}, [:a, :b], true) == false
+    end
+
+    test "returns the default for a value on the path that is not a map" do
+      assert get_path_present(%{a: :off}, [:a, :b], 0) == 0
+      assert get_path_present(%{a: false}, [:a, :b], 0) == 0
+      assert get_path_present(%{a: [b: 1]}, [:a, :b], 0) == 0
+    end
+
+    test "reads one key as get_present/3 does" do
+      assert get_path_present(%{a: 1}, [:a], 0) == get_present(%{a: 1}, :a, 0)
+      assert get_path_present(%{a: nil}, [:a], 0) == get_present(%{a: nil}, :a, 0)
+    end
+
+    test "reads a field of a struct, and returns the default for a key that is not a field" do
+      assert get_path_present(%{"site" => %URI{port: 8080}}, ["site", :port], 443) == 8080
+      assert get_path_present(%URI{host: "example.com"}, [:host], "x") == "example.com"
+      assert get_path_present(%{"site" => %URI{}}, ["site", :nope], 443) == 443
+    end
+
+    test "raises FunctionClauseError for an empty path and for an argument of the wrong type" do
+      assert_raise FunctionClauseError, fn -> apply(&get_path_present/3, [%{a: 1}, [], 0]) end
+      assert_raise FunctionClauseError, fn -> apply(&get_path_present/3, [%{a: 1}, :a, 0]) end
+      assert_raise FunctionClauseError, fn -> apply(&get_path_present/3, [[a: 1], [:a], 0]) end
+    end
+  end
+
   describe "take_as/2" do
     test "takes each key of the mapping and gives it the new name" do
       assert take_as(%{"a" => 1, "b" => 2, "c" => 3}, %{"a" => :x, "b" => :y}) == %{x: 1, y: 2}

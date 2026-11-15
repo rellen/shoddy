@@ -57,6 +57,21 @@ Shoddy.Keywords.get_present([retry: false], :retry, true)
 #=> false
 ```
 
+## Give a default for a value in a nested map
+
+Use `Shoddy.Maps.get_path_present/3` with a list of keys. It returns the
+default if a key of the path is absent, or if a value on the path is `nil`:
+
+```elixir
+settings = %{"intro" => %{order: 2}, "end" => %{order: nil}}
+
+Shoddy.Maps.get_path_present(settings, ["end", :order], 0)
+#=> 0
+```
+
+The function also reads a field of a struct on the path. `get_in/2` raises
+an error for most structs.
+
 ## Find the keys that have a value
 
 Use `Shoddy.Maps.present_keys/2` to find which optional fields have a
