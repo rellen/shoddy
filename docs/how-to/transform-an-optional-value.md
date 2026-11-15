@@ -71,6 +71,29 @@ Shoddy.then_present([2, 3], &Enum.join(&1, " "), default: "all")
 #=> "2 3"
 ```
 
+## Calculate the result for nil only when it is necessary
+
+The option `:default` is a value, so the code calculates it before the
+call, also for a value that is not `nil`. Give the option `:default_lazy`
+for a default that is expensive, that has a side effect, or that can raise.
+It is a function of arity 0, and `Shoddy.then_present/3` calls it only for
+`nil`:
+
+```elixir
+MyApp.Server
+|> GenServer.whereis()
+|> Shoddy.then_present(&GenServer.call(&1, :status), default_lazy: fn -> :not_running end)
+#=> :not_running
+```
+
+Do not give `:default` and `:default_lazy` together. The function then
+raises `ArgumentError`.
+
+If the code needs only the first value that is present, and no function for
+it, use `Shoddy.coalesce/2`. It also calls a function of arity 0 only when
+it examines that value. See
+[Choose the first available value](choose-the-first-available-value.md).
+
 ## Make a list of attributes from optional values
 
 Give the default `[]` to get an empty list for `nil`. Then `++/2` joins the

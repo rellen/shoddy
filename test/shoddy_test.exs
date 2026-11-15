@@ -87,6 +87,39 @@ defmodule ShoddyTest do
       assert Shoddy.then_present(nil, & &1, default: [a: 1]) == [a: 1]
     end
 
+    test "calls the function of :default_lazy for nil, and returns its return value" do
+      assert Shoddy.then_present(nil, & &1, default_lazy: fn -> :built end) == :built
+      assert Shoddy.then_present(nil, & &1, default_lazy: fn -> nil end) == nil
+    end
+
+    test "does not call the function of :default_lazy for a value that is not nil" do
+      fail = fn -> flunk("the function must not run") end
+
+      assert Shoddy.then_present(1, &(&1 + 1), default_lazy: fail) == 2
+      assert Shoddy.then_present(false, & &1, default_lazy: fail) == false
+    end
+
+    test "returns a function of :default with no call" do
+      default = fn -> :not_called end
+      assert Shoddy.then_present(nil, & &1, default: default) == default
+    end
+
+    test "raises ArgumentError for :default and :default_lazy together, also for a value that is not nil" do
+      for value <- [nil, 1] do
+        assert_raise ArgumentError, ~r/:default or the option :default_lazy, but not the two together/, fn ->
+          Shoddy.then_present(value, & &1, default: 1, default_lazy: fn -> 2 end)
+        end
+      end
+    end
+
+    test "raises ArgumentError for a :default_lazy that is not a function of arity 0, also for a value that is not nil" do
+      for lazy <- [:value, nil, fn _x -> 1 end], value <- [nil, 1] do
+        assert_raise ArgumentError, ~r/invalid value for :default_lazy option: expected a function of arity 0/, fn ->
+          Shoddy.then_present(value, & &1, default_lazy: lazy)
+        end
+      end
+    end
+
     test "raises ArgumentError for an unknown option" do
       assert_raise ArgumentError, fn -> Shoddy.then_present(nil, & &1, defualt: []) end
     end

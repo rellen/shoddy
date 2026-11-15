@@ -53,6 +53,11 @@ For the same reason, `Shoddy.then_present/3` ignores only `nil`, and it calls
 the function for `false`. It also gives a default for `nil`. A default for
 `Shoddy.then_if/2` would be ambiguous, because the function would return
 the default for `false` too.
+The default has two options. `:default` is a value, and `then_present/3`
+never calls it, also if it is a function. `:default_lazy` is a function of
+arity 0, and `then_present/3` calls it only for `nil`. One option for the
+two forms would be ambiguous, because a function can also be the default
+value itself. The name follows `Shoddy.Result.unwrap_lazy/2`.
 [Build a map from optional data](../how-to/build-a-map-from-optional-data.md#keep-a-field-that-can-be-false)
 shows when to use each function.
 
