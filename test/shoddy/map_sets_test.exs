@@ -69,6 +69,48 @@ defmodule Shoddy.MapSetsTest do
     end
   end
 
+  describe "put_or_delete/3" do
+    test "puts the element with true, also an element that is a member" do
+      assert put_or_delete(MapSet.new([:a]), :b, true) == MapSet.new([:a, :b])
+      assert put_or_delete(MapSet.new([:a]), :a, true) == MapSet.new([:a])
+    end
+
+    test "deletes the element with false, also an element that is not a member" do
+      assert put_or_delete(MapSet.new([:a, :b]), :a, false) == MapSet.new([:b])
+      assert put_or_delete(MapSet.new([:a]), :b, false) == MapSet.new([:a])
+    end
+
+    test "returns the same map set for a second call with the same arguments" do
+      for member? <- [true, false], set <- [MapSet.new(), MapSet.new([:a]), MapSet.new([:a, :b])] do
+        once = put_or_delete(set, :a, member?)
+        assert put_or_delete(once, :a, member?) == once
+      end
+    end
+
+    test "treats a list, nil and false as one element" do
+      assert put_or_delete(MapSet.new(), [1, 2], true) == MapSet.new([[1, 2]])
+      assert put_or_delete(MapSet.new([nil, false]), nil, false) == MapSet.new([false])
+      assert put_or_delete(MapSet.new(), false, true) == MapSet.new([false])
+    end
+
+    test "compares an element with the strict equality operator" do
+      assert put_or_delete(MapSet.new([1]), 1.0, false) == MapSet.new([1])
+    end
+
+    test "raises FunctionClauseError for a third argument that is not a boolean" do
+      for member? <- [nil, 1, "true", :on] do
+        error = assert_raise FunctionClauseError, fn -> apply(&put_or_delete/3, [MapSet.new(), :a, member?]) end
+        assert {error.module, error.function} == {Shoddy.MapSets, :put_or_delete}
+      end
+    end
+
+    test "raises FunctionClauseError for a first argument that is not a map set" do
+      for set <- [[:a], %{a: 1}, nil] do
+        assert_raise FunctionClauseError, fn -> apply(&put_or_delete/3, [set, :a, true]) end
+      end
+    end
+  end
+
   describe "toggle_all/2" do
     test "puts each element that is not a member into the map set" do
       assert toggle_all(MapSet.new(), [:a, :b]) == MapSet.new([:a, :b])

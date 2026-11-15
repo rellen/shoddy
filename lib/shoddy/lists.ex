@@ -474,6 +474,11 @@ defmodule Shoddy.Lists do
   Use this function for a selection whose order is important, such as the
   columns of a table in the order that the user selected them.
 
+  Use this function only for an event that asks for a change. If the same
+  event can arrive two times, the second call undoes the first. For an event
+  that carries the new state, add or remove the element as the state tells.
+  For a map set, `Shoddy.MapSets.put_or_delete/3` does this work.
+
   This function compares with the strict equality operator `===/2`.
 
   ## Examples

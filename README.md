@@ -29,7 +29,8 @@ params = %{"name" => "Ada", "email" => nil}
   for required keys. It removes, renames, counts and compares entries.
 - `Shoddy.Keywords` puts and reads a value in a keyword list in the same
   way, for example in the options of a function call.
-- `Shoddy.MapSets` toggles the membership of an element in a map set.
+- `Shoddy.MapSets` toggles the membership of an element in a map set, or
+  sets the membership from a boolean.
 - `Shoddy.Lists` finds the elements that occur more than one time in a list,
   or that have the same key. It also gets the only element of a list, and
   it makes a map from the key of each element to the element. It sorts and

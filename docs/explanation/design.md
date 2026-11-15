@@ -432,6 +432,25 @@ To toggle an element one time for each occurrence, for example to apply a
 list of events, call `Shoddy.MapSets.toggle/2` for each element with
 `Enum.reduce/3`.
 
+## A new state is not a toggle
+
+An event can ask for a change, or it can carry the new state. A click on
+a filter asks for a change, so `Shoddy.MapSets.toggle/2` is correct. A
+message such as "the flag is now on" carries the new state. Such a message
+can arrive two times, for example after a reconnection. The second toggle
+would then undo the first.
+
+`Shoddy.MapSets.put_or_delete/3` sets the membership from the state. Its
+result does not depend on the membership before the call, so a second
+message changes nothing. The name tells the two operations. A name such as
+`put_when` would tell only the first, and a reader would not expect a
+deletion.
+
+The third argument must be `true` or `false`. The functions with the
+suffixes `_if` and `_when` accept each truthy value, but here the two values
+select two different operations. A `nil` in that place usually means that
+the event has no state. A deletion with no error would hide that defect.
+
 ## How has_duplicates? finds a duplicate
 
 `Shoddy.Lists.has_duplicates?/1` must be fast for two types of list. In a
