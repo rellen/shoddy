@@ -782,6 +782,10 @@ of each function.
 `nil` usually have the same meaning: no value. Thus the function returns the
 default for the two cases.
 
+`Shoddy.Maps.present_keys/2` uses the same rule for the value `nil`, but it
+raises `KeyError` for an absent key. The caller writes the list of keys in
+the code, so an absent key is a mistake in the code, and not data.
+
 `Shoddy.Maps.put_path/3` goes into a map at each key of the path. A value of
 `nil` contains nothing that the function can lose, so the function replaces
 it with a map. Each other value that is not a map, such as `false`, is

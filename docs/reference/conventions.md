@@ -8,7 +8,7 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_when/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.present_keys/2`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2`, `Shoddy.MapSets.put_or_delete/3` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3`, `Shoddy.Lists.key_get/3`, `Shoddy.Lists.wrap_when/2`, `Shoddy.Lists.compact/1`, `Shoddy.Lists.map_present/2` |
@@ -73,6 +73,7 @@ These functions do not use this rule:
 - `Shoddy.Keywords.put_present/3` ignores only `nil`.
 - `Shoddy.Maps.get_present/3` and `Shoddy.Keywords.get_present/3` return the
   default only for an absent key and for `nil`. They return `false`.
+- `Shoddy.Maps.present_keys/2` ignores only a key with the value `nil`.
 - `Shoddy.Lists.key_get/3` returns the default only for an absent key. It
   returns the value `nil` of a pair that is present.
 - `Shoddy.then_present/3` ignores only `nil`. It calls the function for
@@ -267,6 +268,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Env.one_of/3`. A value that is shorter than the option `:min_bytes`, for `Shoddy.Env.string/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
 | `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. The key `:__struct__` is not a field. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
+| `KeyError` | A key of the list that is not in the map, for `Shoddy.Maps.present_keys/2`. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` or `Shoddy.Result.each_ok/2` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
 
 ## Names
