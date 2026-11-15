@@ -3,6 +3,7 @@
 This guide shows how to put a list of records into an order and into groups.
 Examples are a table and a list with headings. Use
 `Shoddy.Lists.sort_by_keys/2` and `Shoddy.Lists.group_by_in_order/2`. The
+guide also shows how to compare two records. The
 examples use an alias and this list:
 
 ```elixir
@@ -56,6 +57,32 @@ Enum.sort_by([~D[2024-02-01], ~D[2024-01-31]], & &1)
 
 Lists.sort_by_keys([~D[2024-02-01], ~D[2024-01-31]], [{:asc, & &1, Date}])
 #=> [~D[2024-01-31], ~D[2024-02-01]]
+```
+
+## Compare two records by the same keys
+
+Use `Shoddy.Lists.compare_by_keys/3` to ask if one record comes before
+another record. It takes the same keys as `Shoddy.Lists.sort_by_keys/2`, and
+it returns `:lt`, `:eq` or `:gt`:
+
+```elixir
+keys = [{:desc, & &1.on, Date}, & &1.from]
+[first, second, _third] = messages
+
+Lists.compare_by_keys(first, second, keys)
+#=> :lt
+```
+
+`:lt` means that the first record comes before the second record in the
+sorted list. Here the first key has the direction `:desc`, so the record
+with the later date comes first.
+
+Do not compare two tuples with `<`. For a date or a time, `<` compares the
+fields of the struct, so the day counts before the month:
+
+```elixir
+{1, ~D[2026-09-30]} < {1, ~D[2026-10-01]}
+#=> false
 ```
 
 ## Put the records into groups under headings

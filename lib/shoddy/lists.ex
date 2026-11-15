@@ -318,12 +318,62 @@ defmodule Shoddy.Lists do
   def sort_by_keys(list, [_ | _] = keys) when is_list(list) do
     specs = Enum.map(keys, &key_spec!/1)
 
-    Enum.sort_by(
-      list,
-      fn element -> Enum.map(specs, fn {_direction, fun, _module} -> fun.(element) end) end,
-      &in_order?(&1, &2, specs)
-    )
+    Enum.sort_by(list, &key_values(&1, specs), &(compare_values(&1, &2, specs) != :gt))
   end
+
+  @doc """
+  Compares two elements by more than one key.
+
+  `keys` takes the same forms as the keys of `sort_by_keys/2`. The function
+  compares the two elements by the first key. If the two values are equal,
+  it compares them by the next key, and so on.
+
+  The result tells the order of the two elements in a list that
+  `sort_by_keys/2` sorts with the same keys:
+
+    * `:lt` - The first element comes before the second element.
+    * `:gt` - The first element comes after the second element.
+    * `:eq` - The values of each key are equal.
+
+  Thus a key with the direction `:desc` gives `:lt` for the larger value.
+
+  Use this function to ask if one element comes before another element. A
+  comparison of two tuples with `<` is wrong for a struct such as a date or
+  a time, because `<` compares the fields of the struct. Give the module of
+  such a key, as for `sort_by_keys/2`.
+
+  This function raises `ArgumentError` for an element of `keys` that is not
+  one of the forms, and for a module that does not export `compare/2`.
+
+  ## Examples
+
+      iex> keys = [& &1.position, {:asc, & &1.on, Date}]
+      iex> first = %{position: 1, on: ~D[2026-09-30]}
+      iex> second = %{position: 1, on: ~D[2026-10-01]}
+      iex> Shoddy.Lists.compare_by_keys(first, second, keys)
+      :lt
+      iex> Shoddy.Lists.compare_by_keys(second, first, keys)
+      :gt
+      iex> Shoddy.Lists.compare_by_keys(first, first, keys)
+      :eq
+
+  With the direction `:desc`, the larger value comes first:
+
+      iex> Shoddy.Lists.compare_by_keys(%{age: 41}, %{age: 36}, [{:desc, & &1.age}])
+      :lt
+  """
+  @spec compare_by_keys(element, element, [key_spec, ...]) :: :lt | :eq | :gt
+        when element: var,
+             key_spec:
+               (element -> any())
+               | {:asc | :desc, (element -> any())}
+               | {:asc | :desc, (element -> any()), module()}
+  def compare_by_keys(first, second, [_ | _] = keys) do
+    specs = Enum.map(keys, &key_spec!/1)
+    compare_values(key_values(first, specs), key_values(second, specs), specs)
+  end
+
+  defp key_values(element, specs), do: Enum.map(specs, fn {_direction, fun, _module} -> fun.(element) end)
 
   defp key_spec!(fun) when is_function(fun, 1), do: {:asc, fun, nil}
   defp key_spec!({direction, fun}) when direction in [:asc, :desc] and is_function(fun, 1), do: {direction, fun, nil}
@@ -337,14 +387,16 @@ defmodule Shoddy.Lists do
             "got: #{inspect(other)}"
   end
 
-  defp in_order?([], [], []), do: true
+  # sort_by_keys/2 and compare_by_keys/3 use this function, so that they
+  # cannot disagree about an order.
+  defp compare_values([], [], []), do: :eq
 
-  defp in_order?([left | lefts], [right | rights], [{direction, _fun, module} | specs]) do
+  defp compare_values([left | lefts], [right | rights], [{direction, _fun, module} | specs]) do
     case {compare(left, right, module), direction} do
-      {:eq, _direction} -> in_order?(lefts, rights, specs)
-      {:lt, :asc} -> true
-      {:gt, :desc} -> true
-      _other -> false
+      {:eq, _direction} -> compare_values(lefts, rights, specs)
+      {order, :asc} -> order
+      {:lt, :desc} -> :gt
+      {:gt, :desc} -> :lt
     end
   end
 
