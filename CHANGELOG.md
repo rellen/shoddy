@@ -234,3 +234,5 @@ The first release also contains these changes:
   a value that is not `nil` in a map.
 - Add `Shoddy.Maps.get_path_present/3`. It reads a value at a path of keys
   in maps and structs, with a default for an absent key and for `nil`.
+- Add `Shoddy.Maps.get_and_increment/3`. It adds a number to the value of a
+  key, and it returns the new value and the map.

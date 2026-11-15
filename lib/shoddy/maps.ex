@@ -615,6 +615,36 @@ defmodule Shoddy.Maps do
   end
 
   @doc """
+  Adds a number to the value of a key, and returns the new value and the map.
+
+  This function changes the map as `increment/3` does. The result is a
+  tuple of the value after the addition and the new map. The value is the
+  first element, as in the result of `Map.get_and_update/3`.
+
+  Use this function when the code needs the new count in the same step. To
+  get the value before the addition, subtract the amount from the first
+  element.
+
+  ## Examples
+
+      iex> Shoddy.Maps.get_and_increment(%{"a" => 1}, "a")
+      {2, %{"a" => 2}}
+
+      iex> Shoddy.Maps.get_and_increment(%{}, "a")
+      {1, %{"a" => 1}}
+
+      iex> Shoddy.Maps.get_and_increment(%{"a" => 1}, "a", 10)
+      {11, %{"a" => 11}}
+  """
+  @spec get_and_increment(%{optional(key) => number()}, key, number()) ::
+          {number(), %{optional(key) => number()}}
+        when key: any()
+  def get_and_increment(map, key, by \\ 1) when is_non_struct_map(map) and is_number(by) do
+    map = increment(map, key, by)
+    {Map.fetch!(map, key), map}
+  end
+
+  @doc """
   Gives a key of a map a new name, and keeps the other entries.
 
   If `old` is absent, this function returns the map with no change. If

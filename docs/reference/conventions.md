@@ -8,7 +8,7 @@ of each module gives the full description of each function.
 | Module | Functions |
 | --- | --- |
 | `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_when/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
-| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.get_path_present/3`, `Shoddy.Maps.present_keys/2`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
+| `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.get_path_present/3`, `Shoddy.Maps.present_keys/2`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.get_and_increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2`, `Shoddy.MapSets.put_or_delete/3` |
 | `Shoddy.Lists` | `Shoddy.Lists.duplicates/1`, `Shoddy.Lists.duplicates_by/2`, `Shoddy.Lists.has_duplicates?/1`, `Shoddy.Lists.index_by/3`, `Shoddy.Lists.single/1`, `Shoddy.Lists.group_by_in_order/2`, `Shoddy.Lists.upsert_by/4`, `Shoddy.Lists.sort_by_keys/2`, `Shoddy.Lists.compare_by_keys/3`, `Shoddy.Lists.toggle/2`, `Shoddy.Lists.move/3`, `Shoddy.Lists.sorted?/2`, `Shoddy.Lists.cycle_next/2`, `Shoddy.Lists.all_same_by?/2`, `Shoddy.Lists.join_by/4`, `Shoddy.Lists.group_join_by/4`, `Shoddy.Lists.map_with_acc/3`, `Shoddy.Lists.key_get/3`, `Shoddy.Lists.wrap_when/2`, `Shoddy.Lists.compact/1`, `Shoddy.Lists.map_present/2` |
@@ -218,7 +218,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A third argument of `Shoddy.MapSets.put_or_delete/3` that is not `true` or `false`. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
-| `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |
+| `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.get_and_increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |
 | `FunctionClauseError` | An empty path for `Shoddy.Maps.put_path/3` and `Shoddy.Maps.get_path_present/3`. |
 | `FunctionClauseError` | An empty list of keys for `Shoddy.Lists.sort_by_keys/2` and `Shoddy.Lists.compare_by_keys/3`. |
 | `FunctionClauseError` | An empty list for `Shoddy.Lists.cycle_next/2`, or a negative index for `Shoddy.Lists.move/3`. |
@@ -253,7 +253,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one key with the same new key, for `Shoddy.Maps.map_keys/2` and `Shoddy.Maps.stringify_keys/1`. A list key that `to_string/1` cannot convert, such as `[:a]`, for `Shoddy.Maps.stringify_keys/1`. |
 | `ArgumentError` | A new key that is already in the map, for `Shoddy.Maps.rename_key/3`. |
 | `ArgumentError` | More than one key with the same value, for `Shoddy.Maps.invert/1`. |
-| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3` and `Shoddy.Numbers.mean/1`. A mean that is too large for a float, for `Shoddy.Numbers.mean/1`. |
+| `ArithmeticError` | A value that is not a number, for `Shoddy.Maps.increment/3`, `Shoddy.Maps.get_and_increment/3` and `Shoddy.Numbers.mean/1`. A mean that is too large for a float, for `Shoddy.Numbers.mean/1`. |
 | `ArgumentError` | A value on the path that is not a map and not `nil`, for `Shoddy.Maps.put_path/3`. |
 | `ArgumentError` | More than one element with the same key, for `Shoddy.Lists.index_by/3` with the default `on_duplicate: :raise`. An unknown option, a `:value` that is not a function of arity 1, or an `:on_duplicate` other than `:raise`, `:first` and `:last`. |
 | `ArgumentError` | An unknown option or a value of `:at` other than `:end` and `:start`, for `Shoddy.Lists.upsert_by/4`. |
@@ -262,7 +262,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An index that is not in the list, for `Shoddy.Lists.move/3`. |
 | `ArgumentError` | An element that is not in the list, for `Shoddy.Lists.cycle_next/2`. |
 | `ArgumentError` | More than one element of the second list with the same key, for `Shoddy.Lists.join_by/4`. This rule does not apply to the key `nil`. |
-| `ArgumentError` | The key `:__struct__` for a plain map, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.invert/1` and `Shoddy.Maps.take_as/2`. The map would then be a struct. |
+| `ArgumentError` | The key `:__struct__` for a plain map, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.get_and_increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.invert/1` and `Shoddy.Maps.take_as/2`. The map would then be a struct. |
 | `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
 | `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string of exactly one grapheme, for `Shoddy.Strings.mask/2`. |
 | `ArgumentError` | An empty separator, an empty list, or a list with a value that is not a non-empty string, for `Shoddy.Strings.split_trim/2`. |
