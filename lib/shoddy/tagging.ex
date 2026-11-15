@@ -18,6 +18,17 @@ defmodule Shoddy.Tagging do
 
       iex> %{count: 1} |> Shoddy.Tagging.tag(:noreply)
       {:noreply, %{count: 1}}
+
+  ## Import the functions
+
+  To call the functions with no module name, import only the functions that
+  the module uses:
+
+      import Shoddy.Tagging, only: [ok: 1, error: 1]
+
+  An import of all the functions can conflict with a function of the module.
+  In a module that imports `Plug.Conn`, do not import `halt/1`, because
+  `Plug.Conn.halt/1` has the same name.
   """
 
   @doc """
@@ -81,7 +92,8 @@ defmodule Shoddy.Tagging do
   @doc """
   Puts a value into a `:cont` tuple.
 
-  Use this function with `Enum.reduce_while/3`.
+  Use this function with `Enum.reduce_while/3`, or in an `on_mount` hook of a
+  Phoenix LiveView.
 
   ## Examples
 
@@ -94,7 +106,8 @@ defmodule Shoddy.Tagging do
   @doc """
   Puts a value into a `:halt` tuple.
 
-  Use this function with `Enum.reduce_while/3`.
+  Use this function with `Enum.reduce_while/3`, or in an `on_mount` hook of a
+  Phoenix LiveView.
 
   ## Examples
 
