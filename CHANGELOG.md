@@ -199,3 +199,5 @@ The first release also contains these changes:
 - Add `Shoddy.Lists.compare_by_keys/3`. It compares two elements by the
   keys of `Shoddy.Lists.sort_by_keys/2`, and it returns `:lt`, `:eq` or
   `:gt`.
+- Add `Shoddy.Lists.group_join_by/4`. It puts each element of the first list
+  with each element of the second list that has the same key.

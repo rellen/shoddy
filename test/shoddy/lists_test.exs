@@ -380,6 +380,59 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "group_join_by/4" do
+    test "puts each left element with each right element of its key, in the order of the two lists" do
+      left = [{:b}, {:a}, {:c}]
+      right = [{:a, 1}, {:b, 2}, {:a, 3}, {:z, 4}]
+
+      assert group_join_by(left, right, &elem(&1, 0), &elem(&1, 0)) ==
+               [{{:b}, [{:b, 2}]}, {{:a}, [{:a, 1}, {:a, 3}]}, {{:c}, []}]
+    end
+
+    test "gives the same group to each left element with the same key" do
+      assert group_join_by([1, 1], [1], & &1, & &1) == [{1, [1]}, {1, [1]}]
+    end
+
+    test "never matches a nil key" do
+      assert group_join_by([%{k: nil}], [%{k: nil}, %{k: nil}], & &1.k, & &1.k) == [{%{k: nil}, []}]
+    end
+
+    test "matches the key false" do
+      assert group_join_by([false], [false, true], & &1, & &1) == [{false, [false]}]
+    end
+
+    test "compares the keys with the strict equality operator" do
+      assert group_join_by([1], [1.0], & &1, & &1) == [{1, []}]
+    end
+
+    test "returns an empty list for an empty left list, and empty groups for an empty right list" do
+      assert group_join_by([], [1], & &1, & &1) == []
+      assert group_join_by([1], [], & &1, & &1) == [{1, []}]
+    end
+
+    test "calls each key function one time for each element" do
+      parent = self()
+
+      key = fn element ->
+        send(parent, {:key, element})
+        element
+      end
+
+      group_join_by([:l], [:r], key, key)
+
+      assert_received {:key, :l}
+      assert_received {:key, :r}
+      refute_received {:key, _element}
+    end
+
+    test "raises FunctionClauseError for an argument of the wrong type" do
+      for args <- [[%{}, [], & &1, & &1], [[], :right, & &1, & &1], [[], [], nil, & &1], [[], [], & &1, &{&1, &2}]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&group_join_by/4, args) end
+        assert {error.module, error.function} == {Shoddy.Lists, :group_join_by}
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])
