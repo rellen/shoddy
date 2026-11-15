@@ -46,6 +46,24 @@ defmodule Shoddy.Tagging do
   def ok(value), do: tag(value, :ok)
 
   @doc """
+  Puts a value and a second value into an `:ok` tagged tuple of three elements.
+
+  The arguments have the order of the tuple. Use this function for a result
+  that has a second value, such as a number and the rest of the text after
+  it.
+
+  ## Examples
+
+      iex> Shoddy.Tagging.ok(:priority, 3)
+      {:ok, :priority, 3}
+
+      iex> 42 |> Shoddy.Tagging.ok(" apples")
+      {:ok, 42, " apples"}
+  """
+  @spec ok(value, extra) :: {:ok, value, extra} when value: any(), extra: any()
+  def ok(value, extra), do: tag(value, extra, :ok)
+
+  @doc """
   Puts a value into an error tuple.
 
   ## Examples
@@ -58,6 +76,20 @@ defmodule Shoddy.Tagging do
   """
   @spec error(value) :: {:error, value} when value: any()
   def error(value), do: tag(value, :error)
+
+  @doc """
+  Puts a reason and a second value into an `:error` tagged tuple of three elements.
+
+  The arguments have the order of the tuple. Use this function for an error
+  that also returns the result of the work before the error.
+
+  ## Examples
+
+      iex> Shoddy.Tagging.error(:unterminated, ["a", "b"])
+      {:error, :unterminated, ["a", "b"]}
+  """
+  @spec error(value, extra) :: {:error, value, extra} when value: any(), extra: any()
+  def error(value, extra), do: tag(value, extra, :error)
 
   @doc """
   Puts a value into a `:noreply` tuple.
