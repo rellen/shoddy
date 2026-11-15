@@ -325,4 +325,38 @@ defmodule Shoddy.StringsTest do
       end
     end
   end
+
+  describe "upcase_first/1" do
+    test "changes the first grapheme to upper case, and keeps the rest with no change" do
+      assert upcase_first("the API key") == "The API key"
+      assert upcase_first("a") == "A"
+      assert upcase_first("élan Vital") == "Élan Vital"
+      assert upcase_first("API key") == "API key"
+    end
+
+    test "returns an empty string for an empty string" do
+      assert upcase_first("") == ""
+    end
+
+    test "returns a string with no change if the first grapheme has no upper case form" do
+      assert upcase_first("1 key") == "1 key"
+      assert upcase_first(" key") == " key"
+      assert upcase_first(<<255, ?a>>) == <<255, ?a>>
+    end
+
+    test "changes a first grapheme of more than one code point" do
+      assert upcase_first("éte") == "Éte"
+    end
+
+    test "returns a longer string if the upper case form has more than one letter" do
+      assert upcase_first("ßa") == "SSa"
+    end
+
+    test "raises FunctionClauseError from upcase_first/1 itself for a value that is not a string" do
+      for value <- [nil, :key, ~c"key", 1] do
+        error = assert_raise FunctionClauseError, fn -> apply(&upcase_first/1, [value]) end
+        assert {error.module, error.function} == {Shoddy.Strings, :upcase_first}
+      end
+    end
+  end
 end

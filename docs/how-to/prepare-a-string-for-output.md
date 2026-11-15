@@ -1,7 +1,8 @@
 # Prepare a string for output
 
 This guide shows how to hide a secret in a log. It also shows how to make
-sure that a string starts or ends with a fixed text. The examples use an
+sure that a string starts or ends with a fixed text. The last section shows
+how to start a message with an upper case letter. The examples use an
 alias:
 
 ```elixir
@@ -69,4 +70,22 @@ gets two slashes and never gets none:
 |> Strings.ensure_suffix("/")
 |> Kernel.<>("users")
 #=> "https://example.com/api/users"
+```
+
+## Start a message with an upper case letter
+
+Use `Shoddy.Strings.upcase_first/1`. It changes only the first character, so
+a name such as `API` stays in upper case:
+
+```elixir
+Strings.upcase_first("the API key is not valid")
+#=> "The API key is not valid"
+```
+
+The function accepts an empty string. Thus a message of whitespace only
+raises no exception after `String.trim/1`:
+
+```elixir
+"   " |> String.trim() |> Strings.upcase_first()
+#=> ""
 ```
