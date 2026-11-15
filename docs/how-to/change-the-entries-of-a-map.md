@@ -44,6 +44,17 @@ To count each element of a list in one step, `Enum.frequencies/1` does the
 same work. Use `Shoddy.Maps.increment/3` when the counts change at
 different places, for example in the state of a process.
 
+To use the new count in the same step, call
+`Shoddy.Maps.get_and_increment/3`. It returns the new count and the map.
+This example gives a number to a name that occurs a second time:
+
+```elixir
+{count, counts} = Maps.get_and_increment(%{"node" => 1}, "node")
+
+"node:#{count}"
+#=> "node:2"
+```
+
 ## Find a key by its value
 
 Use `Shoddy.Maps.invert/1`. It swaps the keys and the values:

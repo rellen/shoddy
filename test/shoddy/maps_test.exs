@@ -517,6 +517,42 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "get_and_increment/3" do
+    test "returns the value after the addition and the new map" do
+      assert get_and_increment(%{a: 1, b: 5}, :a) == {2, %{a: 2, b: 5}}
+    end
+
+    test "returns the amount for an absent key" do
+      assert get_and_increment(%{}, :a) == {1, %{a: 1}}
+      assert get_and_increment(%{}, :a, 5) == {5, %{a: 5}}
+    end
+
+    test "accepts a negative amount and a float" do
+      assert get_and_increment(%{a: 1}, :a, -3) == {-2, %{a: -2}}
+      assert get_and_increment(%{a: 1}, :a, 0.5) == {1.5, %{a: 1.5}}
+    end
+
+    test "returns the same map as increment/3" do
+      {_count, map} = get_and_increment(%{a: 1}, :a, 4)
+      assert map == increment(%{a: 1}, :a, 4)
+    end
+
+    test "raises ArithmeticError for a value that is not a number" do
+      assert_raise ArithmeticError, fn -> get_and_increment(%{a: "1"}, :a) end
+    end
+
+    test "raises ArgumentError for the key :__struct__" do
+      assert_raise ArgumentError, fn -> get_and_increment(%{}, :__struct__) end
+    end
+
+    test "raises FunctionClauseError from get_and_increment/3 itself for a struct or an amount that is not a number" do
+      error = assert_raise FunctionClauseError, fn -> apply(&get_and_increment/3, [%URI{}, :port, 1]) end
+      assert error.function == :get_and_increment
+      error = assert_raise FunctionClauseError, fn -> apply(&get_and_increment/3, [%{}, :a, "1"]) end
+      assert error.function == :get_and_increment
+    end
+  end
+
   describe "rename_key/3" do
     test "keeps the value and the other entries" do
       assert rename_key(%{a: 1, b: 2}, :a, :c) == %{c: 1, b: 2}
