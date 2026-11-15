@@ -277,6 +277,101 @@ defmodule Shoddy.DateTimesTest do
     end
   end
 
+  describe "within?/3" do
+    test "includes the first value and the last value" do
+      first = ~N[2024-01-01 10:00:00]
+      last = ~N[2024-01-01 11:00:00]
+
+      assert within?(first, first, last)
+      assert within?(~N[2024-01-01 10:30:00], first, last)
+      assert within?(last, first, last)
+      refute within?(~N[2024-01-01 09:59:59.999999], first, last)
+      refute within?(~N[2024-01-01 11:00:00.000001], first, last)
+    end
+
+    test "accepts Date, Time, NaiveDateTime and DateTime" do
+      assert within?(~D[2024-01-03], ~D[2024-01-01], ~D[2024-01-03])
+      assert within?(~T[11:00:00], ~T[10:00:00], ~T[11:00:00])
+      assert within?(~N[2024-01-01 11:00:00], ~N[2024-01-01 10:00:00], ~N[2024-01-01 11:00:00])
+      assert within?(~U[2024-01-01 11:00:00Z], ~U[2024-01-01 10:00:00Z], ~U[2024-01-01 11:00:00Z])
+    end
+
+    test "returns true for a value that is not before the first value, if the last value is nil" do
+      assert within?(~D[2026-01-01], ~D[2026-01-01], nil)
+      assert within?(~D[2030-01-01], ~D[2026-01-01], nil)
+      assert within?(~T[23:59:59], ~T[10:00:00], nil)
+      assert within?(~N[2030-01-01 00:00:00], ~N[2026-01-01 00:00:00], nil)
+      assert within?(~U[2030-01-01 00:00:00Z], ~U[2026-01-01 00:00:00Z], nil)
+    end
+
+    test "returns false for a value before the first value, if the last value is nil" do
+      refute within?(~D[2025-12-31], ~D[2026-01-01], nil)
+      refute within?(~U[2025-12-31 23:59:59.999999Z], ~U[2026-01-01 00:00:00Z], nil)
+    end
+
+    test "compares two dates in time, not by their fields" do
+      refute within?(~D[2024-02-01], ~D[2024-01-01], ~D[2024-01-31])
+      assert within?(~D[2024-01-31], ~D[2023-12-31], ~D[2024-02-01])
+      assert within?(~D[2024-02-01], ~D[2024-01-31], nil)
+    end
+
+    test "compares the points in time of DateTime values in different time zones" do
+      paris = %{
+        ~U[2024-01-01 11:00:00Z]
+        | hour: 12,
+          time_zone: "Europe/Paris",
+          zone_abbr: "CET",
+          utc_offset: 3600
+      }
+
+      assert within?(paris, ~U[2024-01-01 10:00:00Z], ~U[2024-01-01 11:00:00Z])
+      refute within?(paris, ~U[2024-01-01 11:00:01Z], ~U[2024-01-01 12:30:00Z])
+      refute within?(paris, ~U[2024-01-01 11:00:01Z], nil)
+    end
+
+    test "ignores the precision of the fractional second" do
+      assert within?(~U[2024-01-01 10:00:00Z], ~U[2024-01-01 10:00:00.000000Z], ~U[2024-01-01 11:00:00Z])
+      assert within?(~U[2024-01-01 11:00:00.000Z], ~U[2024-01-01 10:00:00Z], ~U[2024-01-01 11:00:00Z])
+    end
+
+    test "returns true for the one value of a period with an equal first and last value" do
+      assert within?(~D[2024-01-01], ~D[2024-01-01], ~D[2024-01-01])
+      refute within?(~D[2024-01-02], ~D[2024-01-01], ~D[2024-01-01])
+    end
+
+    test "returns false for a period in the wrong order" do
+      refute within?(~D[2024-01-02], ~D[2024-01-03], ~D[2024-01-01])
+      refute within?(~D[2024-01-03], ~D[2024-01-03], ~D[2024-01-01])
+      refute within?(~D[2024-01-01], ~D[2024-01-03], ~D[2024-01-01])
+    end
+
+    test "raises FunctionClauseError for values of different types" do
+      assert_raise FunctionClauseError, fn ->
+        apply(&within?/3, [~N[2024-01-01 10:00:00], ~U[2024-01-01 09:00:00Z], ~U[2024-01-01 11:00:00Z]])
+      end
+
+      assert_raise FunctionClauseError, fn ->
+        apply(&within?/3, [~D[2024-01-02], ~D[2024-01-01], ~N[2024-01-03 00:00:00]])
+      end
+
+      assert_raise FunctionClauseError, fn ->
+        apply(&within?/3, [~D[2024-01-02], ~N[2024-01-01 00:00:00], nil])
+      end
+    end
+
+    test "raises FunctionClauseError for a value that is not a date or a time" do
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [2, 1, 3]) end
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [2, 1, nil]) end
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [%URI{}, %URI{}, %URI{}]) end
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [%URI{}, %URI{}, nil]) end
+    end
+
+    test "raises FunctionClauseError for a first value of nil" do
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [~D[2024-01-02], nil, ~D[2024-01-03]]) end
+      assert_raise FunctionClauseError, fn -> apply(&within?/3, [~D[2024-01-02], nil, nil]) end
+    end
+  end
+
   describe "next_start/2" do
     test "returns the start of the next minute, hour and day" do
       value = ~N[2024-12-31 23:59:59.5]
