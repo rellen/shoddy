@@ -67,7 +67,7 @@ and add the omission yourself:
 
 ## Shorten a string to a number of bytes
 
-A database column or a protocol can limit a value in bytes, not in
+A database column or a protocol can limit text in bytes, not in
 characters. Use `Shoddy.Strings.truncate_bytes/2`. It never cuts a
 character in half:
 
@@ -78,3 +78,14 @@ Strings.truncate_bytes("Möbius", 2)
 
 The letter `ö` uses two bytes, so it does not fit after `M`.
 `binary_part/3` would cut it, and the result would not be a valid string.
+
+Use this function only for text. For binary data that is not text, use
+`binary_slice/3`. It accepts a length that is longer than the binary:
+
+```elixir
+binary_slice(<<1, 2, 13, 10, 255>>, 0, 3)
+#=> <<1, 2, 13>>
+```
+
+The bytes 13 and 10 are `"\r\n"`, which is one grapheme. Thus
+`Strings.truncate_bytes/2` returns `<<1, 2>>` for this binary and 3 bytes.
