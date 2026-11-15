@@ -165,6 +165,9 @@ defmodule Shoddy.Tagging do
 
   Use this function in a GenServer `handle_call/3` callback.
 
+  The reply is the first argument. For a pipeline of the state, use
+  `reply_with/2`.
+
   ## Examples
 
       iex> Shoddy.Tagging.reply(:ok, %{count: 1})
@@ -172,6 +175,26 @@ defmodule Shoddy.Tagging do
   """
   @spec reply(value, extra) :: {:reply, value, extra} when value: any(), extra: any()
   def reply(value, extra), do: tag(value, extra, :reply)
+
+  @doc """
+  Puts a state and a reply into a `:reply` tagged tuple of three elements.
+
+  The state is the first argument, and the reply is the second argument.
+  Thus this function can be the last step of a pipeline that changes the
+  state. `reply/2` makes the same tuple, but it takes the reply first.
+
+  ## Examples
+
+      iex> Shoddy.Tagging.reply_with(%{count: 1}, :ok)
+      {:reply, :ok, %{count: 1}}
+
+      iex> %{count: 1}
+      ...> |> Map.update!(:count, &(&1 + 1))
+      ...> |> Shoddy.Tagging.reply_with(:ok)
+      {:reply, :ok, %{count: 2}}
+  """
+  @spec reply_with(state, reply) :: {:reply, reply, state} when state: any(), reply: any()
+  def reply_with(state, reply), do: tag(reply, state, :reply)
 
   @doc """
   Puts a value into a `:stop` tuple.
@@ -189,6 +212,9 @@ defmodule Shoddy.Tagging do
 
   Use this function in a GenServer callback that must stop the process.
 
+  The reason is the first argument. For a pipeline of the state, use
+  `stop_with/2`.
+
   ## Examples
 
       iex> Shoddy.Tagging.stop(:normal, %{count: 1})
@@ -196,6 +222,26 @@ defmodule Shoddy.Tagging do
   """
   @spec stop(value, extra) :: {:stop, value, extra} when value: any(), extra: any()
   def stop(value, extra), do: tag(value, extra, :stop)
+
+  @doc """
+  Puts a state and a reason into a `:stop` tagged tuple of three elements.
+
+  The state is the first argument, and the reason is the second argument.
+  Thus this function can be the last step of a pipeline that changes the
+  state. `stop/2` makes the same tuple, but it takes the reason first.
+
+  ## Examples
+
+      iex> Shoddy.Tagging.stop_with(%{count: 1}, :normal)
+      {:stop, :normal, %{count: 1}}
+
+      iex> %{count: 1}
+      ...> |> Map.put(:closed, true)
+      ...> |> Shoddy.Tagging.stop_with(:normal)
+      {:stop, :normal, %{closed: true, count: 1}}
+  """
+  @spec stop_with(state, reason) :: {:stop, reason, state} when state: any(), reason: any()
+  def stop_with(state, reason), do: tag(reason, state, :stop)
 
   @doc """
   Puts a value into a tagged tuple with the given atom tag.

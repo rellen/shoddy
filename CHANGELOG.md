@@ -227,3 +227,6 @@ The first release also contains these changes:
   when no part is present.
 - Add `Shoddy.Tagging.ok/2` and `Shoddy.Tagging.error/2`. They put two
   values into a tagged tuple of three elements.
+- Add `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2`. They
+  take the state first, so a pipeline that changes the state can end with
+  them.

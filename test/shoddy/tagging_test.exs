@@ -93,6 +93,20 @@ defmodule Shoddy.TaggingTest do
     end
   end
 
+  describe "reply_with/2" do
+    test "puts a state and a reply into a :reply tagged tuple, with the reply before the state" do
+      assert reply_with(%{count: 1}, :ok) == {:reply, :ok, %{count: 1}}
+    end
+
+    test "takes the state from a pipeline" do
+      assert %{count: 1} |> Map.put(:count, 2) |> reply_with(:ok) == {:reply, :ok, %{count: 2}}
+    end
+
+    test "returns the same tuple as reply/2 with the arguments in the other order" do
+      assert reply_with(:state, :reply) == reply(:reply, :state)
+    end
+  end
+
   describe "stop/1" do
     test "puts a value into a :stop tuple" do
       assert stop(:normal) == {:stop, :normal}
@@ -102,6 +116,20 @@ defmodule Shoddy.TaggingTest do
   describe "stop/2" do
     test "puts a reason and a state into a :stop tagged tuple of three elements" do
       assert stop(:normal, %{}) == {:stop, :normal, %{}}
+    end
+  end
+
+  describe "stop_with/2" do
+    test "puts a state and a reason into a :stop tagged tuple, with the reason before the state" do
+      assert stop_with(%{count: 1}, :normal) == {:stop, :normal, %{count: 1}}
+    end
+
+    test "takes the state from a pipeline" do
+      assert %{count: 1} |> Map.put(:count, 2) |> stop_with(:shutdown) == {:stop, :shutdown, %{count: 2}}
+    end
+
+    test "returns the same tuple as stop/2 with the arguments in the other order" do
+      assert stop_with(:state, :reason) == stop(:reason, :state)
     end
   end
 
