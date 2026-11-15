@@ -230,3 +230,5 @@ The first release also contains these changes:
 - Add `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2`. They
   take the state first, so a pipeline that changes the state can end with
   them.
+- Add `Shoddy.Maps.present_keys/2`. It returns the keys of a list that have
+  a value that is not `nil` in a map.

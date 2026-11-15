@@ -195,6 +195,31 @@ defmodule Shoddy.Maps do
   end
 
   @doc """
+  Returns the keys of a list that have a value in a map.
+
+  A key has a value if its value in the map is not `nil`. Thus `false` is a
+  value. The result keeps the order of `keys`.
+
+  Each key must be in the map. For another key, this function raises
+  `KeyError`, so a mistake in the name of a key does not hide a value.
+
+  Use this function to find which optional fields of a map or a struct have
+  a value.
+
+  ## Examples
+
+      iex> Shoddy.Maps.present_keys(%{column: 1, order: nil, wrap: false}, [:order, :wrap, :column])
+      [:wrap, :column]
+
+      iex> Shoddy.Maps.present_keys(%URI{host: "example.com"}, [:host, :port])
+      [:host]
+  """
+  @spec present_keys(map(), [key]) :: [key] when key: any()
+  def present_keys(map, keys) when is_map(map) and is_list(keys) do
+    Enum.reject(keys, &is_nil(Map.fetch!(map, &1)))
+  end
+
+  @doc """
   Takes keys from a map, and gives each key a new name.
 
   `mapping` is a map from each key to take to its new name. The result

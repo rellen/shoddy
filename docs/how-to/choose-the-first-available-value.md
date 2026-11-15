@@ -57,6 +57,21 @@ Shoddy.Keywords.get_present([retry: false], :retry, true)
 #=> false
 ```
 
+## Find the keys that have a value
+
+Use `Shoddy.Maps.present_keys/2` to find which optional fields have a
+value. It returns each key with a value that is not `nil`, in the order of
+the list:
+
+```elixir
+node = %{name: "intro", column: 2, order: nil}
+
+Shoddy.Maps.present_keys(node, [:column, :order])
+#=> [:column]
+```
+
+The function raises `KeyError` for a key that is not in the map.
+
 ## Reject more values than nil
 
 By default, `Shoddy.coalesce/2` rejects only `nil`. An empty string is not

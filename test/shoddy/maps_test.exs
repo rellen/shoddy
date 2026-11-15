@@ -168,6 +168,34 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "present_keys/2" do
+    test "returns the keys with a value that is not nil, in the order of the list" do
+      assert present_keys(%{a: 1, b: nil, c: 3}, [:c, :b, :a]) == [:c, :a]
+    end
+
+    test "keeps false, zero and an empty string" do
+      assert present_keys(%{a: false, b: 0, c: ""}, [:a, :b, :c]) == [:a, :b, :c]
+    end
+
+    test "returns an empty list for an empty list of keys" do
+      assert present_keys(%{a: 1}, []) == []
+    end
+
+    test "reads the fields of a struct" do
+      assert present_keys(%URI{host: "example.com", port: nil}, [:port, :host]) == [:host]
+    end
+
+    test "raises KeyError for a key that is not in the map, also after a key that is present" do
+      assert_raise KeyError, fn -> present_keys(%{a: 1}, [:a, :b]) end
+      assert_raise KeyError, fn -> present_keys(%URI{}, [:nope]) end
+    end
+
+    test "raises FunctionClauseError for an argument of the wrong type" do
+      assert_raise FunctionClauseError, fn -> apply(&present_keys/2, [[a: 1], [:a]]) end
+      assert_raise FunctionClauseError, fn -> apply(&present_keys/2, [%{a: 1}, :a]) end
+    end
+  end
+
   describe "take_as/2" do
     test "takes each key of the mapping and gives it the new name" do
       assert take_as(%{"a" => 1, "b" => 2, "c" => 3}, %{"a" => :x, "b" => :y}) == %{x: 1, y: 2}
