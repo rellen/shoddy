@@ -191,8 +191,16 @@ defmodule Shoddy do
     * `:default` - The value that this function returns for `nil`. The
       default is `nil`.
 
-  This function raises `ArgumentError` for an option that is not in the list
-  above.
+    * `:default_lazy` - A function of arity 0. For `nil`, this function
+      calls it and returns its return value. It does not call the function
+      for another value. Use this option for a default that is expensive,
+      that has a side effect, or that can raise.
+
+  This function raises `ArgumentError` for these options:
+
+  - An option that is not in the list above.
+  - `:default` and `:default_lazy` together.
+  - A `:default_lazy` that is not a function of arity 0.
 
   ## Examples
 
@@ -217,6 +225,14 @@ defmodule Shoddy do
       iex> Shoddy.then_present("intro", &[{"data-el", &1}], default: [])
       [{"data-el", "intro"}]
 
+  The function calls the function of `:default_lazy` only for `nil`:
+
+      iex> Shoddy.then_present(nil, &String.trim/1, default_lazy: fn -> "no name" end)
+      "no name"
+
+      iex> Shoddy.then_present(" Ada ", &String.trim/1, default_lazy: fn -> raise "not called" end)
+      "Ada"
+
   Use the function in a pipeline:
 
       iex> %{steps: [2, 3]}
@@ -227,8 +243,29 @@ defmodule Shoddy do
   @spec then_present(value, (value -> result), keyword()) :: result | default
         when value: any(), result: any(), default: any()
   def then_present(value, fun, opts \\ []) when is_function(fun, 1) and is_list(opts) do
-    opts = Keyword.validate!(opts, default: nil)
-    if is_nil(value), do: opts[:default], else: fun.(value)
+    default = opts |> Keyword.validate!([:default, :default_lazy]) |> default_fun!()
+    if is_nil(value), do: default.(), else: fun.(value)
+  end
+
+  # This function returns a function of arity 0 for each form of the default,
+  # so that then_present/3 has one path for `nil`.
+  defp default_fun!(opts) do
+    case {Keyword.fetch(opts, :default), Keyword.fetch(opts, :default_lazy)} do
+      {{:ok, _default}, {:ok, _fun}} ->
+        raise ArgumentError, "give the option :default or the option :default_lazy, but not the two together"
+
+      {:error, {:ok, fun}} when is_function(fun, 0) ->
+        fun
+
+      {:error, {:ok, other}} ->
+        Shoddy.Option.invalid!(:default_lazy, "a function of arity 0", other)
+
+      {{:ok, default}, :error} ->
+        fn -> default end
+
+      {:error, :error} ->
+        fn -> nil end
+    end
   end
 
   @doc """

@@ -211,3 +211,6 @@ The first release also contains these changes:
   pairs, or a default. The key can be a string or a value of another type.
 - Add `Shoddy.then_when/3`. It applies a function to a value if a condition
   is truthy. The condition is a value, and not a predicate.
+- Add the option `:default_lazy` to `Shoddy.then_present/3`. It is a
+  function of arity 0 that returns the default, and the function calls it
+  only for `nil`.

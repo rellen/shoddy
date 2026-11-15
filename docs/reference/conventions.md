@@ -102,6 +102,7 @@ For example, `Shoddy.then_if/2` tests the value that it transforms, and
 | `Shoddy.then_if/3` | The function to apply. | 1 |
 | `Shoddy.then_when/3` | The function to apply. | 1 |
 | `Shoddy.then_present/3` | The function to apply. | 1 |
+| `Shoddy.then_present/3` | The value of the option `:default_lazy`. `Shoddy.then_present/3` calls it only for `nil`. | 0 |
 | `Shoddy.Maps.map_values/2` | The function to apply to each value. | 1 |
 | `Shoddy.Maps.map_keys/2` | The function to apply to each key. | 1 |
 | `Shoddy.Lists.duplicates_by/2` | The function that returns the key of an element. | 1 |
@@ -223,7 +224,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, a `Time` or a `Date`, for `Shoddy.DateTimes.round/2`. |
 | `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
-| `ArgumentError` | An unknown option for `Shoddy.then_present/3`. |
+| `ArgumentError` | An unknown option, the options `:default` and `:default_lazy` together, or a `:default_lazy` that is not a function of arity 0, for `Shoddy.then_present/3`. |
 | `ArgumentError` | An unknown option, an omission that is not a string, or an omission that is longer than the maximum, for `Shoddy.Strings.truncate/3`. The function checks the omission also for a string that it does not shorten. |
 | `ArgumentError` | An unknown option, a limit that is not an integer or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.integer/2`. |
 | `ArgumentError` | An unknown option, a limit that is not a number or `nil`, or a `:min` that is higher than `:max`, for `Shoddy.Parse.float/2`. |
