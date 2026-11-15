@@ -201,3 +201,7 @@ The first release also contains these changes:
   `:gt`.
 - Add `Shoddy.Lists.group_join_by/4`. It puts each element of the first list
   with each element of the second list that has the same key.
+- Add the options `:value` and `:on_duplicate` to `Shoddy.Lists.index_by/3`.
+  `:value` is a function that returns the value for an element.
+  `:on_duplicate` keeps the first or the last element of a key that is not
+  unique. The default still raises `ArgumentError`.

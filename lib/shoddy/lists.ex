@@ -125,10 +125,30 @@ defmodule Shoddy.Lists do
   records by a key, such as an ID, many times. A lookup in the map is faster
   than `Enum.find/2` on the list.
 
-  Each key must be unique. This function raises `ArgumentError` if more than
-  one element has the same key. The message tells each such key.
-  `Map.new(list, &{&1.id, &1})` is different: it keeps the last of these
-  elements, and it does not tell you about the others.
+  By default, each key must be unique. This function raises `ArgumentError`
+  if more than one element has the same key. The message tells each such
+  key. `Map.new(list, &{&1.id, &1})` is different: it keeps the last of
+  these elements, and it does not tell you about the others.
+
+  ## Options
+
+    * `:value` - A function of arity 1 that returns the value for an
+      element. The default returns the element.
+
+    * `:on_duplicate` - The rule for more than one element with the same
+      key:
+
+        * `:raise` - The function raises `ArgumentError`. This value is the
+          default.
+        * `:first` - The map contains the first of these elements.
+        * `:last` - The map contains the last of these elements.
+
+  This function raises `ArgumentError` for an unknown option and for an
+  option value that is not in the list above. It checks the options also
+  for an empty list.
+
+  The function calls `key_fun` and the function of `:value` one time for
+  each element, also for an element that the map does not contain.
 
   This function compares two keys with the strict equality operator `===/2`,
   as the keys of a map do. Thus the integer `1` and the float `1.0` are two
@@ -148,6 +168,20 @@ defmodule Shoddy.Lists do
       iex> Shoddy.Lists.index_by([%{id: 1}, %{id: 1}], & &1.id)
       ** (ArgumentError) more than one element has the same key: [1]
 
+  The option `:value` puts one field into the map:
+
+      iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
+      iex> Shoddy.Lists.index_by(users, & &1.id, value: & &1.name)
+      %{1 => "Ada", 2 => "Grace"}
+
+  The option `:on_duplicate` selects one element of a key that is not unique:
+
+      iex> rows = [%{email: "a@example.com", id: 1}, %{email: "a@example.com", id: 2}]
+      iex> Shoddy.Lists.index_by(rows, & &1.email, on_duplicate: :first)
+      %{"a@example.com" => %{email: "a@example.com", id: 1}}
+      iex> Shoddy.Lists.index_by(rows, & &1.email, on_duplicate: :last, value: & &1.id)
+      %{"a@example.com" => 2}
+
   Use the map to find each record by its key:
 
       iex> users = [%{id: 1, name: "Ada"}, %{id: 2, name: "Grace"}]
@@ -155,11 +189,27 @@ defmodule Shoddy.Lists do
       iex> Enum.map([2, 1], &by_id[&1].name)
       ["Grace", "Ada"]
   """
-  @spec index_by([element], (element -> key)) :: %{optional(key) => element}
+  @spec index_by([element], (element -> key), keyword()) :: %{optional(key) => any()}
         when element: var, key: var
-  def index_by(list, key_fun) when is_list(list) and is_function(key_fun, 1) do
-    list |> Enum.map(&{key_fun.(&1), &1}) |> index_pairs!()
+  def index_by(list, key_fun, opts \\ []) when is_list(list) and is_function(key_fun, 1) and is_list(opts) do
+    opts = Keyword.validate!(opts, value: &Function.identity/1, on_duplicate: :raise)
+    value_fun = value_fun!(Keyword.fetch!(opts, :value))
+    on_duplicate = on_duplicate!(Keyword.fetch!(opts, :on_duplicate))
+
+    list |> Enum.map(&{key_fun.(&1), value_fun.(&1)}) |> index_pairs(on_duplicate)
   end
+
+  defp value_fun!(fun) when is_function(fun, 1), do: fun
+  defp value_fun!(other), do: Shoddy.Option.invalid!(:value, "a function of arity 1", other)
+
+  defp on_duplicate!(rule) when rule in [:raise, :first, :last], do: rule
+  defp on_duplicate!(other), do: Shoddy.Option.invalid!(:on_duplicate, ":raise, :first or :last", other)
+
+  # Map.new/1 keeps the last pair of a key, so the reversed list keeps the
+  # first pair.
+  defp index_pairs(pairs, :raise), do: index_pairs!(pairs)
+  defp index_pairs(pairs, :last), do: Map.new(pairs)
+  defp index_pairs(pairs, :first), do: pairs |> Enum.reverse() |> Map.new()
 
   defp index_pairs!(pairs) do
     index = Map.new(pairs)
@@ -615,7 +665,7 @@ defmodule Shoddy.Lists do
   The right list can contain more than one element with the key `nil`.
 
   The other keys of `right` must be unique. This function raises
-  `ArgumentError` for such a key that is not unique, as `index_by/2` does.
+  `ArgumentError` for such a key that is not unique, as `index_by/3` does.
   Each key of `left` can occur more than one time.
 
   This function compares two keys with the strict equality operator `===/2`.
