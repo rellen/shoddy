@@ -123,6 +123,8 @@ For one task, use a how-to guide:
 For the rules that apply to each function, read the reference:
 
 - [The conventions of the functions](docs/reference/conventions.md)
+- [Usage rules for Shoddy](usage-rules.md), a short list of rules for an AI
+  agent that writes code with the library
 
 For the reasons behind the design, read the explanation:
 

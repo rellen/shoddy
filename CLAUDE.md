@@ -136,6 +136,9 @@ above. A change that adds documentation in another style is not complete.
 - Each new public function needs a reference, a how-to guide and, for an
   unusual decision, an explanation. The section "Document a new function"
   of `docs/development.md` gives the steps.
+- `usage-rules.md` gives rules for an AI agent that uses the library. If an
+  agent can use a new function incorrectly, add one rule to that file. Keep
+  the file short.
 - Run each example of a new document before you commit it. No test runs
   the examples of a document in `docs`.
 

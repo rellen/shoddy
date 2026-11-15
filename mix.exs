@@ -85,13 +85,14 @@ defmodule Shoddy.MixProject do
         "docs/how-to/check-if-a-time-value-is-in-a-period.md",
         "docs/how-to/test-a-process.md",
         "docs/reference/conventions.md",
+        "usage-rules.md",
         "docs/explanation/design.md",
         "docs/development.md"
       ],
       groups_for_extras: [
         Tutorials: ~r"docs/tutorials/",
         "How-to guides": ~r"docs/how-to/",
-        Reference: ~r"docs/reference/",
+        Reference: [~r"docs/reference/", "usage-rules.md"],
         Explanation: ~r"docs/explanation/",
         Development: ["docs/development.md"]
       ],
