@@ -101,6 +101,30 @@ messages
 `Enum.group_by/2` returns a map. A map has no order that you can use, so
 the headings could change their order.
 
+## Add a cumulative total or a position to each record
+
+Use `Shoddy.Lists.map_with_acc/3` when the value for a record depends on the
+records before it. Give a function that receives the record and an
+accumulator. It returns a tuple of the new record and the accumulator for
+the next record:
+
+```elixir
+rows = [%{label: "Rent", amount: 900}, %{label: "Food", amount: 250}]
+
+Lists.map_with_acc(rows, 0, fn row, total ->
+  total = total + row.amount
+  {Map.put(row, :total, total), total}
+end)
+#=> [
+#=>   %{label: "Rent", amount: 900, total: 900},
+#=>   %{label: "Food", amount: 250, total: 1150}
+#=> ]
+```
+
+`Enum.map_reduce/3` does the same work, but it also returns the last
+accumulator. Code that does not use that accumulator must remove it with
+`elem(0)`.
+
 ## Check that a list is in order
 
 Use `Shoddy.Lists.sorted?/2`, for example for data that must arrive in order.
