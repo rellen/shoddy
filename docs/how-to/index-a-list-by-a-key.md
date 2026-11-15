@@ -1,7 +1,7 @@
 # Index a list by a key
 
 This guide shows how to make a map from a list of records, so that you can
-find each record by its key. Use `Shoddy.Lists.index_by/2`. The examples use
+find each record by its key. Use `Shoddy.Lists.index_by/3`. The examples use
 an alias and this list:
 
 ```elixir
@@ -28,6 +28,16 @@ by_id[2]
 `Enum.find/2` reads the list from the start for each lookup. For many
 lookups in a long list, the map is faster.
 
+## Map each key to one field
+
+Give the option `:value`. It is a function that returns the value for a
+record:
+
+```elixir
+Lists.index_by(users, & &1.id, value: & &1.name)
+#=> %{1 => "Ada", 2 => "Grace", 3 => "Alan"}
+```
+
 ## Join two lists by a key
 
 Use `Shoddy.Lists.join_by/4`. It puts each element of the first list with
@@ -42,7 +52,7 @@ Lists.join_by(orders, users, & &1.user_id, & &1.id)
 
 For a key with no partner, the second element of the tuple is `nil`. The
 keys of the second list, other than `nil`, must be unique, as for
-`Shoddy.Lists.index_by/2`. A `nil` key never matches, so an order with no user
+`Shoddy.Lists.index_by/3`. A `nil` key never matches, so an order with no user
 gets `nil`, also if the second list contains a new user with no ID yet:
 
 ```elixir
@@ -72,7 +82,7 @@ the order of the second list. A `nil` key never matches, as for
 
 ## Find an error in data that must have unique keys
 
-`Shoddy.Lists.index_by/2` raises `ArgumentError` if more than one record has
+`Shoddy.Lists.index_by/3` raises `ArgumentError` if more than one record has
 the same key. The message tells each such key:
 
 ```elixir
@@ -83,11 +93,31 @@ Lists.index_by([%{id: 1}, %{id: 2}, %{id: 1}], & &1.id)
 `Map.new(users, &{&1.id, &1})` keeps the last of these records, and it does
 not tell you about the others.
 
+## Keep one record of a key that is not unique
+
+Give the option `:on_duplicate` if the data can contain a key more than one
+time, and the code must not raise. The value `:first` keeps the first
+record of the key, and `:last` keeps the last record:
+
+```elixir
+rows = [%{email: "ada@example.com", id: 1}, %{email: "ada@example.com", id: 7}]
+
+Lists.index_by(rows, & &1.email, on_duplicate: :first)
+#=> %{"ada@example.com" => %{email: "ada@example.com", id: 1}}
+
+Lists.index_by(rows, & &1.email, on_duplicate: :last, value: & &1.id)
+#=> %{"ada@example.com" => 7}
+```
+
+Use this option only when a duplicate is correct data, or when the code
+must continue with data that has an error. An example is a page where a
+person corrects that error. The default, `:raise`, shows a duplicate at
+once.
+
 ## Keep each record of a key that is not unique
 
-If more than one record can have the same key, do not use
-`Shoddy.Lists.index_by/2`. Use `Enum.group_by/2`. It returns a list of
-records for each key:
+To keep each record of such a key, do not use `Shoddy.Lists.index_by/3`.
+Use `Enum.group_by/2`. It returns a list of records for each key:
 
 ```elixir
 Enum.group_by([%{id: 1, v: :a}, %{id: 1, v: :b}], & &1.id)

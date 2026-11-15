@@ -97,6 +97,75 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "index_by/3" do
+    test "puts the return value of :value into the map" do
+      assert index_by([{:a, 1}, {:b, 2}], &elem(&1, 0), value: &elem(&1, 1)) == %{a: 1, b: 2}
+      assert index_by([{:a, nil}], &elem(&1, 0), value: &elem(&1, 1)) == %{a: nil}
+    end
+
+    test "keeps the first element of a key with on_duplicate: :first" do
+      list = [{:a, 1}, {:b, 2}, {:a, 3}]
+      assert index_by(list, &elem(&1, 0), on_duplicate: :first) == %{a: {:a, 1}, b: {:b, 2}}
+    end
+
+    test "keeps the last element of a key with on_duplicate: :last" do
+      list = [{:a, 1}, {:b, 2}, {:a, 3}]
+      assert index_by(list, &elem(&1, 0), on_duplicate: :last) == %{a: {:a, 3}, b: {:b, 2}}
+    end
+
+    test "raises ArgumentError for a duplicate key with on_duplicate: :raise, also with :value" do
+      for opts <- [[on_duplicate: :raise], [on_duplicate: :raise, value: &elem(&1, 1)], [value: &elem(&1, 1)]] do
+        assert_raise ArgumentError, "more than one element has the same key: [:a]", fn ->
+          index_by([{:a, 1}, {:a, 1}], &elem(&1, 0), opts)
+        end
+      end
+    end
+
+    test "uses the two options together" do
+      list = [{:a, 1}, {:a, 2}]
+      assert index_by(list, &elem(&1, 0), value: &elem(&1, 1), on_duplicate: :first) == %{a: 1}
+      assert index_by(list, &elem(&1, 0), value: &elem(&1, 1), on_duplicate: :last) == %{a: 2}
+    end
+
+    test "calls the two functions one time for each element, also for an element that it drops" do
+      parent = self()
+
+      tell = fn tag ->
+        fn element ->
+          send(parent, {tag, element})
+          element
+        end
+      end
+
+      index_by([1, 1], tell.(:key), value: tell.(:value), on_duplicate: :first)
+
+      for tag <- [:key, :value] do
+        assert_received {^tag, 1}
+        assert_received {^tag, 1}
+        refute_received {^tag, _element}
+      end
+    end
+
+    test "raises ArgumentError for a wrong option, also for an empty list" do
+      assert_raise ArgumentError, ~r/invalid value for :on_duplicate option: expected :raise, :first or :last/, fn ->
+        index_by([], & &1, on_duplicate: :skip)
+      end
+
+      for value <- [nil, :name, fn -> 1 end, fn _a, _b -> 1 end] do
+        assert_raise ArgumentError, ~r/invalid value for :value option: expected a function of arity 1/, fn ->
+          index_by([], & &1, value: value)
+        end
+      end
+
+      assert_raise ArgumentError, fn -> index_by([], & &1, on_duplicates: :first) end
+    end
+
+    test "raises FunctionClauseError for options that are not a list" do
+      error = assert_raise FunctionClauseError, fn -> apply(&index_by/3, [[1], & &1, :first]) end
+      assert {error.module, error.function} == {Shoddy.Lists, :index_by}
+    end
+  end
+
   describe "group_by_in_order/2" do
     test "keeps the order of the first element of each key and the order of the elements" do
       assert group_by_in_order([3, 1, 4, 1, 5, 9, 2, 6], &rem(&1, 3)) == [{0, [3, 9, 6]}, {1, [1, 4, 1]}, {2, [5, 2]}]
