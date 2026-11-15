@@ -62,6 +62,9 @@ params = %{"name" => "Ada", "email" => nil}
   or a day, or to the nearest unit. It finds the start of the next unit, and
   it makes each unit of a period. It tells if a date or a time is in a
   period, and if two periods overlap.
+- `Shoddy.Tests` waits for a condition or for the end of a process in an
+  ExUnit test. It also suspends a process, and it changes the environment
+  until the end of the test.
 
 ## Installation
 
@@ -115,6 +118,7 @@ For one task, use a how-to guide:
 - [Round a time value down](docs/how-to/round-a-time-value-down.md)
 - [Round a time value up](docs/how-to/round-a-time-value-up.md)
 - [Check if a time value is in a period](docs/how-to/check-if-a-time-value-is-in-a-period.md)
+- [Test a process](docs/how-to/test-a-process.md)
 
 For the rules that apply to each function, read the reference:
 

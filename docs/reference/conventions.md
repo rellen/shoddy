@@ -19,6 +19,7 @@ of each module gives the full description of each function.
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.next_start/2`, `Shoddy.DateTimes.between?/3`, `Shoddy.DateTimes.within?/3`, `Shoddy.DateTimes.overlap?/2`, `Shoddy.DateTimes.stream/3`, `Shoddy.DateTimes.round/2` |
+| `Shoddy.Tests` | `Shoddy.Tests.eventually/2`, `Shoddy.Tests.await_down/2`, `Shoddy.Tests.kill_and_wait/2`, `Shoddy.Tests.suspend/1`, `Shoddy.Tests.put_app_env/3`, `Shoddy.Tests.put_system_env/2` |
 
 The names `Maps`, `Keywords`, `MapSets`, `Lists`, `Strings` and `DateTimes`
 are in the plural. Thus an alias of one of these modules does not hide the
@@ -43,6 +44,7 @@ function can be a step of a pipeline.
 | `Shoddy.Result` | The result. For `Shoddy.Result.normalize/1`, the result or the tuple of three elements. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. For `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2`, the state. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3` and `Shoddy.DateTimes.within?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
+| `Shoddy.Tests` | The process. For `Shoddy.Tests.eventually/2`, the function. For `Shoddy.Tests.put_app_env/3`, the application. For `Shoddy.Tests.put_system_env/2`, the name of the environment variable. |
 
 In `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3`, the tag is the last
 argument.
@@ -66,6 +68,7 @@ use `Shoddy.Strings.presence/1`.
 | `Shoddy.Result.ensure/3` | The return value of the predicate. |
 | `Shoddy.Result.find_error/3` | The return value of the check. |
 | `Shoddy.Result.ok_if/2` | The first argument. |
+| `Shoddy.Tests.eventually/2` | The return value of the function. |
 
 These functions do not use this rule:
 
@@ -139,6 +142,7 @@ its element.
 | `Shoddy.Result.attempt/2` | The function to call. | 0 |
 | `Shoddy.Result.unwrap_lazy/2` | The function that returns the default for an error. | 0 |
 | `Shoddy.Result.unwrap!/2` | The function that returns the message. It receives the reason. | 1 |
+| `Shoddy.Tests.eventually/2` | The function to call until it returns a truthy value. | 0 |
 
 `Shoddy.coalesce/2` does not call a function of arity 0 if the option
 `call_functions?` is `false`. It never calls a function of another arity.
@@ -236,6 +240,7 @@ These functions compare two values with the strict equality operator
 | `FunctionClauseError` | Two values that are not both a `NaiveDateTime` or both a `DateTime` in UTC, for `Shoddy.DateTimes.stream/3`. |
 | `FunctionClauseError` | A `DateTime` in a time zone other than UTC, a `Time` or a `Date`, for `Shoddy.DateTimes.round/2`. |
 | `FunctionClauseError` | Three values that do not have the same type, or a value that is not a `Date`, a `Time`, a `NaiveDateTime` or a `DateTime`, for `Shoddy.DateTimes.between?/3` and `Shoddy.DateTimes.within?/3`. The last value of `Shoddy.DateTimes.within?/3` can also be `nil`. |
+| `FunctionClauseError` | A timeout that is not a non-negative integer, for `Shoddy.Tests.await_down/2` and `Shoddy.Tests.kill_and_wait/2`. |
 | `ArgumentError` | An unknown option, or an option value of the wrong type, for `Shoddy.coalesce/2`. |
 | `ArgumentError` | An unknown option, the options `:default` and `:default_lazy` together, or a `:default_lazy` that is not a function of arity 0, for `Shoddy.then_present/3`. |
 | `ArgumentError` | A part that is not a string or `nil`, or an unknown option, for `Shoddy.Strings.join_present/3`. |
@@ -268,10 +273,13 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string of exactly one grapheme, for `Shoddy.Strings.mask/2`. |
 | `ArgumentError` | An empty separator, an empty list, or a list with a value that is not a non-empty string, for `Shoddy.Strings.split_trim/2`. |
 | `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Env.one_of/3`. A value that is shorter than the option `:min_bytes`, for `Shoddy.Env.string/2`. The function checks the options also if the variable is absent. A blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |
+| `ArgumentError` | An unknown option, a `:timeout` that is not a non-negative integer, or an `:interval` that is not a positive integer, for `Shoddy.Tests.eventually/2`. |
+| `ArgumentError` | A caller that is not the test process, for `Shoddy.Tests.suspend/1`, `Shoddy.Tests.put_app_env/3` and `Shoddy.Tests.put_system_env/2`. ExUnit raises this error. |
 | `System.EnvError` | An absent variable without the option `:default`, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2` and `Shoddy.Env.one_of/3`. |
 | `KeyError` | A key that is not a field of the struct, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3` and `Shoddy.Maps.put_path/3` with a struct. The key `:__struct__` is not a field. `Shoddy.Maps.put_if/3` and `Shoddy.Maps.put_present/3` raise this error also if they do not put the value. |
 | `KeyError` | A key of the list that is not in the map, for `Shoddy.Maps.present_keys/2`. |
 | `Protocol.UndefinedError` | A struct that does not implement `Enumerable`, as the first argument of `Shoddy.Result.collect/2`, or a first argument of `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` or `Shoddy.Result.each_ok/2` that is not enumerable. A key that does not implement `String.Chars`, such as a tuple, for `Shoddy.Maps.stringify_keys/1`. |
+| `ExUnit.AssertionError` | A process that does not stop before the timeout, for `Shoddy.Tests.await_down/2` and `Shoddy.Tests.kill_and_wait/2`. |
 
 ## Names
 

@@ -19,6 +19,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Result`
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
+- `Shoddy.Tests`
 
 The first release also contains these changes:
 
@@ -243,3 +244,7 @@ The first release also contains these changes:
 - Add `Shoddy.DateTimes.within?/3`. It returns `true` if a date or a time
   is in a period that includes its last value. A last value of `nil` gives
   a period with no end.
+- Add `Shoddy.Tests` with `eventually/2`, `await_down/2`, `kill_and_wait/2`,
+  `suspend/1`, `put_app_env/3` and `put_system_env/2`, for ExUnit tests of
+  processes and of the environment. A release does not get ExUnit from
+  Shoddy.

@@ -14,7 +14,9 @@ defmodule Shoddy.MixProject do
       source_url: "https://github.com/rellen/shoddy",
       homepage_url: "https://rellen.github.io/shoddy/",
       docs: docs(),
-      dialyzer: [plt_local_path: "priv/plts"]
+      # `Shoddy.Tests` calls ExUnit, and ExUnit is not an application that
+      # Shoddy needs. Thus Dialyzer finds ExUnit only with this option.
+      dialyzer: [plt_local_path: "priv/plts", plt_add_apps: [:ex_unit]]
     ]
   end
 
@@ -81,6 +83,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/round-a-time-value-down.md",
         "docs/how-to/round-a-time-value-up.md",
         "docs/how-to/check-if-a-time-value-is-in-a-period.md",
+        "docs/how-to/test-a-process.md",
         "docs/reference/conventions.md",
         "docs/explanation/design.md",
         "docs/development.md"
@@ -97,7 +100,8 @@ defmodule Shoddy.MixProject do
         Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets, Shoddy.Lists],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
         Configuration: [Shoddy.Env],
-        "Dates and times": [Shoddy.DateTimes]
+        "Dates and times": [Shoddy.DateTimes],
+        Tests: [Shoddy.Tests]
       ]
     ]
   end
