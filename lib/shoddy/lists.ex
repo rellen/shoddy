@@ -808,6 +808,44 @@ defmodule Shoddy.Lists do
   defp find_pair([], _key, default), do: default
 
   @doc """
+  Returns a list of one element if a condition is truthy, or an empty list.
+
+  If `condition` is truthy, this function returns `[element]`. If the
+  condition is falsy, it returns `[]`. A truthy value is a value that is not
+  `nil` and not `false`.
+
+  Use this function to build a list from parts, where some parts depend on a
+  condition. It replaces `if condition, do: [element], else: []`. Join the
+  parts with `++/2` or with `List.flatten/1`.
+
+  The first argument is the element, and not a list. This function does not
+  examine the element, so it returns `[nil]` for the element `nil` and a
+  truthy condition.
+
+  ## Examples
+
+      iex> Shoddy.Lists.wrap_when("tree-colored", true)
+      ["tree-colored"]
+
+      iex> Shoddy.Lists.wrap_when("tree-colored", false)
+      []
+
+      iex> Shoddy.Lists.wrap_when(nil, true)
+      [nil]
+
+  Build a list of classes:
+
+      iex> color = "red"
+      iex> image = nil
+      iex> ["tree"] ++ Shoddy.Lists.wrap_when("tree-colored", color) ++ Shoddy.Lists.wrap_when("tree-media", image)
+      ["tree", "tree-colored"]
+  """
+  @spec wrap_when(element, as_boolean(any())) :: [element] when element: var
+  def wrap_when(element, condition) do
+    if condition, do: [element], else: []
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

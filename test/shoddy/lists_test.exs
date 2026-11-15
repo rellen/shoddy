@@ -568,6 +568,26 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "wrap_when/2" do
+    test "returns a list of the element for a truthy condition, also 0 and an empty string" do
+      for condition <- [true, 0, "", [], :yes] do
+        assert wrap_when(:element, condition) == [:element]
+      end
+    end
+
+    test "returns an empty list for nil and false" do
+      assert wrap_when(:element, false) == []
+      assert wrap_when(:element, nil) == []
+    end
+
+    test "does not examine the element" do
+      assert wrap_when(nil, true) == [nil]
+      assert wrap_when(false, true) == [false]
+      assert wrap_when([1, 2], true) == [[1, 2]]
+      assert wrap_when(nil, false) == []
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])
