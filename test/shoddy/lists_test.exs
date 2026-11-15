@@ -502,6 +502,31 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "map_with_acc/3" do
+    test "returns the values, and gives each new accumulator to the next call" do
+      assert map_with_acc([1, 2, 3], 10, fn element, acc -> {{element, acc}, acc + element} end) ==
+               [{1, 10}, {2, 11}, {3, 13}]
+    end
+
+    test "returns an empty list for an empty list, and does not call the function" do
+      assert map_with_acc([], :acc, fn _element, _acc -> flunk("the function must not run") end) == []
+    end
+
+    test "gives the same values as Enum.map_reduce/3" do
+      fun = fn element, acc -> {element * acc, acc + 1} end
+      list = Enum.to_list(1..20)
+
+      assert map_with_acc(list, 1, fun) == elem(Enum.map_reduce(list, 1, fun), 0)
+    end
+
+    test "raises FunctionClauseError for an argument of the wrong type" do
+      for args <- [[1..3, 0, fn e, a -> {e, a} end], [[1], 0, fn e -> {e, e} end], [[1], 0, nil]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&map_with_acc/3, args) end
+        assert {error.module, error.function} == {Shoddy.Lists, :map_with_acc}
+      end
+    end
+  end
+
   describe "has_duplicates?/1" do
     test "returns true for a duplicate at the start of a long list" do
       assert has_duplicates?([1, 1 | Enum.to_list(2..5_000)])

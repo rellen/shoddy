@@ -34,8 +34,9 @@ params = %{"name" => "Ada", "email" => nil}
   or that have the same key. It also gets the only element of a list, and
   it makes a map from the key of each element to the element. It sorts and
   groups records in a fixed order, and it compares two records by the same
-  keys. It replaces, adds, moves or toggles an element. It joins two lists by
-  a key, and it gives each element one partner or a list of partners.
+  keys. It maps a list with an accumulator. It replaces, adds, moves or
+  toggles an element. It joins two lists by a key, and it gives each element
+  one partner or a list of partners.
 - `Shoddy.Strings` has a guard that rejects `nil` and an empty string
   together, and a predicate that also treats whitespace as empty. It changes
   an empty string to `nil`. It shortens a string for display or to a number

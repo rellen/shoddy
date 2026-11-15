@@ -731,6 +731,43 @@ defmodule Shoddy.Lists do
   end
 
   @doc """
+  Maps a list with a function that also carries an accumulator.
+
+  `fun` receives an element and the accumulator. It returns a tuple
+  `{value, new_accumulator}`. This function puts `value` into the result,
+  and it gives `new_accumulator` to the call for the next element. `acc` is the
+  accumulator for the first element.
+
+  This function is `Enum.map_reduce/3` without the last accumulator in the
+  result. Use it when each value depends on the elements before it, for
+  example a position or a total, and the code does not use the last
+  accumulator.
+
+  ## Examples
+
+      iex> Shoddy.Lists.map_with_acc([10, 20, 5], 0, fn height, y -> {{height, y}, y + height} end)
+      [{10, 0}, {20, 10}, {5, 30}]
+
+      iex> Shoddy.Lists.map_with_acc([], 0, fn height, y -> {{height, y}, y + height} end)
+      []
+
+  Add a total to each record:
+
+      iex> rows = [%{amount: 900}, %{amount: 250}]
+      iex> Shoddy.Lists.map_with_acc(rows, 0, fn row, total ->
+      ...>   total = total + row.amount
+      ...>   {Map.put(row, :total, total), total}
+      ...> end)
+      [%{amount: 900, total: 900}, %{amount: 250, total: 1150}]
+  """
+  @spec map_with_acc([element], acc, (element, acc -> {value, acc})) :: [value]
+        when element: var, acc: var, value: var
+  def map_with_acc(list, acc, fun) when is_list(list) and is_function(fun, 2) do
+    {values, _acc} = Enum.map_reduce(list, acc, fun)
+    values
+  end
+
+  @doc """
   Returns `true` if an element occurs more than one time in a list.
 
   This function compares two elements with the strict equality operator

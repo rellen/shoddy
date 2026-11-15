@@ -205,3 +205,5 @@ The first release also contains these changes:
   `:value` is a function that returns the value for an element.
   `:on_duplicate` keeps the first or the last element of a key that is not
   unique. The default still raises `ArgumentError`.
+- Add `Shoddy.Lists.map_with_acc/3`. It maps a list with a function that
+  also carries an accumulator, and it returns only the list of values.
