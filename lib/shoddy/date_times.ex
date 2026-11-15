@@ -16,6 +16,8 @@ defmodule Shoddy.DateTimes do
   - `next_start/2` returns the start of the next minute, hour or day. The
     result is always after the value.
   - `between?/3` tells if a value is in a period. It also accepts a `Date`.
+  - `within?/3` tells if a value is in a period that includes its last
+    value, or that has no end.
   - `overlap?/2` tells if two periods have a value in common.
   - `stream/3` makes a stream of values, one unit apart, in a period.
   - `round/2` rounds a value to the nearest start of a unit.
@@ -63,6 +65,7 @@ defmodule Shoddy.DateTimes do
 
   @precisions [:millisecond, :microsecond]
   @units [:minute, :hour, :day]
+  @period_modules [Date, Time, NaiveDateTime, DateTime]
 
   defguardp is_time_value(value)
             when is_struct(value, DateTime) or is_struct(value, NaiveDateTime) or
@@ -321,10 +324,38 @@ defmodule Shoddy.DateTimes do
   """
   @spec between?(value, value, value) :: boolean()
         when value: Date.t() | Time.t() | NaiveDateTime.t() | DateTime.t()
-  def between?(%module{} = value, %module{} = first, %module{} = last)
-      when module in [Date, Time, NaiveDateTime, DateTime] do
-    module.compare(value, first) != :lt and module.compare(value, last) == :lt
+  def between?(%module{} = value, %module{} = first, %module{} = last) when module in @period_modules do
+    not before?(module, value, first) and before?(module, value, last)
   end
+
+  @doc """
+  Returns `true` if a value is in a period that includes its last value.
+
+  The period includes `first` and `last`. If `last` is `nil`, the period has
+  no end, and it contains each value that is not before `first`. Only `last`
+  accepts `nil`.
+
+  The rules for the types are the rules of `between?/3`. The function
+  returns `false` if `last` is before `first`.
+
+  ## Examples
+
+      iex> Shoddy.DateTimes.within?(~D[2026-03-31], ~D[2026-01-01], ~D[2026-03-31])
+      true
+
+      iex> Shoddy.DateTimes.within?(~D[2030-01-01], ~D[2026-01-01], nil)
+      true
+
+      iex> Shoddy.DateTimes.within?(~D[2025-12-31], ~D[2026-01-01], nil)
+      false
+  """
+  @spec within?(value, value, value | nil) :: boolean()
+        when value: Date.t() | Time.t() | NaiveDateTime.t() | DateTime.t()
+  def within?(%module{} = value, %module{} = first, nil) when module in @period_modules,
+    do: not before?(module, value, first)
+
+  def within?(%module{} = value, %module{} = first, %module{} = last) when module in @period_modules,
+    do: not before?(module, value, first) and not before?(module, last, value)
 
   @doc """
   Returns the start of the next unit after a time value.
@@ -396,7 +427,7 @@ defmodule Shoddy.DateTimes do
   @spec overlap?({value, value}, {value, value}) :: boolean()
         when value: Date.t() | Time.t() | NaiveDateTime.t() | DateTime.t()
   def overlap?({%module{} = first_a, %module{} = last_a}, {%module{} = first_b, %module{} = last_b})
-      when module in [Date, Time, NaiveDateTime, DateTime] do
+      when module in @period_modules do
     before?(module, first_a, last_a) and before?(module, first_b, last_b) and
       before?(module, first_a, last_b) and before?(module, first_b, last_a)
   end

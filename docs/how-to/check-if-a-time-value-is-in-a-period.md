@@ -47,6 +47,20 @@ DateTimes.between?(~D[2024-07-04], arrival, departure)
 `date in Date.range(arrival, departure)` is different. The range includes
 the last date.
 
+## Check a period that includes its last day
+
+A price is valid from 1 January to 31 March, and 31 March is part of the
+period. Use `Shoddy.DateTimes.within?/3`, which includes the last value. A
+last value of `nil` gives a period with no end:
+
+```elixir
+DateTimes.within?(~D[2026-03-31], ~D[2026-01-01], ~D[2026-03-31])
+#=> true
+
+DateTimes.within?(~D[2030-01-01], ~D[2026-01-01], nil)
+#=> true
+```
+
 ## Do not compare two structs directly
 
 The operators `<` and `>`, and functions such as `Enum.max/1`, compare the

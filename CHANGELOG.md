@@ -240,3 +240,6 @@ The first release also contains these changes:
   map. For an absent key, it puts the result of a function into the map.
 - Add `Shoddy.Strings.upcase_first/1`. It changes the first grapheme of a
   string to upper case, and it keeps the rest with no change.
+- Add `Shoddy.DateTimes.within?/3`. It returns `true` if a date or a time
+  is in a period that includes its last value. A last value of `nil` gives
+  a period with no end.

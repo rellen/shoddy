@@ -773,6 +773,12 @@ periods overlap only if a value is in the two periods. Thus a booking that
 ends on 4 July and a booking that starts on 4 July do not overlap. A rule
 that included the last value would refuse the second booking.
 
+`Shoddy.DateTimes.within?/3` is for a period that a person states with its
+last day, such as "valid from 1 January to 31 March". That period contains
+31 March, so the function includes the last value. It also accepts `nil` as
+the last value, for a period with no end, such as a membership with no end
+date.
+
 ## When nil counts as absent
 
 Some functions of `Shoddy.Maps` treat a key with the value `nil` as an
