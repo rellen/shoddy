@@ -238,3 +238,5 @@ The first release also contains these changes:
   key, and it returns the new value and the map.
 - Add `Shoddy.Maps.get_or_put_lazy/3`. It returns the value of a key and the
   map. For an absent key, it puts the result of a function into the map.
+- Add `Shoddy.Strings.upcase_first/1`. It changes the first grapheme of a
+  string to upper case, and it keeps the rest with no change.

@@ -34,6 +34,7 @@ defmodule Shoddy.Strings do
   - `mask/2` hides a secret, and keeps some graphemes visible.
   - `ensure_prefix/2` and `ensure_suffix/2` add a fixed text at an end of
     the string, if it is not there.
+  - `upcase_first/1` changes the first grapheme to upper case.
   """
 
   @doc """
@@ -519,5 +520,33 @@ defmodule Shoddy.Strings do
   @spec ensure_suffix(String.t(), String.t()) :: String.t()
   def ensure_suffix(string, suffix) when is_binary(string) and is_binary(suffix) do
     if String.ends_with?(string, suffix), do: string, else: string <> suffix
+  end
+
+  @doc """
+  Changes the first grapheme of a string to upper case.
+
+  This function keeps the rest of the string with no change. Use it to start
+  a sentence with an upper case letter. The upper case form of `"ß"` is
+  `"SS"`, so the result can be longer than the string.
+
+  ## Examples
+
+      iex> Shoddy.Strings.upcase_first("the API key")
+      "The API key"
+
+      iex> Shoddy.Strings.upcase_first("")
+      ""
+
+  `String.capitalize/1` also changes the rest of the string to lower case:
+
+      iex> String.capitalize("the API key")
+      "The api key"
+  """
+  @spec upcase_first(String.t()) :: String.t()
+  def upcase_first(string) when is_binary(string) do
+    case String.next_grapheme(string) do
+      {first, rest} -> String.upcase(first) <> rest
+      nil -> string
+    end
   end
 end
