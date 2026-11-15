@@ -922,6 +922,11 @@ because most callers use the new count, for example as the number of a new
 name. The name follows `Map.get_and_update/3`, which also returns a value
 and the new map.
 
+`Shoddy.Maps.get_or_put_lazy/3` has `get` in its name, and not `fetch`. A
+function with `fetch` in its name returns an ok tuple or an error, as
+`Map.fetch/2` and `Shoddy.Maps.fetch_keys/2` do. This function returns the
+value itself.
+
 `Shoddy.Maps.diff/2` compares with `===/2` and only at the top level. A
 change from `1` to `1.0` is a change. A deep comparison would need a rule
 for lists, structs and keyword lists, and each rule is correct for some

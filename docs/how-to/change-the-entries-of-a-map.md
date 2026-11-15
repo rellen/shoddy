@@ -55,6 +55,24 @@ This example gives a number to a name that occurs a second time:
 #=> "node:2"
 ```
 
+## Keep a value that is expensive to make
+
+A process often keeps a map with one expensive value for each key, such as
+a client for each region. Use `Shoddy.Maps.get_or_put_lazy/3`. It calls the
+function only for an absent key, and it returns the value and the map:
+
+```elixir
+clients = %{"eu" => :client_eu}
+
+{client, clients} = Maps.get_or_put_lazy(clients, "us", fn -> :client_us end)
+
+client
+#=> :client_us
+
+clients
+#=> %{"eu" => :client_eu, "us" => :client_us}
+```
+
 ## Find a key by its value
 
 Use `Shoddy.Maps.invert/1`. It swaps the keys and the values:

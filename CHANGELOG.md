@@ -236,3 +236,5 @@ The first release also contains these changes:
   in maps and structs, with a default for an absent key and for `nil`.
 - Add `Shoddy.Maps.get_and_increment/3`. It adds a number to the value of a
   key, and it returns the new value and the map.
+- Add `Shoddy.Maps.get_or_put_lazy/3`. It returns the value of a key and the
+  map. For an absent key, it puts the result of a function into the map.

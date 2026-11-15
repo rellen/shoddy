@@ -645,6 +645,43 @@ defmodule Shoddy.Maps do
   end
 
   @doc """
+  Returns the value of a key and the map, with a new entry for an absent key.
+
+  If `map` has an entry for `key`, this function returns its value and the
+  map with no change. If the key is absent, this function calls `fun`, and
+  it puts the result into the map. It then returns the result and the new
+  map. The value is the first element of the tuple, as in the result of
+  `Map.pop/3`.
+
+  A key with the value `nil` is present, as in `Map.get_lazy/3`. The map
+  must be a plain map.
+
+  Use this function for a map of values that are expensive to make, such as
+  one client for each region.
+
+  ## Examples
+
+      iex> Shoddy.Maps.get_or_put_lazy(%{"eu" => :client_eu}, "us", fn -> :client_us end)
+      {:client_us, %{"eu" => :client_eu, "us" => :client_us}}
+
+      iex> Shoddy.Maps.get_or_put_lazy(%{"eu" => :client_eu}, "eu", fn -> raise "not called" end)
+      {:client_eu, %{"eu" => :client_eu}}
+  """
+  @spec get_or_put_lazy(%{optional(key) => value}, key, (-> value)) :: {value, %{optional(key) => value}}
+        when key: any(), value: any()
+  def get_or_put_lazy(map, key, fun) when is_non_struct_map(map) and is_function(fun, 0) do
+    case map do
+      %{^key => value} ->
+        {value, map}
+
+      _absent ->
+        ensure_writable_key!(map, key)
+        value = fun.()
+        {value, Map.put(map, key, value)}
+    end
+  end
+
+  @doc """
   Gives a key of a map a new name, and keeps the other entries.
 
   If `old` is absent, this function returns the map with no change. If
