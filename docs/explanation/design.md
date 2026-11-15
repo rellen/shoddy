@@ -729,7 +729,7 @@ first if `nil` must count as absent.
 A list of records often goes to a person, for example as a table or as a
 list with headings. The order of that list is part of its meaning. Three
 functions of `Shoddy.Lists` keep or make an order where the standard
-functions lose it.
+functions lose it, and one function compares two records in that order.
 
 `Shoddy.Lists.group_by_in_order/2` returns a list, not a map. A map with
 more than 32 keys has no order that a program can use, so the groups of
@@ -743,6 +743,15 @@ order that is not the order of time. The function also gives each key its
 own direction. A single key with a tuple of values cannot do this, because
 the direction applies to the full tuple. Equal elements stay in the order
 of the input, so a second sort does not move them.
+
+`Shoddy.Lists.compare_by_keys/3` compares two elements with the same keys.
+Code that tests if one record comes before another record often compares
+two tuples with `<`. That comparison has the same defect for a date or a
+time, and a list that the database sorted correctly hides the defect. The
+two functions use one comparison, so they cannot disagree. The result of
+`compare_by_keys/3` thus follows the directions of the keys. `:lt` means
+that the first element comes first in the sorted list, also for a key with
+the direction `:desc`.
 
 `Shoddy.Lists.upsert_by/4` puts a changed record at the position of the old
 record. A person who reads the list then sees the change at the same place.

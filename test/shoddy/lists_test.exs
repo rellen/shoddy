@@ -200,6 +200,61 @@ defmodule Shoddy.ListsTest do
     end
   end
 
+  describe "compare_by_keys/3" do
+    test "compares by the next key only if the values of the earlier key are equal" do
+      keys = [&elem(&1, 0), &elem(&1, 1)]
+
+      assert compare_by_keys({1, :b}, {2, :a}, keys) == :lt
+      assert compare_by_keys({2, :a}, {1, :b}, keys) == :gt
+      assert compare_by_keys({1, :a}, {1, :b}, keys) == :lt
+      assert compare_by_keys({1, :b}, {1, :a}, keys) == :gt
+      assert compare_by_keys({1, :a}, {1, :a}, keys) == :eq
+    end
+
+    test "gives :lt for the larger value of a key with the direction :desc" do
+      assert compare_by_keys(2, 1, [{:desc, & &1}]) == :lt
+      assert compare_by_keys(1, 2, [{:desc, & &1}]) == :gt
+      assert compare_by_keys(1, 1, [{:desc, & &1}]) == :eq
+      assert compare_by_keys({1, :a}, {1, :b}, [{:asc, &elem(&1, 0)}, {:desc, &elem(&1, 1)}]) == :gt
+    end
+
+    test "uses compare/2 of a module, where the operator < gives a wrong answer" do
+      earlier = {1, ~U[2026-09-30 10:00:00Z]}
+      later = {1, ~U[2026-10-01 10:00:00Z]}
+      keys = [&elem(&1, 0), {:asc, &elem(&1, 1), DateTime}]
+
+      # The operator < compares the day before the month, so it gives the wrong order.
+      refute apply(&</2, [earlier, later])
+      assert compare_by_keys(earlier, later, keys) == :lt
+      assert compare_by_keys(later, earlier, keys) == :gt
+      assert compare_by_keys(later, earlier, [&elem(&1, 0), {:desc, &elem(&1, 1), DateTime}]) == :lt
+    end
+
+    test "agrees with sort_by_keys/2 for each pair of a list" do
+      list = for a <- 1..3, b <- [:x, :y], c <- 1..2, do: {a, b, c}
+      keys = [{:desc, &elem(&1, 0)}, &elem(&1, 1), {:desc, &elem(&1, 2)}]
+      sorted = sort_by_keys(Enum.shuffle(list), keys)
+
+      for {first, i} <- Enum.with_index(sorted), {second, j} <- Enum.with_index(sorted) do
+        expected = if i < j, do: :lt, else: if(i > j, do: :gt, else: :eq)
+        assert compare_by_keys(first, second, keys) == expected
+      end
+    end
+
+    test "raises ArgumentError for a key in a wrong form" do
+      assert_raise ArgumentError, ~r/invalid key/, fn -> compare_by_keys(1, 2, [:asc]) end
+      assert_raise ArgumentError, ~r/invalid key/, fn -> compare_by_keys(1, 2, [{:up, & &1}]) end
+    end
+
+    test "raises ArgumentError for a module that does not export compare/2" do
+      assert_raise ArgumentError, ~r/does not export compare\/2/, fn -> compare_by_keys(1, 2, [{:asc, & &1, Enum}]) end
+    end
+
+    test "raises FunctionClauseError for an empty list of keys" do
+      assert_raise FunctionClauseError, fn -> apply(&compare_by_keys/3, [1, 2, []]) end
+    end
+  end
+
   describe "toggle/2" do
     test "removes each occurrence, and keeps the order of the others" do
       assert toggle([:a, :b, :a, :c], :a) == [:b, :c]

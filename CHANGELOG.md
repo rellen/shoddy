@@ -196,3 +196,6 @@ The first release also contains these changes:
   or an ok tuple, so a pipeline can continue after a bare `:ok`.
 - Add `Shoddy.Result.then_keep/2`. It calls a step that can fail, and it
   returns the value before the step, or the error of the step.
+- Add `Shoddy.Lists.compare_by_keys/3`. It compares two elements by the
+  keys of `Shoddy.Lists.sort_by_keys/2`, and it returns `:lt`, `:eq` or
+  `:gt`.
