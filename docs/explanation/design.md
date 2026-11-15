@@ -918,6 +918,23 @@ partners, for example the lines of an order, so a key with more than one
 partner is correct. The rule for a `nil` key is the same in the two
 functions.
 
+## A list from optional parts
+
+Code often builds a list from parts, and some parts depend on a condition.
+`Shoddy.Lists.wrap_when/2` returns such a part: a list of one element, or
+an empty list. The caller joins the parts with `++/2`.
+
+The first argument of `wrap_when/2` is the element, and not a list. The
+other functions of `Shoddy.Lists` take a list first. But the element is
+the value that the function operates on, and the name of the module tells
+the type of the result.
+
+Shoddy has no function that adds an element to the end of a list for a
+condition. `list ++ Lists.wrap_when(element, condition)` does that work,
+and the `++/2` shows the cost of the copy to the reader. The function also
+has no form with a function of arity 0 for the element. An element that is
+expensive to build is not usual in a list of classes or of messages.
+
 ## What mask shows
 
 `Shoddy.Strings.mask/2` shows some characters of a secret, so that a person

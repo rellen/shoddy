@@ -214,3 +214,5 @@ The first release also contains these changes:
 - Add the option `:default_lazy` to `Shoddy.then_present/3`. It is a
   function of arity 0 that returns the default, and the function calls it
   only for `nil`.
+- Add `Shoddy.Lists.wrap_when/2`. It returns a list of one element if a
+  condition is truthy, or an empty list.
