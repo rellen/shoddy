@@ -41,7 +41,7 @@ function can be a step of a pipeline.
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.normalize/1`, the result or the tuple of three elements. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
-| `Shoddy.Tagging` | The value that goes into the tuple. |
+| `Shoddy.Tagging` | The value that goes into the tuple. For `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2`, the state. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
 
 In `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3`, the tag is the last

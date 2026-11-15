@@ -48,6 +48,22 @@ end
 
 The callback returns `{:reply, 1, %{count: 1}}`.
 
+## Reply after a change to the state
+
+`Shoddy.Tagging.reply/2` takes the reply first, so a pipeline of the state
+cannot end with it. Use `Shoddy.Tagging.reply_with/2`. The first argument
+is the state, and the second argument is the reply:
+
+```elixir
+def handle_call({:add, amount}, _from, state) do
+  state
+  |> Map.update!(:count, &(&1 + amount))
+  |> Shoddy.Tagging.reply_with(:ok)
+end
+```
+
+For an amount of 2, the callback returns `{:reply, :ok, %{count: 3}}`.
+
 ## Stop the process
 
 Use `Shoddy.Tagging.stop/2`. The first argument is the reason, and the
@@ -57,6 +73,9 @@ second argument is the state:
 Shoddy.Tagging.stop(:normal, state)
 #=> {:stop, :normal, %{count: 1}}
 ```
+
+`Shoddy.Tagging.stop_with/2` takes the state first, as
+`Shoddy.Tagging.reply_with/2` does.
 
 ## Continue or halt a reduction
 

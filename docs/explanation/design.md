@@ -39,6 +39,17 @@ pipeline.
 `Shoddy.Tagging.tag/2` also obeys this rule. The tag is the last argument,
 although the tag is the first element of the tuple.
 
+## Two orders for a reply
+
+`Shoddy.Tagging.reply/2` has the order of the tuple: the reply, then the
+state. But a pipeline that changes the state gives the state as the first
+argument. With `reply/2`, the state would then be the reply, and a
+GenServer accepts that tuple with no error.
+
+Thus `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2` take
+the state first. `reply/2` and `Shoddy.Tagging.stop/2` keep the order of
+the tuple.
+
 ## The condition is truthiness
 
 `Shoddy.then_if/2` and `Shoddy.Maps.put_if/3` examine whether a value is
