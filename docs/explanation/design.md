@@ -791,6 +791,11 @@ the code, so an absent key is a mistake in the code, and not data.
 it with a map. Each other value that is not a map, such as `false`, is
 data. The function does not replace data, so it raises `ArgumentError`.
 
+`Shoddy.Maps.get_path_present/3` uses the rule of `get_present/3` at each
+key of the path. For a value on the path that is not a map, it returns the
+default. `put_path/3` raises for such a value, but a reader cannot lose
+data.
+
 `Shoddy.Maps.fetch_keys/2` checks that the keys exist, as `Map.fetch/2`
 does. A key with the value `nil` exists. A form or an API can send `nil` on
 purpose, for example to clear a field. The caller can remove such entries

@@ -232,3 +232,5 @@ The first release also contains these changes:
   them.
 - Add `Shoddy.Maps.present_keys/2`. It returns the keys of a list that have
   a value that is not `nil` in a map.
+- Add `Shoddy.Maps.get_path_present/3`. It reads a value at a path of keys
+  in maps and structs, with a default for an absent key and for `nil`.
