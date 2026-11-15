@@ -68,20 +68,19 @@ params = %{"name" => " Ada ", "email" => nil, "age" => "36"}
 
 ## Put an entry that depends on a condition
 
-Sometimes the condition is not the value itself. Use `Shoddy.then_if/3` with
-a predicate of arity 0. A predicate is a function that returns a truthy value
-or a falsy value. A falsy value is `nil` or `false`.
+Sometimes the condition is not the value itself. Use `Shoddy.then_when/3`
+with the condition as the second argument:
 
 ```elixir
 admin? = true
 
 %{name: "Ada"}
-|> Shoddy.then_if(fn -> admin? end, &Map.put(&1, :role, :admin))
+|> Shoddy.then_when(admin?, &Map.put(&1, :role, :admin))
 #=> %{name: "Ada", role: :admin}
 ```
 
-If the predicate returns a falsy value, `Shoddy.then_if/3` returns the map
-with no change.
+If the condition is falsy, `Shoddy.then_when/3` returns the map with no
+change. A falsy value is `nil` or `false`.
 
 ## Keep a field that can be false
 

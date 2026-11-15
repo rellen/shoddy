@@ -209,3 +209,5 @@ The first release also contains these changes:
   also carries an accumulator, and it returns only the list of values.
 - Add `Shoddy.Lists.key_get/3`. It returns the value of a key in a list of
   pairs, or a default. The key can be a string or a value of another type.
+- Add `Shoddy.then_when/3`. It applies a function to a value if a condition
+  is truthy. The condition is a value, and not a predicate.

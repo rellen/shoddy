@@ -37,6 +37,37 @@ defmodule ShoddyTest do
     end
   end
 
+  describe "then_when/3" do
+    test "calls the function for a truthy condition, also 0 and an empty string" do
+      for condition <- [true, 0, "", [], :yes] do
+        assert Shoddy.then_when(1, condition, &(&1 + 1)) == 2
+      end
+    end
+
+    test "returns the value with no change for nil and false, and does not call the function" do
+      fail = fn _value -> flunk("the function must not run") end
+
+      assert Shoddy.then_when(1, false, fail) == 1
+      assert Shoddy.then_when(1, nil, fail) == 1
+    end
+
+    test "does not examine the value, so it calls the function for nil and false" do
+      assert Shoddy.then_when(nil, true, &{:seen, &1}) == {:seen, nil}
+      assert Shoddy.then_when(false, true, &{:seen, &1}) == {:seen, false}
+    end
+
+    test "raises FunctionClauseError for a condition that is a function" do
+      for condition <- [fn -> true end, &is_nil/1, fn _a, _b -> true end] do
+        error = assert_raise FunctionClauseError, fn -> apply(&Shoddy.then_when/3, [1, condition, & &1]) end
+        assert {error.module, error.function} == {Shoddy, :then_when}
+      end
+    end
+
+    test "raises FunctionClauseError for a function of the wrong arity" do
+      assert_raise FunctionClauseError, fn -> apply(&Shoddy.then_when/3, [1, true, fn -> 0 end]) end
+    end
+  end
+
   describe "then_present/3" do
     test "calls the function for false" do
       assert Shoddy.then_present(false, &{:seen, &1}) == {:seen, false}

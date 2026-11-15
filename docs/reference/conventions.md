@@ -7,7 +7,7 @@ of each module gives the full description of each function.
 
 | Module | Functions |
 | --- | --- |
-| `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
+| `Shoddy` | `Shoddy.then_if/2`, `Shoddy.then_if/3`, `Shoddy.then_when/3`, `Shoddy.then_present/3`, `Shoddy.id/1`, `Shoddy.coalesce/2` |
 | `Shoddy.Maps` | `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.get_present/3`, `Shoddy.Maps.take_as/2`, `Shoddy.Maps.deep_merge/2`, `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.fetch_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2`, `Shoddy.Maps.invert/1` |
 | `Shoddy.Keywords` | `Shoddy.Keywords.put_if/3`, `Shoddy.Keywords.put_present/3`, `Shoddy.Keywords.get_present/3`, `Shoddy.Keywords.compact/1` |
 | `Shoddy.MapSets` | `Shoddy.MapSets.toggle/2`, `Shoddy.MapSets.toggle_all/2` |
@@ -59,6 +59,7 @@ use `Shoddy.Strings.presence/1`.
 | --- | --- |
 | `Shoddy.then_if/2` | The first argument. |
 | `Shoddy.then_if/3` | The return value of the predicate. |
+| `Shoddy.then_when/3` | The condition, which is the second argument. |
 | `Shoddy.Maps.put_if/3` | The value to put into the map. |
 | `Shoddy.Keywords.put_if/3` | The value to put into the keyword list. |
 | `Shoddy.Result.ensure/3` | The return value of the predicate. |
@@ -78,6 +79,20 @@ These functions do not use this rule:
 - `Shoddy.coalesce/2` rejects the values in its option `:reject`. The
   default of that option is `[nil]`.
 
+## The suffixes of the names
+
+The suffix of a name tells which value the function tests. A suffix is the
+last part of a name.
+
+| Suffix | The test |
+| --- | --- |
+| `_if` | The function tests a value that it also uses, such as the value to put. With a predicate, it tests the return value of the predicate. The value must be truthy. |
+| `_when` | The function tests a condition that is a separate argument. The function does not use the condition for another purpose. The condition must be truthy. |
+| `_present` | The function tests that a value is not `nil`. Thus `false` is a present value. |
+
+For example, `Shoddy.then_if/2` tests the value that it transforms, and
+`Shoddy.then_when/3` tests a condition that the caller gives.
+
 ## Functions as arguments
 
 | Function | Argument | Arity |
@@ -85,6 +100,7 @@ These functions do not use this rule:
 | `Shoddy.then_if/2` | The function to apply. | 1 |
 | `Shoddy.then_if/3` | The predicate. | 0 or 1 |
 | `Shoddy.then_if/3` | The function to apply. | 1 |
+| `Shoddy.then_when/3` | The function to apply. | 1 |
 | `Shoddy.then_present/3` | The function to apply. | 1 |
 | `Shoddy.Maps.map_values/2` | The function to apply to each value. | 1 |
 | `Shoddy.Maps.map_keys/2` | The function to apply to each key. | 1 |
@@ -186,6 +202,7 @@ These functions compare two values with the strict equality operator
 | --- | --- |
 | `FunctionClauseError` | An argument of the wrong type, such as a list as the first argument of `Shoddy.Maps.put_if/3`. |
 | `FunctionClauseError` | A function of the wrong arity. |
+| `FunctionClauseError` | A function as the condition of `Shoddy.then_when/3`. |
 | `FunctionClauseError` | A struct as the argument `mapping` of `Shoddy.Maps.take_as/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.deep_merge/2`. |
 | `FunctionClauseError` | A struct as an argument of `Shoddy.Maps.map_values/2`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.compact/1`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.stringify_keys/1`, `Shoddy.Maps.diff/2` or `Shoddy.Maps.invert/1`. |
