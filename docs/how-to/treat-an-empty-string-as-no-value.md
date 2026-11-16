@@ -121,3 +121,22 @@ Strings.blank?(" Ada ")
 
 [The design of Shoddy](../explanation/design.md#what-is_non_empty_string-accepts)
 tells why the guard does not trim the string.
+
+## Read a field of a form in a LiveView
+
+A person can forge a LiveView event, so a field can contain a list or a map
+in the place of a string. Use `Shoddy.Strings.non_blank/1`. It returns `nil`
+for a blank string and for a value that is not a string:
+
+```elixir
+Strings.non_blank(" Biscuit ")
+#=> " Biscuit "
+
+Strings.non_blank("  ")
+#=> nil
+
+Strings.non_blank(["a list"])
+#=> nil
+```
+
+The function does not trim a string that is not blank.

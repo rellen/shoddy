@@ -23,6 +23,8 @@ defmodule Shoddy.Strings do
   not empty, so the two tools keep it. To treat such a string as empty, call
   `String.trim/1` first. The predicate `blank?/1` also treats such a string
   as empty.
+  `non_blank/1` returns `nil` for such a string, and also for a value that is
+  not a string.
 
   The other functions change a string:
 
@@ -290,6 +292,33 @@ defmodule Shoddy.Strings do
   @spec blank?(String.t() | nil) :: boolean()
   def blank?(nil), do: true
   def blank?(value) when is_binary(value), do: String.trim(value) == ""
+
+  @doc """
+  Returns a string that is not blank, or `nil` for each other value.
+
+  The function returns `nil` for `nil`, for a blank string and for a value
+  that is not a string. A blank string is a string that `blank?/1` accepts.
+  The function returns each other string with no change, and it does not
+  trim it.
+
+  Use this function for a field of a form in a LiveView. A forged event can
+  send a list or a map in the place of a string, and the function treats
+  such a value as absent.
+
+  ## Examples
+
+      iex> Shoddy.Strings.non_blank(" Ada ")
+      " Ada "
+
+      iex> Shoddy.Strings.non_blank(" \\t\\n")
+      nil
+
+      iex> Shoddy.Strings.non_blank(["a list"])
+      nil
+  """
+  @spec non_blank(term()) :: String.t() | nil
+  def non_blank(value) when is_binary(value), do: if(!blank?(value), do: value)
+  def non_blank(_value), do: nil
 
   @doc """
   Splits a string into a list of values, trims each value, and removes each

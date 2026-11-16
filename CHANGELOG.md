@@ -248,3 +248,5 @@ The first release also contains these changes:
   `suspend/1`, `put_app_env/3` and `put_system_env/2`, for ExUnit tests of
   processes and of the environment. A release does not get ExUnit from
   Shoddy.
+- Add `Shoddy.Strings.non_blank/1`. It returns a string that is not blank,
+  or `nil` for each other value, also for a value that is not a string.

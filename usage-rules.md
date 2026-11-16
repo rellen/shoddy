@@ -76,6 +76,11 @@ Examples of these rules:
   text. For binary data that is not text, use `binary_slice/3`.
 - `Shoddy.Strings.upcase_first/1` keeps the rest of the string.
   `String.capitalize/1` changes the rest to lower case.
+- `Shoddy.Strings.presence/1` changes only `""` to `nil`. For a field of a
+  form, use `Shoddy.Strings.non_blank/1`. It also returns `nil` for a
+  string of whitespace and for a value that is not a string.
+  `Shoddy.Strings.blank?/1` raises for a value that is not `nil` and not a
+  string.
 
 ## Tests
 

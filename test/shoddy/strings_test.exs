@@ -191,6 +191,33 @@ defmodule Shoddy.StringsTest do
     end
   end
 
+  describe "non_blank/1" do
+    test "returns a string that is not blank with no change" do
+      assert non_blank("Ada") == "Ada"
+      assert non_blank(" Biscuit ") == " Biscuit "
+      assert non_blank("0") == "0"
+    end
+
+    test "returns nil for nil, the empty string and whitespace" do
+      assert non_blank(nil) == nil
+      assert non_blank("") == nil
+      assert non_blank("  \t\r\n") == nil
+      assert non_blank("\u00A0\u2003") == nil
+    end
+
+    test "returns nil for each value that is not a string" do
+      for value <- [["a list"], %{"a" => 1}, false, 0, :a, %URI{}] do
+        assert non_blank(value) == nil
+      end
+    end
+
+    test "agrees with blank?/1 for each string" do
+      for value <- ["", " ", "a", " a "] do
+        assert is_nil(non_blank(value)) == blank?(value)
+      end
+    end
+  end
+
   describe "split_trim/2" do
     test "splits at the default separator, trims each value and removes each empty value" do
       assert split_trim(" a ,, b , ") == ["a", "b"]
