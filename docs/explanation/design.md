@@ -631,6 +631,12 @@ The function does not trim the string, for the same reason as the guard.
 The two tools then agree: `presence/1` returns `nil` for a binary only if
 `is_non_empty_string/1` rejects it.
 
+`Shoddy.Strings.non_blank/1` has another purpose: it reads input that a
+person can forge, such as a field of a LiveView event. For such input, a
+list or a map in the place of a string is not data. Thus the function
+returns `nil` for it. `blank?/1` raises for such a value, because it is a
+predicate for strings only.
+
 ## Why Parse examines the full text
 
 `Integer.parse/1` returns the start of the text as an integer, and it also
