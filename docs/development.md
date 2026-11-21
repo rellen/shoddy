@@ -116,7 +116,8 @@ these steps in the commit that adds the function:
 5. Add a line to the part "Unreleased" of `CHANGELOG.md`. If the function
    changes what a module does, change its description in `README.md`.
 6. Usage rules: if an AI agent can use the function incorrectly, add one
-   rule to `usage-rules.md`. Keep that file short.
+   rule to `usage-rules.md`. Keep that file short. Start each heading of
+   that file at level 3, and do not give the file a title.
 
 ## The workflow
 
