@@ -1257,9 +1257,17 @@ defmodule Shoddy.Result do
   stacktrace, as if no `try` were present.
 
   An Erlang error, such as `:badarg`, is a term and not an exception. The
-  function converts it into an exception, such as `ArgumentError`, and
-  compares that exception with the list. An Erlang error that is not in the
-  list continues as the original term.
+  option `:rescue` matches an Erlang error in the same way as a `rescue`
+  clause of `try`:
+
+  - `ErlangError` in the list matches each Erlang error. It does not match
+    an exception that Elixir code raises, such as `raise ArgumentError`.
+  - Another module in the list matches an Erlang error that Elixir converts
+    into that exception. For example, `ArgumentError` matches `:badarg`.
+
+  For an Erlang error that it rescues, the function returns the same
+  exception as a `rescue` clause, with the same message. An Erlang error
+  that it does not rescue continues as the original term.
 
   The option `:catch` is a list of classes. The only accepted class is
   `:exit`. With `catch: [:exit]`, an exit of `fun` gives
@@ -1302,6 +1310,11 @@ defmodule Shoddy.Result do
       iex> Shoddy.Result.attempt(fn -> raise "boom" end, rescue: [ArgumentError])
       ** (RuntimeError) boom
 
+  `ErlangError` matches each Erlang error, as in a `rescue` clause:
+
+      iex> Shoddy.Result.attempt(fn -> :erlang.error(:enoent) end, rescue: [ErlangError])
+      {:error, %ErlangError{original: :enoent}}
+
   With `catch: [:exit]`, an exit gives an error tuple:
 
       iex> Shoddy.Result.attempt(fn -> GenServer.call(:shoddy_doc_no_server, :status) end, catch: [:exit])
@@ -1322,11 +1335,10 @@ defmodule Shoddy.Result do
       {:ok, fun.()}
     catch
       :error, reason ->
-        exception = Exception.normalize(:error, reason, __STACKTRACE__)
-
-        if exception.__struct__ in exceptions,
-          do: {:error, exception},
-          else: :erlang.raise(:error, reason, __STACKTRACE__)
+        case rescue_error(reason, __STACKTRACE__, exceptions) do
+          {:ok, exception} -> {:error, exception}
+          :error -> :erlang.raise(:error, reason, __STACKTRACE__)
+        end
 
       :exit, reason ->
         if :exit in classes,
@@ -1334,6 +1346,30 @@ defmodule Shoddy.Result do
           else: :erlang.raise(:exit, reason, __STACKTRACE__)
     end
   end
+
+  # This function matches an error as a rescue clause of try does. An
+  # exception matches its own module. ErlangError matches each Erlang error.
+  defp rescue_error(exception, _stacktrace, exceptions) when is_exception(exception) do
+    if exception.__struct__ in exceptions, do: {:ok, exception}, else: :error
+  end
+
+  defp rescue_error(reason, stacktrace, exceptions) do
+    if ErlangError in exceptions do
+      {:ok, Exception.normalize(:error, reason, error_info_stacktrace(reason, stacktrace))}
+    else
+      exception = Exception.normalize(:error, reason, stacktrace)
+      if exception.__struct__ in exceptions, do: {:ok, exception}, else: :error
+    end
+  end
+
+  # A rescue clause with ErlangError gives the stacktrace to
+  # Exception.normalize/3 only for these errors. For another error, the
+  # stacktrace can add lines with a wrong cause to the message.
+  defp error_info_stacktrace(reason, stacktrace) when reason in [:system_limit, :badarg, :undef, :function_clause],
+    do: stacktrace
+
+  defp error_info_stacktrace({tag, _detail}, stacktrace) when tag in [:badarg, :badkey], do: stacktrace
+  defp error_info_stacktrace(_reason, _stacktrace), do: []
 
   defp attempt_options!(opts) do
     opts = Keyword.validate!(opts, rescue: [], catch: [])

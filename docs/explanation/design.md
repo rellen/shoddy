@@ -300,6 +300,15 @@ expected. Each other exception continues with its stacktrace. An Erlang
 error, such as `:badarg`, continues as the original term. Thus a `catch`
 around the call matches it as if `attempt/2` were not present.
 
+The option `:rescue` matches an Erlang error in the same way as a `rescue`
+clause. A developer who replaces `rescue e in ErlangError` with
+`rescue: [ErlangError]` thus gets the same errors and the same messages.
+Elixir converts some Erlang errors into their own exceptions, such as
+`:badarg` into `ArgumentError`. A comparison of the converted module alone
+would not rescue such an error with `ErlangError`. Elixir also uses the
+stacktrace only for some Erlang errors. For another error, the stacktrace
+can add a wrong cause to the message.
+
 An exit is a failure of another kind. Erlang puts each failure into one of
 three classes: `:error`, `:exit` and `:throw`. An exception has the class
 `:error`. A call to a process exits when the process does not answer, and

@@ -250,3 +250,8 @@ The first release also contains these changes:
   Shoddy.
 - Add `Shoddy.Strings.non_blank/1`. It returns a string that is not blank,
   or `nil` for each other value, also for a value that is not a string.
+- Breaking: `ErlangError` in the option `:rescue` of
+  `Shoddy.Result.attempt/2` matches each Erlang error, as a `rescue` clause
+  does. Thus it now rescues an error such as `:badarg`. For each Erlang
+  error that it rescues, `attempt/2` returns the exception of a `rescue`
+  clause, with the same message.
