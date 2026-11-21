@@ -85,7 +85,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/check-if-a-time-value-is-in-a-period.md",
         "docs/how-to/test-a-process.md",
         "docs/reference/conventions.md",
-        "usage-rules.md",
+        {"usage-rules.md", title: "Usage rules"},
         "docs/explanation/design.md",
         "docs/development.md"
       ],
