@@ -158,3 +158,28 @@ Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
 The message does not contain the value. Plug needs at least 64 bytes for the
 secret key base of a cookie store. Without the option, a short key causes an
 error only at the first request that uses the session.
+
+## Read a URL
+
+Use `Shoddy.Env.uri/2`, for example for the URL of a database. Give the
+option `:schemes` to permit only some schemes:
+
+```elixir
+config :my_app, MyApp.Repo,
+  url: Shoddy.Env.uri("DATABASE_URL", schemes: ["ecto", "postgres", "postgresql"])
+```
+
+The function returns the trimmed value as a string. The value must have a
+scheme and a host. Thus `DATABASE_URL=localhost` stops the start, and the
+message tells the name of the variable:
+
+```elixir
+# DATABASE_URL="localhost"
+Shoddy.Env.uri("DATABASE_URL")
+#=> ** (ArgumentError) invalid value for the environment variable "DATABASE_URL" (:no_scheme)
+```
+
+The message does not contain the value, because a URL often contains a
+password. With `Shoddy.Env.string/2`, Ecto finds the mistake when the
+repository starts. The message of Ecto does not tell the name of the
+variable.

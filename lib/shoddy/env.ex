@@ -16,6 +16,9 @@ defmodule Shoddy.Env do
       config :my_app, MyAppWeb.Endpoint,
         secret_key_base: Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
 
+      config :my_app, MyApp.Repo,
+        url: Shoddy.Env.uri("DATABASE_URL", schemes: ["ecto", "postgres"])
+
   Each function raises an exception for a value that is not correct. The
   application then does not start with a wrong configuration, and the
   message tells the name of the variable.
@@ -338,4 +341,73 @@ defmodule Shoddy.Env do
   defp separator!(separator) when is_binary(separator) or is_list(separator), do: separator
 
   defp separator!(other), do: Shoddy.Option.invalid!(:separator, "a string or a list of strings", other)
+
+  @doc """
+  Reads a URL with a scheme and a host from an environment variable.
+
+  The function checks the trimmed value with `Shoddy.Parse.uri/2`, and it
+  returns the trimmed value as a string. Thus the result can go directly
+  into the configuration, for example as the `:url` of an Ecto repository.
+
+  The message for a wrong value does not contain the value. A URL often
+  contains a password, and a message can go into a log. The message tells
+  the reason, such as `:no_scheme`, and the permitted schemes.
+
+  ## Options
+
+    * `:default` - The value for an absent or blank variable. Without this
+      option, the function raises an exception for such a variable.
+
+    * `:schemes` - The list of the permitted schemes, as for
+      `Shoddy.Parse.uri/2`. The default is `nil`, which permits each scheme.
+
+  This function raises `ArgumentError` for a value without a scheme or a
+  host, and for a scheme that is not permitted. It also raises
+  `ArgumentError` for an unknown option, and for a `:schemes` that is not a
+  list of strings or `nil`.
+
+  ## Examples
+
+      iex> System.put_env("SHODDY_DOC_DATABASE_URL", "ecto://user:secret@db.example.com/app\\n")
+      iex> Shoddy.Env.uri("SHODDY_DOC_DATABASE_URL", schemes: ["ecto", "postgres"])
+      "ecto://user:secret@db.example.com/app"
+
+      iex> System.put_env("SHODDY_DOC_DATABASE_URL", "db.example.com")
+      iex> Shoddy.Env.uri("SHODDY_DOC_DATABASE_URL")
+      ** (ArgumentError) invalid value for the environment variable "SHODDY_DOC_DATABASE_URL" (:no_scheme)
+
+      iex> System.put_env("SHODDY_DOC_DATABASE_URL", "mysql://user:secret@db.example.com/app")
+      iex> Shoddy.Env.uri("SHODDY_DOC_DATABASE_URL", schemes: ["ecto", "postgres"])
+      ** (ArgumentError) invalid value for the environment variable "SHODDY_DOC_DATABASE_URL" (:scheme_not_allowed), expected one of: "ecto", "postgres"
+  """
+  @spec uri(String.t(), keyword()) :: String.t() | default when default: any()
+  def uri(name, opts \\ []) when is_binary(name) and is_list(opts) do
+    opts = Keyword.validate!(opts, [:default, schemes: nil])
+    schemes = Keyword.fetch!(opts, :schemes)
+    # Parse.uri/2 checks its options first. This call thus raises for a wrong
+    # option also if the variable is absent.
+    Parse.uri("", schemes: schemes)
+
+    read(name, opts, fn
+      "" -> :absent
+      text -> {:ok, check_uri!(text, name, schemes)}
+    end)
+  end
+
+  # This function raises the error itself. The message of value! contains
+  # the value, and a URL can contain a password.
+  defp check_uri!(text, name, schemes) do
+    case Parse.uri(text, schemes: schemes) do
+      {:ok, _uri} ->
+        text
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "invalid value for the environment variable #{inspect(name)} (#{inspect(reason)})" <>
+                schemes_hint(reason, schemes)
+    end
+  end
+
+  defp schemes_hint(:scheme_not_allowed, schemes), do: ", expected one of: " <> Enum.map_join(schemes, ", ", &inspect/1)
+  defp schemes_hint(_reason, _schemes), do: ""
 end
