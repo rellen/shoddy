@@ -180,4 +180,30 @@ config :my_app, MyAppWeb.Endpoint,
 ```
 
 Do not put a secret into the hint. The hint does not remove the value from
-a message. Only the message of `:min_bytes` does not contain the value.
+a message. Only two messages do not contain the value: the message of
+`:min_bytes`, and the message of `Shoddy.Env.uri/2` for a wrong value.
+
+## Read a URL
+
+Use `Shoddy.Env.uri/2`, for example for the URL of a database. Give the
+option `:schemes` to permit only some schemes:
+
+```elixir
+config :my_app, MyApp.Repo,
+  url: Shoddy.Env.uri("DATABASE_URL", schemes: ["ecto", "postgres", "postgresql"])
+```
+
+The function returns the trimmed value as a string. The value must have a
+scheme and a host. Thus `DATABASE_URL=localhost` stops the start, and the
+message tells the name of the variable:
+
+```elixir
+# DATABASE_URL="localhost"
+Shoddy.Env.uri("DATABASE_URL")
+#=> ** (ArgumentError) invalid value for the environment variable "DATABASE_URL" (:no_scheme)
+```
+
+The message does not contain the value, because a URL often contains a
+password. With `Shoddy.Env.string/2`, Ecto finds the mistake when the
+repository starts. The message of Ecto does not tell the name of the
+variable.

@@ -256,3 +256,8 @@ The first release also contains these changes:
 - Add the option `:hint` to each function of `Shoddy.Env`. The function
   adds the hint on a new line at the end of the message for an absent, a
   blank or a wrong value.
+- Add `Shoddy.Parse.uri/2`. It converts text into a `URI` with a scheme and
+  a host. The option `:schemes` gives the permitted schemes.
+- Add `Shoddy.Env.uri/2`. It reads a URL with a scheme and a host, and it
+  returns the string. The message for a wrong value does not contain the
+  value, because a URL often contains a password.

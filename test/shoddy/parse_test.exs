@@ -288,4 +288,64 @@ defmodule Shoddy.ParseTest do
       assert_raise FunctionClauseError, fn -> apply(&one_of/2, ["a", MapSet.new([:a])]) end
     end
   end
+
+  describe "uri/2" do
+    test "returns a URI with the scheme in lower case" do
+      assert {:ok, %URI{scheme: "postgres", userinfo: "user:pw", host: "db", port: 5432, path: "/app"}} =
+               uri("POSTGRES://user:pw@db:5432/app")
+    end
+
+    test "accepts a host in square brackets" do
+      assert {:ok, %URI{host: "::1", port: 4000}} = uri("http://[::1]:4000")
+    end
+
+    test "returns :no_scheme for text without a scheme" do
+      for text <- ["localhost", "//db/app", "/app", ""] do
+        assert uri(text) == {:error, :no_scheme}
+      end
+    end
+
+    test "returns :no_host for text without a host" do
+      for text <- ["localhost:5432", "http://", "file:///tmp", "mailto:a@example.com"] do
+        assert uri(text) == {:error, :no_host}
+      end
+    end
+
+    test "returns :not_a_uri for text that URI.new/1 does not accept" do
+      for text <- ["http://example.com/a b", " http://example.com", "http://exa\nmple.com"] do
+        assert uri(text) == {:error, :not_a_uri}
+      end
+    end
+
+    test "returns :scheme_not_allowed for a scheme that is not in :schemes" do
+      assert uri("mysql://db/app", schemes: ["postgres"]) == {:error, :scheme_not_allowed}
+      assert uri("http://db", schemes: []) == {:error, :scheme_not_allowed}
+    end
+
+    test "compares each scheme of :schemes in lower case" do
+      assert {:ok, %URI{scheme: "postgres"}} = uri("Postgres://db/app", schemes: ["POSTGRES"])
+    end
+
+    test "permits each scheme for the schemes nil" do
+      assert {:ok, %URI{scheme: "redis"}} = uri("redis://cache", schemes: nil)
+    end
+
+    test "returns :not_a_string for a value that is not a string, after it checks the options" do
+      for value <- [nil, :http, ~c"http://a", %URI{scheme: "http", host: "a"}] do
+        assert uri(value) == {:error, :not_a_string}
+      end
+
+      assert_raise ArgumentError, ~r/:schemes option/, fn -> uri(nil, schemes: "http") end
+    end
+
+    test "raises ArgumentError for a wrong option" do
+      for opts <- [[schemes: "http"], [schemes: [:http]], [schemes: ["http", nil]], [scheme: ["http"]]] do
+        assert_raise ArgumentError, fn -> uri("http://a", opts) end
+      end
+    end
+
+    test "does not return the part of the text that is not correct" do
+      assert uri("ecto://user:p w@db/app") == {:error, :not_a_uri}
+    end
+  end
 end
