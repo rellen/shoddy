@@ -250,3 +250,9 @@ The first release also contains these changes:
   Shoddy.
 - Add `Shoddy.Strings.non_blank/1`. It returns a string that is not blank,
   or `nil` for each other value, also for a value that is not a string.
+- Breaking: The functions of `Shoddy.Env` raise `ArgumentError` for an
+  absent variable without the option `:default`. They do not raise
+  `System.EnvError`. The message says that the variable is not set.
+- Add the option `:hint` to each function of `Shoddy.Env`. The function
+  adds the hint on a new line at the end of the message for an absent, a
+  blank or a wrong value.

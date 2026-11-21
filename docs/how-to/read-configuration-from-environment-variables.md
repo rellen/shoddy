@@ -28,11 +28,11 @@ Shoddy.Env.integer("PORT", default: 4000)
 ## Require a variable
 
 Do not give the option `:default`. For an absent variable, the function
-raises `System.EnvError`, as `System.fetch_env!/1` does:
+raises `ArgumentError`:
 
 ```elixir
 Shoddy.Env.integer("POOL_SIZE")
-#=> ** (System.EnvError) could not fetch environment variable "POOL_SIZE" because it is not set
+#=> ** (ArgumentError) the environment variable "POOL_SIZE" is not set
 ```
 
 For a blank value, the function raises `ArgumentError`, and the message
@@ -158,3 +158,26 @@ Shoddy.Env.string("SECRET_KEY_BASE", min_bytes: 64)
 The message does not contain the value. Plug needs at least 64 bytes for the
 secret key base of a cookie store. Without the option, a short key causes an
 error only at the first request that uses the session.
+
+## Tell the operator how to correct a variable
+
+Give the option `:hint`. The function adds the hint on a new line at the
+end of the message for an absent, a blank or a wrong value:
+
+```elixir
+config :my_app, MyAppWeb.Endpoint,
+  secret_key_base:
+    Shoddy.Env.string("SECRET_KEY_BASE",
+      min_bytes: 64,
+      hint: "Generate a value with: mix phx.gen.secret"
+    )
+```
+
+```elixir
+# SECRET_KEY_BASE is absent
+#=> ** (ArgumentError) the environment variable "SECRET_KEY_BASE" is not set
+#=> Generate a value with: mix phx.gen.secret
+```
+
+Do not put a secret into the hint. The hint does not remove the value from
+a message. Only the message of `:min_bytes` does not contain the value.

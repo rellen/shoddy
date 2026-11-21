@@ -877,13 +877,24 @@ starts a container often sets each variable of a template, also the
 variables with no value. Thus a blank value usually means "not set", and
 the functions return the default for it.
 
-Without a default, the functions raise an exception for an absent or a
-blank variable. For an absent variable, they raise `System.EnvError`, as
-`System.fetch_env!/1` does. For a blank value, they raise `ArgumentError`.
-The message of `System.EnvError` says that the variable is not set. That
-message would send an operator to the wrong problem, because the variable
-is set. The message of `ArgumentError` tells the value instead. A required
-list thus never becomes an empty list with no message.
+Without a default, the functions raise `ArgumentError` for an absent or a
+blank variable. For an absent variable, the message says that the variable
+is not set. For a blank value, the message tells the value instead,
+because the variable is set. A required list thus never becomes an empty
+list with no message.
+
+The functions do not raise `System.EnvError` for an absent variable,
+although `System.fetch_env!/1` does. That exception has only the field
+`:env`, and its message is fixed. Thus its message cannot contain the
+hint. With one exception type, a caller also needs only one `rescue`
+clause for each error of a variable.
+
+The option `:hint` adds a text on a new line at the end of the message. A
+`config/runtime.exs` file often tells the operator how to correct a
+variable, for example with the command that makes a secret. The hint keeps
+that text in the message. The functions do not add the hint to the message
+for a wrong option, because a wrong option is a mistake in the code, and
+the hint is for an operator.
 
 The functions check their options also if the variable is absent. A wrong
 option is a mistake in the code, not in the deployment. On the computer of

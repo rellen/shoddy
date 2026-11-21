@@ -35,12 +35,28 @@ defmodule Shoddy.Env do
 
   Each function accepts the option `:default`. The function returns it if
   the variable is absent or blank. The function does not examine the
-  default. If you do not give the option, the function raises an
-  exception:
+  default. If you do not give the option, the function raises
+  `ArgumentError`:
 
-  - `System.EnvError` for an absent variable.
-  - `ArgumentError` for a blank value. The message tells the value, so an
-    operator can see that the variable is set.
+  - For an absent variable, the message tells that the variable is not set.
+  - For a blank value, the message tells the value. Thus an operator can
+    see that the variable is set.
+
+  Each function also accepts the option `:hint`. A hint is a text that
+  tells an operator how to correct the variable. The function adds the
+  hint on a new line at the end of the message for an absent, a blank or
+  a wrong value. The function does not add the hint to the message for a
+  wrong option. The default is `nil`, which adds no hint.
+
+      config :my_app, MyAppWeb.Endpoint,
+        secret_key_base:
+          Shoddy.Env.string("SECRET_KEY_BASE",
+            min_bytes: 64,
+            hint: "Generate a value with: mix phx.gen.secret"
+          )
+
+  The hint does not make a message safe for a secret. The message for a
+  wrong value can contain the value, as each function tells.
   """
 
   alias Shoddy.Parse
@@ -60,8 +76,12 @@ defmodule Shoddy.Env do
     * `:min` and `:max` - The range of the integer, as for
       `Shoddy.Parse.integer/2`.
 
+    * `:hint` - A text for the end of the message of an exception for the
+      variable. The default is `nil`, which adds no hint.
+
   This function raises `ArgumentError` for a value that is not an integer
-  or is not in the range, and for an unknown option.
+  or is not in the range, for an unknown option, and for a `:hint` that is
+  not a string or `nil`.
 
   ## Examples
 
@@ -79,7 +99,7 @@ defmodule Shoddy.Env do
   """
   @spec integer(String.t(), keyword()) :: integer() | default when default: any()
   def integer(name, opts \\ []) when is_binary(name) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default, :min, :max])
+    opts = Keyword.validate!(opts, [:default, :min, :max, hint: nil])
     read(name, opts, &Parse.integer(&1, Keyword.take(opts, [:min, :max])))
   end
 
@@ -101,10 +121,14 @@ defmodule Shoddy.Env do
       `"0"` for `false`. It adds these texts to the two lists. The default is
       `false`.
 
+    * `:hint` - A text for the end of the message of an exception for the
+      variable. The default is `nil`, which adds no hint.
+
   This function raises `ArgumentError` for a value that is not in the
-  lists, and for an unknown option. It also raises `ArgumentError` for a
-  `:digits` that is not a boolean, and for a text that is in the two lists
-  after it adds the digits.
+  lists, for an unknown option, and for a `:hint` that is not a string or
+  `nil`. It also raises `ArgumentError` for a `:digits` that is not a
+  boolean, and for a text that is in the two lists after it adds the
+  digits.
 
   ## Examples
 
@@ -122,7 +146,7 @@ defmodule Shoddy.Env do
   """
   @spec boolean(String.t(), keyword()) :: boolean() | default when default: any()
   def boolean(name, opts \\ []) when is_binary(name) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default, true_values: ["true"], false_values: ["false"], digits: false])
+    opts = Keyword.validate!(opts, [:default, true_values: ["true"], false_values: ["false"], digits: false, hint: nil])
 
     lists =
       case Keyword.fetch!(opts, :digits) do
@@ -163,11 +187,15 @@ defmodule Shoddy.Env do
       shorter value, the function raises `ArgumentError`. The default is
       `nil`, which sets no limit.
 
+    * `:hint` - A text for the end of the message of an exception for the
+      variable. The default is `nil`, which adds no hint.
+
   The message for a value that is too short does not contain the value. A
   string variable often holds a secret, and a message can go into a log.
 
-  This function raises `ArgumentError` for an unknown option, and for a
-  `:min_bytes` that is not a non-negative integer or `nil`.
+  This function raises `ArgumentError` for an unknown option, for a
+  `:min_bytes` that is not a non-negative integer or `nil`, and for a
+  `:hint` that is not a string or `nil`.
 
   ## Examples
 
@@ -185,12 +213,12 @@ defmodule Shoddy.Env do
   """
   @spec string(String.t(), keyword()) :: String.t() | default when default: any()
   def string(name, opts \\ []) when is_binary(name) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default, min_bytes: nil])
+    opts = Keyword.validate!(opts, [:default, min_bytes: nil, hint: nil])
     min_bytes = opts |> Keyword.fetch!(:min_bytes) |> min_bytes!()
 
     read(name, opts, fn
       "" -> :absent
-      text -> {:ok, check_size!(text, name, min_bytes)}
+      text -> {:ok, check_size!(text, name, min_bytes, opts)}
     end)
   end
 
@@ -200,48 +228,61 @@ defmodule Shoddy.Env do
 
   # This function raises the error itself. The message of value! contains
   # the value, and the value of a string variable can be a secret.
-  defp check_size!(text, name, min_bytes) when is_integer(min_bytes) and byte_size(text) < min_bytes do
+  defp check_size!(text, name, min_bytes, opts) when is_integer(min_bytes) and byte_size(text) < min_bytes do
     raise ArgumentError,
-          "the environment variable #{inspect(name)} has #{byte_size(text)} bytes, " <>
-            "but it must have at least #{min_bytes} bytes"
+          message(
+            "the environment variable #{inspect(name)} has #{byte_size(text)} bytes, " <>
+              "but it must have at least #{min_bytes} bytes",
+            Keyword.fetch!(opts, :hint)
+          )
   end
 
-  defp check_size!(text, _name, _min_bytes), do: text
+  defp check_size!(text, _name, _min_bytes, _opts), do: text
 
-  # The function `hint` returns a text for the end of the message for an
-  # invalid value. The function calls it only for such a value.
-  defp read(name, opts, parse, hint \\ fn -> "" end) do
+  # The function `details` returns a text for the end of the first line of
+  # the message for an invalid value. The function calls it only for such a
+  # value. The option :hint comes after that text, on a new line.
+  defp read(name, opts, parse, details \\ fn -> "" end) do
+    hint = opts |> Keyword.fetch!(:hint) |> hint!()
     raw = System.get_env(name)
     text = String.trim(raw || "")
 
     case parse.(text) do
       _result when is_nil(raw) ->
-        default!(opts, System.EnvError.exception(env: name))
+        default!(opts, "the environment variable #{inspect(name)} is not set", hint)
 
       result when text == "" or result == :absent ->
-        default!(
-          opts,
-          ArgumentError.exception("the environment variable #{inspect(name)} has no value: #{inspect(raw)}")
-        )
+        default!(opts, "the environment variable #{inspect(name)} has no value: #{inspect(raw)}", hint)
 
       result ->
-        value!(result, name, raw, hint)
+        value!(result, name, raw, details, hint)
     end
   end
 
-  defp default!(opts, exception) do
+  defp hint!(hint) when is_nil(hint) or is_binary(hint), do: hint
+
+  defp hint!(other), do: Shoddy.Option.invalid!(:hint, "a string or nil", other)
+
+  defp default!(opts, message, hint) do
     case Keyword.fetch(opts, :default) do
       {:ok, default} -> default
-      :error -> raise exception
+      :error -> raise ArgumentError, message(message, hint)
     end
   end
 
-  defp value!({:ok, value}, _name, _raw, _hint), do: value
+  defp value!({:ok, value}, _name, _raw, _details, _hint), do: value
 
-  defp value!({:error, reason}, name, raw, hint) do
+  defp value!({:error, reason}, name, raw, details, hint) do
     raise ArgumentError,
-          "invalid value for the environment variable #{inspect(name)}: #{inspect(raw)} (#{inspect(reason)})" <> hint.()
+          message(
+            "invalid value for the environment variable #{inspect(name)}: #{inspect(raw)} (#{inspect(reason)})" <>
+              details.(),
+            hint
+          )
   end
+
+  defp message(text, nil), do: text
+  defp message(text, hint), do: text <> "\n" <> hint
 
   @doc """
   Reads one value from a fixed list of values.
@@ -262,9 +303,13 @@ defmodule Shoddy.Env do
     * `:default` - The value for an absent or blank variable. Without this
       option, the function raises an exception for such a variable.
 
-  This function raises `ArgumentError` for a value that is not allowed, and
-  for an unknown option. It also raises `ArgumentError` if `allowed` is not
-  a list of atoms and not a keyword list, also if the variable is absent.
+    * `:hint` - A text for the end of the message of an exception for the
+      variable. The default is `nil`, which adds no hint.
+
+  This function raises `ArgumentError` for a value that is not allowed, for
+  an unknown option, and for a `:hint` that is not a string or `nil`. It
+  also raises `ArgumentError` if `allowed` is not a list of atoms and not
+  a keyword list, also if the variable is absent.
 
   ## Examples
 
@@ -282,7 +327,7 @@ defmodule Shoddy.Env do
   """
   @spec one_of(String.t(), [atom()] | keyword(), keyword()) :: any()
   def one_of(name, allowed, opts \\ []) when is_binary(name) and is_list(allowed) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default])
+    opts = Keyword.validate!(opts, [:default, hint: nil])
     read(name, opts, &Parse.one_of(&1, allowed), fn -> ", expected one of: " <> allowed_names(allowed) end)
   end
 
@@ -308,9 +353,13 @@ defmodule Shoddy.Env do
 
     * `:separator` - The string between two values. The default is `","`.
 
-  This function raises `ArgumentError` for an unknown option, and for a
-  separator that `Shoddy.Strings.split_trim/2` does not accept. A
-  separator must be a string or a list of strings.
+    * `:hint` - A text for the end of the message of an exception for the
+      variable. The default is `nil`, which adds no hint.
+
+  This function raises `ArgumentError` for an unknown option, for a
+  `:hint` that is not a string or `nil`, and for a separator that
+  `Shoddy.Strings.split_trim/2` does not accept. A separator must be a
+  string or a list of strings.
 
   ## Examples
 
@@ -324,7 +373,7 @@ defmodule Shoddy.Env do
   """
   @spec list(String.t(), keyword()) :: [String.t()] | default when default: any()
   def list(name, opts \\ []) when is_binary(name) and is_list(opts) do
-    opts = Keyword.validate!(opts, [:default, separator: ","])
+    opts = Keyword.validate!(opts, [:default, separator: ",", hint: nil])
     separator = opts |> Keyword.fetch!(:separator) |> separator!()
 
     read(name, opts, fn text ->
