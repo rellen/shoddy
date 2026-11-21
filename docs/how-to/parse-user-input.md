@@ -136,6 +136,26 @@ Do not call `String.to_atom/1` on user input. The runtime never removes an
 atom, and the number of atoms has a limit. `Shoddy.Parse.one_of/2` never
 makes a new atom.
 
+## Read a URL
+
+Use `Shoddy.Parse.uri/2` for a link that a user gives. The URL must have a
+scheme and a host. Give the option `:schemes` to permit only some schemes:
+
+```elixir
+{:ok, uri} = Parse.uri("https://example.com/docs", schemes: ["http", "https"])
+uri.host
+#=> "example.com"
+
+Parse.uri("example.com")
+#=> {:error, :no_scheme}
+
+Parse.uri("ftp://example.com", schemes: ["http", "https"])
+#=> {:error, :scheme_not_allowed}
+```
+
+`URI.new/1` accepts `"example.com"` as a path with no scheme. Thus a check
+of `URI.new/1` alone does not stop such text.
+
 ## Give each error a message for the user
 
 Use `Shoddy.Result.map_error/2` to change each reason into a message:

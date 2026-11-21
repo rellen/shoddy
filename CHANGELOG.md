@@ -250,3 +250,8 @@ The first release also contains these changes:
   Shoddy.
 - Add `Shoddy.Strings.non_blank/1`. It returns a string that is not blank,
   or `nil` for each other value, also for a value that is not a string.
+- Add `Shoddy.Parse.uri/2`. It converts text into a `URI` with a scheme and
+  a host. The option `:schemes` gives the permitted schemes.
+- Add `Shoddy.Env.uri/2`. It reads a URL with a scheme and a host, and it
+  returns the string. The message for a wrong value does not contain the
+  value, because a URL often contains a password.

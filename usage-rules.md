@@ -81,6 +81,8 @@ Examples of these rules:
   string of whitespace and for a value that is not a string.
   `Shoddy.Strings.blank?/1` raises for a value that is not `nil` and not a
   string.
+- `Shoddy.Env.uri/2` returns the URL as a string. `Shoddy.Parse.uri/2`
+  returns a `URI` struct.
 
 ## Tests
 

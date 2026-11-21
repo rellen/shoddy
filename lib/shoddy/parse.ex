@@ -25,6 +25,8 @@ defmodule Shoddy.Parse do
   - `boolean/2` converts text into `true` or `false`.
   - `one_of/2` converts text into one atom from a list that you give, or into
     the value of a key of a keyword list. It does not make a new atom.
+  - `uri/2` converts text into a `URI` with a scheme and a host. It can also
+    check the scheme.
   """
 
   @doc """
@@ -409,5 +411,88 @@ defmodule Shoddy.Parse do
       true ->
         raise ArgumentError, "the allowed list must be a list of atoms or a keyword list, got: #{inspect(allowed)}"
     end
+  end
+
+  @doc """
+  Converts text into a `URI` with a scheme and a host.
+
+  The function parses the text with `URI.new/1`. It returns these errors:
+
+  - `{:error, :not_a_uri}` for text that `URI.new/1` does not accept, for
+    example text with a space.
+  - `{:error, :no_scheme}` for text without a scheme, such as `"localhost"`.
+  - `{:error, :no_host}` for text without a host, such as `"localhost:5432"`
+    or `"file:///tmp"`. In `"localhost:5432"`, the scheme is `"localhost"`.
+  - `{:error, :scheme_not_allowed}` for a scheme that is not in the option
+    `:schemes`.
+
+  `URI.new/1` changes the scheme to lower case. Thus the scheme of the
+  result is always in lower case.
+
+  ## Options
+
+    * `:schemes` - The list of the permitted schemes. The function compares
+      each scheme in lower case. The default is `nil`, which permits each
+      scheme.
+
+  This function raises `ArgumentError` for an unknown option, and for a
+  `:schemes` that is not a list of strings or `nil`.
+
+  ## Examples
+
+      iex> {:ok, uri} = Shoddy.Parse.uri("https://example.com/docs")
+      iex> {uri.scheme, uri.host, uri.path}
+      {"https", "example.com", "/docs"}
+
+      iex> Shoddy.Parse.uri("localhost")
+      {:error, :no_scheme}
+
+      iex> Shoddy.Parse.uri("localhost:5432")
+      {:error, :no_host}
+
+      iex> Shoddy.Parse.uri("https://example.com/a b")
+      {:error, :not_a_uri}
+
+      iex> Shoddy.Parse.uri("mysql://db.example.com/app", schemes: ["postgres", "postgresql"])
+      {:error, :scheme_not_allowed}
+  """
+  @spec uri(term(), keyword()) ::
+          {:ok, URI.t()} | {:error, :not_a_string | :not_a_uri | :no_scheme | :no_host | :scheme_not_allowed}
+  def uri(text, opts \\ []) when is_list(opts) do
+    schemes = opts |> Keyword.validate!(schemes: nil) |> Keyword.fetch!(:schemes) |> schemes!()
+
+    with {:ok, text} <- string(text),
+         {:ok, uri} <- new_uri(text) do
+      check_uri(uri, schemes)
+    end
+  end
+
+  defp schemes!(nil), do: nil
+
+  defp schemes!(schemes) when is_list(schemes) do
+    if Enum.all?(schemes, &is_binary/1),
+      do: Enum.map(schemes, &String.downcase/1),
+      else: Shoddy.Option.invalid!(:schemes, "a list of strings or nil", schemes)
+  end
+
+  defp schemes!(other), do: Shoddy.Option.invalid!(:schemes, "a list of strings or nil", other)
+
+  defp string(text) when is_binary(text), do: {:ok, text}
+  defp string(_other), do: {:error, :not_a_string}
+
+  # URI.new/1 returns the part of the text that is not correct. This function
+  # does not return that part, because a URL can contain a password.
+  defp new_uri(text) do
+    case URI.new(text) do
+      {:ok, uri} -> {:ok, uri}
+      {:error, _part} -> {:error, :not_a_uri}
+    end
+  end
+
+  defp check_uri(%URI{scheme: nil}, _schemes), do: {:error, :no_scheme}
+  defp check_uri(%URI{host: host}, _schemes) when host in [nil, ""], do: {:error, :no_host}
+
+  defp check_uri(%URI{scheme: scheme} = uri, schemes) do
+    if is_nil(schemes) or scheme in schemes, do: {:ok, uri}, else: {:error, :scheme_not_allowed}
   end
 end
