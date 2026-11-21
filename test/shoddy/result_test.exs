@@ -1098,6 +1098,47 @@ defmodule Shoddy.ResultTest do
       assert catch_error(attempt(fn -> :erlang.error(:badarg) end, rescue: [KeyError])) == :badarg
     end
 
+    test "rescues each Erlang error with ErlangError in the list, as a rescue clause does" do
+      table = :ets.new(:shoddy_test, [])
+      :ets.delete(table)
+
+      funs = [
+        fn -> :ets.lookup(table, :key) end,
+        fn -> :erlang.error({:badarg, :detail}) end,
+        fn -> :erlang.map_get(:key, Process.get(:shoddy_no_key, %{})) end,
+        fn -> :erlang.list_to_atom(List.duplicate(?a, 300)) end,
+        fn -> Process.get(:shoddy_no_key, :shoddy_no_module).f() end,
+        fn -> Process.get(:shoddy_no_key, fn :a -> :a end).(:b) end,
+        fn -> System.cmd("/shoddy/no/program", []) end,
+        fn -> :erlang.error(:shoddy_reason) end
+      ]
+
+      for fun <- funs do
+        expected =
+          try do
+            fun.()
+          rescue
+            error in ErlangError -> error
+          end
+
+        assert attempt(fun, rescue: [ErlangError]) == {:error, expected}
+      end
+    end
+
+    test "gives the message of a rescue clause for an Erlang error with no exception module" do
+      assert {:error, error} = attempt(fn -> System.cmd("/shoddy/no/program", []) end, rescue: [ErlangError])
+      assert Exception.message(error) == "Erlang error: :enoent"
+    end
+
+    test "does not rescue an exception that Elixir code raises with ErlangError in the list" do
+      assert_raise ArgumentError, fn -> attempt(fn -> raise ArgumentError end, rescue: [ErlangError]) end
+    end
+
+    test "rescues an ErlangError exception with ErlangError in the list" do
+      assert attempt(fn -> raise ErlangError, original: :x end, rescue: [ErlangError]) ==
+               {:error, %ErlangError{original: :x}}
+    end
+
     test "keeps the stacktrace of an exception that it does not rescue" do
       {error, [top | _]} =
         try do
