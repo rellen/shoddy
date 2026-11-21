@@ -51,7 +51,9 @@ Examples of these rules:
   error. `Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2` raise.
 - The functions of `Shoddy.Env` raise an exception for an absent variable
   or a wrong value. Use them in `config/runtime.exs`, and give the option
-  `:default` for an optional variable.
+  `:default` for an optional variable. Without a default, they raise
+  `ArgumentError`, also for an absent variable. Give the option `:hint` to
+  tell an operator how to correct the variable.
 
 ## Functions that an agent can use incorrectly
 
