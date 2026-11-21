@@ -40,8 +40,8 @@ defmodule Shoddy.EnvTest do
       assert integer(name, default: :off, min: 1) == :off
     end
 
-    test "raises System.EnvError for an absent variable without a default", %{name: name} do
-      assert_raise System.EnvError, fn -> integer(name) end
+    test "raises ArgumentError that tells that an absent variable without a default is not set", %{name: name} do
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> integer(name) end
     end
 
     test "raises ArgumentError that tells the value for a blank variable without a default", %{name: name} do
@@ -108,8 +108,8 @@ defmodule Shoddy.EnvTest do
       assert boolean(name, default: false) == false
     end
 
-    test "raises System.EnvError for an absent variable without a default", %{name: name} do
-      assert_raise System.EnvError, fn -> boolean(name) end
+    test "raises ArgumentError that tells that an absent variable without a default is not set", %{name: name} do
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> boolean(name) end
     end
 
     test "removes the whitespace at the start and at the end of the value", %{name: name} do
@@ -212,8 +212,8 @@ defmodule Shoddy.EnvTest do
       assert string(name, default: "x") == "x"
     end
 
-    test "raises System.EnvError for an absent variable without a default", %{name: name} do
-      assert_raise System.EnvError, fn -> string(name) end
+    test "raises ArgumentError that tells that an absent variable without a default is not set", %{name: name} do
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> string(name) end
     end
 
     test "raises ArgumentError for a blank variable without a default", %{name: name} do
@@ -288,8 +288,8 @@ defmodule Shoddy.EnvTest do
       assert one_of(name, [:text, :json], default: nil) == nil
     end
 
-    test "raises System.EnvError for an absent variable without a default", %{name: name} do
-      assert_raise System.EnvError, fn -> one_of(name, [:text]) end
+    test "raises ArgumentError that tells that an absent variable without a default is not set", %{name: name} do
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> one_of(name, [:text]) end
     end
 
     test "raises ArgumentError for a blank variable without a default", %{name: name} do
@@ -353,7 +353,7 @@ defmodule Shoddy.EnvTest do
       assert list(name, default: nil) == nil
       assert_raise ArgumentError, ~r/has no value/, fn -> list(name) end
       System.delete_env(name)
-      assert_raise System.EnvError, fn -> list(name) end
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> list(name) end
     end
 
     test "raises ArgumentError for an unknown option", %{name: name} do
@@ -374,5 +374,89 @@ defmodule Shoddy.EnvTest do
         assert {error.module, error.function} == {Shoddy.Env, :list}
       end
     end
+  end
+
+  describe "the option :hint" do
+    @hint "Generate a value with: mix phx.gen.secret"
+
+    test "adds the hint on a new line for an absent variable, in each function", %{name: name} do
+      for read <- readers() do
+        assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set\n#{@hint}], fn ->
+          read.(name, hint: @hint)
+        end
+      end
+    end
+
+    test "adds the hint on a new line for a blank value, in each function", %{name: name} do
+      System.put_env(name, " ")
+
+      for read <- readers() do
+        assert_raise ArgumentError, ~s[the environment variable "#{name}" has no value: " "\n#{@hint}], fn ->
+          read.(name, hint: @hint)
+        end
+      end
+    end
+
+    test "adds the hint on a new line for a wrong value", %{name: name} do
+      System.put_env(name, "x")
+
+      assert_raise ArgumentError,
+                   ~s[invalid value for the environment variable "#{name}": "x" (:not_an_integer)\n#{@hint}],
+                   fn -> integer(name, hint: @hint) end
+
+      assert_raise ArgumentError,
+                   ~s[invalid value for the environment variable "#{name}": "x" (:not_a_boolean)\n#{@hint}],
+                   fn -> boolean(name, hint: @hint) end
+    end
+
+    test "puts the hint after the allowed names for one_of/3", %{name: name} do
+      System.put_env(name, "xml")
+
+      message =
+        ~s[invalid value for the environment variable "#{name}": "xml" (:not_allowed), ] <>
+          ~s[expected one of: "text", "json"\n#{@hint}]
+
+      assert_raise ArgumentError, message, fn -> one_of(name, [:text, :json], hint: @hint) end
+    end
+
+    test "adds the hint for a value that is shorter than :min_bytes, and does not add the value", %{name: name} do
+      System.put_env(name, "abcdef")
+
+      message = ~s[the environment variable "#{name}" has 6 bytes, but it must have at least 64 bytes\n#{@hint}]
+      assert_raise ArgumentError, message, fn -> string(name, min_bytes: 64, hint: @hint) end
+    end
+
+    test "adds no text for a hint of nil", %{name: name} do
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> integer(name, hint: nil) end
+    end
+
+    test "does not change the result for a correct value or a default", %{name: name} do
+      assert integer(name, default: 1, hint: @hint) == 1
+      System.put_env(name, "2")
+      assert integer(name, hint: @hint) == 2
+    end
+
+    test "does not add the hint to the message for a wrong option", %{name: name} do
+      error = assert_raise ArgumentError, fn -> integer(name, hint: @hint, min: :low) end
+      refute error.message =~ @hint
+    end
+
+    test "raises ArgumentError for a hint that is not a string or nil, also if the variable is absent", %{name: name} do
+      for read <- readers(), hint <- [:text, ~c"text", 1] do
+        assert_raise ArgumentError, ~r/invalid value for :hint option: expected a string or nil/, fn ->
+          read.(name, default: "x", hint: hint)
+        end
+      end
+    end
+  end
+
+  defp readers do
+    [
+      &integer/2,
+      &boolean/2,
+      &string/2,
+      &list/2,
+      &one_of(&1, [:text], &2)
+    ]
   end
 end
