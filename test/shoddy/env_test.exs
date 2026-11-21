@@ -12,7 +12,8 @@ defmodule Shoddy.EnvTest do
     "SHODDY_DOC_HOST",
     "SHODDY_DOC_SECRET",
     "SHODDY_DOC_LOG_FORMAT",
-    "SHODDY_DOC_STORAGE"
+    "SHODDY_DOC_STORAGE",
+    "SHODDY_DOC_DATABASE_URL"
   ]
 
   setup do
@@ -409,6 +410,16 @@ defmodule Shoddy.EnvTest do
                    fn -> boolean(name, hint: @hint) end
     end
 
+    test "adds the hint and not the value for a wrong URL", %{name: name} do
+      System.put_env(name, "mysql://user:secret@db/app")
+
+      message =
+        ~s[invalid value for the environment variable "#{name}" (:scheme_not_allowed), ] <>
+          ~s[expected one of: "ecto"\n#{@hint}]
+
+      assert_raise ArgumentError, message, fn -> uri(name, schemes: ["ecto"], hint: @hint) end
+    end
+
     test "puts the hint after the allowed names for one_of/3", %{name: name} do
       System.put_env(name, "xml")
 
@@ -456,7 +467,57 @@ defmodule Shoddy.EnvTest do
       &boolean/2,
       &string/2,
       &list/2,
-      &one_of(&1, [:text], &2)
+      &one_of(&1, [:text], &2),
+      &uri/2
     ]
+  end
+
+  describe "uri/2" do
+    test "returns the trimmed value as a string", %{name: name} do
+      System.put_env(name, " postgres://user:pw@db/app\n")
+      assert uri(name) == "postgres://user:pw@db/app"
+      assert uri(name, schemes: ["postgres"]) == "postgres://user:pw@db/app"
+    end
+
+    test "returns the default for an absent or blank variable, and raises without a default", %{name: name} do
+      assert uri(name, default: nil) == nil
+      assert_raise ArgumentError, ~s[the environment variable "#{name}" is not set], fn -> uri(name) end
+      System.put_env(name, " ")
+      assert uri(name, default: "http://localhost") == "http://localhost"
+      assert_raise ArgumentError, ~r/has no value/, fn -> uri(name) end
+    end
+
+    test "raises ArgumentError with the reason and without the value for a wrong value", %{name: name} do
+      for {value, reason} <- [
+            {"secret.example.com", ":no_scheme"},
+            {"secret:5432", ":no_host"},
+            {"http://secret.example.com/a b", ":not_a_uri"}
+          ] do
+        System.put_env(name, value)
+        error = assert_raise ArgumentError, fn -> uri(name, default: "http://localhost") end
+        assert error.message == ~s[invalid value for the environment variable "#{name}" (#{reason})]
+        refute error.message =~ "secret"
+      end
+    end
+
+    test "raises ArgumentError with the permitted schemes for a scheme that is not permitted", %{name: name} do
+      System.put_env(name, "mysql://user:secret@db/app")
+      error = assert_raise ArgumentError, fn -> uri(name, schemes: ["ecto", "postgres"]) end
+
+      assert error.message ==
+               ~s[invalid value for the environment variable "#{name}" (:scheme_not_allowed), expected one of: "ecto", "postgres"]
+    end
+
+    test "raises ArgumentError for a wrong option, also if the variable is absent", %{name: name} do
+      assert_raise ArgumentError, ~r/:schemes option/, fn -> uri(name, default: nil, schemes: "http") end
+      assert_raise ArgumentError, fn -> uri(name, default: nil, scheme: ["http"]) end
+    end
+
+    test "raises FunctionClauseError from uri/2 itself for an argument of the wrong type" do
+      for args <- [[:url, []], ["URL", :default]] do
+        error = assert_raise FunctionClauseError, fn -> apply(&uri/2, args) end
+        assert {error.module, error.function} == {Shoddy.Env, :uri}
+      end
+    end
   end
 end

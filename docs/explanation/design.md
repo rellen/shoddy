@@ -910,6 +910,13 @@ it. A string variable often holds a secret, and a message can go into a
 log. The message for a blank value still contains the value, because
 whitespace is not a secret.
 
+`Shoddy.Env.uri/2` also keeps the value out of its messages, because a URL
+often contains a password. The message tells the reason, such as
+`:no_host`, and the permitted schemes. `Shoddy.Parse.uri/2` does not return
+the part of the text that `URI.new/1` rejects, for the same reason.
+`Shoddy.Env.uri/2` returns the string and not a `URI`, because a library
+such as Ecto takes the URL as a string.
+
 The message of `Shoddy.Env.one_of/3` gives the allowed names. A value that
 is not in a fixed list is usually a small mistake in the text, such as
 `"S3"` for `"s3"`. Thus an operator can correct the value from the
