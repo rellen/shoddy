@@ -261,3 +261,8 @@ The first release also contains these changes:
 - Add `Shoddy.Env.uri/2`. It reads a URL with a scheme and a host, and it
   returns the string. The message for a wrong value does not contain the
   value, because a URL often contains a password.
+- Breaking: `ErlangError` in the option `:rescue` of
+  `Shoddy.Result.attempt/2` matches each Erlang error, as a `rescue` clause
+  does. Thus it now rescues an error such as `:badarg`. For each Erlang
+  error that it rescues, `attempt/2` returns the exception of a `rescue`
+  clause, with the same message.
