@@ -12,6 +12,10 @@ defmodule Shoddy.Maps do
   The name of this module is `Maps`, in the plural. Thus the alias `Maps`
   does not hide the standard `Map` module.
 
+  `text_fields/1` is different. Its input comes from the browser, so it
+  accepts a value of each type, and it returns an empty map for a value that
+  is not a plain map.
+
   A struct is also a map, but it has a fixed set of fields. For a struct,
   `put_if/3`, `put_present/3` and `put_path/3` accept only a key that is a
   field of the struct. They raise `KeyError` for another key, as the update
@@ -810,6 +814,50 @@ defmodule Shoddy.Maps do
       "more than one key has the same value: #{inspect(values)}"
     end)
   end
+
+  @doc """
+  Keeps the fields of a form that contain text, or a list of text.
+
+  A page that refuses a form shows the form again with the text of the
+  person. The fields come from the browser, and a forged request can send a
+  map or a number in the place of text. A form cannot show a map as the
+  value of a field, so the page fails. This function removes each such
+  field. The result contains only these entries:
+
+  - an entry with a string key and a string value.
+  - an entry with a string key and a list. The function removes each element
+    of the list that is not a string. An empty list stays.
+
+  This function accepts a value of each type. For a value that is not a
+  plain map, it returns an empty map. A struct is not a plain map.
+
+  ## Examples
+
+      iex> Shoddy.Maps.text_fields(%{"name" => "Ada", "note" => %{"a" => "1"}, "days" => ["1", %{}]})
+      %{"name" => "Ada", "days" => ["1"]}
+
+      iex> Shoddy.Maps.text_fields(%{"age" => 7, :role => "admin"})
+      %{}
+
+      iex> Shoddy.Maps.text_fields(["a list"])
+      %{}
+  """
+  @spec text_fields(term()) :: %{optional(String.t()) => String.t() | [String.t()]}
+  def text_fields(fields) when is_non_struct_map(fields) do
+    for {key, value} <- fields, is_binary(key), text = text_value(value), into: %{}, do: {key, text}
+  end
+
+  def text_fields(_other), do: %{}
+
+  defp text_value(value) when is_binary(value), do: value
+  defp text_value(values) when is_list(values), do: text_elements(values, [])
+  defp text_value(_other), do: nil
+
+  # A request cannot contain an improper list, but this function accepts a
+  # value of each type. Thus the function ignores the tail of such a list.
+  defp text_elements([value | rest], kept) when is_binary(value), do: text_elements(rest, [value | kept])
+  defp text_elements([_value | rest], kept), do: text_elements(rest, kept)
+  defp text_elements(_end, kept), do: Enum.reverse(kept)
 
   defp new_map!(pairs, size, describe) do
     result = Map.new(pairs)

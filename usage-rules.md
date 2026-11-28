@@ -85,6 +85,9 @@ Examples of these rules:
   returns a `URI` struct.
 - For a term in a log, use `Shoddy.Terms.shape/2`, and not `inspect/1`.
   `inspect/1` shows the data of the term.
+- To show a refused form again, give the fields to
+  `Shoddy.Maps.text_fields/1` first. Do not give the fields of the browser
+  to the form with no change, because a field with a map makes the page fail.
 
 ### Tests
 

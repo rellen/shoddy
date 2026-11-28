@@ -27,6 +27,7 @@ params = %{"name" => "Ada", "email" => nil}
   also takes keys from a map with new names, and it merges nested maps. It
   changes each key or each value, puts a value deep into a map, and checks
   for required keys. It removes, renames, counts and compares entries.
+  It keeps the fields of a form that contain text.
 - `Shoddy.Keywords` puts and reads a value in a keyword list in the same
   way, for example in the options of a function call.
 - `Shoddy.MapSets` toggles the membership of an element in a map set, or

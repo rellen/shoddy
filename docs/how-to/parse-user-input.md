@@ -229,6 +229,29 @@ not call `String.trim/1` before the function for such input, because
 [The design of Shoddy](../explanation/design.md#why-parse-accepts-a-value-of-each-type)
 tells why the functions return an error and do not raise.
 
+## Show a refused form again
+
+A page that refuses a form shows the form again with the text of the
+person. A forged request can send a map in the place of the text of a field.
+A form cannot show a map as a value, so the page fails.
+`Shoddy.Maps.text_fields/1` keeps only the fields with text, and the
+fields with a list of text:
+
+```elixir
+%{"name" => "Ada", "email" => %{"forged" => "1"}, "days" => ["mon", 2]}
+|> Shoddy.Maps.text_fields()
+#=> %{"name" => "Ada", "days" => ["mon"]}
+```
+
+In a LiveView, give the result to `Phoenix.Component.to_form/2`, and assign
+the form again. For a value that is not a map, the function returns `%{}`,
+so the form is empty:
+
+```elixir
+Shoddy.Maps.text_fields(["a list"])
+#=> %{}
+```
+
 ## Accept spaces around the value
 
 The functions do not trim the text. Call `String.trim/1` first:

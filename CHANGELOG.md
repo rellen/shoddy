@@ -270,3 +270,7 @@ The first release also contains these changes:
 - Add `Shoddy.Terms.shape/2`. It describes the form of a term for a log,
   and it hides the data in the term. It shows the atoms, the kind of each
   other value, and the module of an exception.
+- Add `Shoddy.Maps.text_fields/1`. It keeps the fields of a form that
+  contain text or a list of text, and it removes each other field. It
+  accepts a value of each type, and it returns an empty map for a value
+  that is not a plain map.

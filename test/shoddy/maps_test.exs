@@ -691,6 +691,39 @@ defmodule Shoddy.MapsTest do
     end
   end
 
+  describe "text_fields/1" do
+    test "keeps each field with text, and each field with a list" do
+      fields = %{"name" => "Ada", "note" => "", "days" => ["1", "2"], "tags" => []}
+
+      assert text_fields(fields) == fields
+    end
+
+    test "removes each field with a value that is not text and not a list" do
+      fields = %{"name" => "Ada", "age" => 7, "note" => %{"a" => "1"}, "admin" => true, "role" => nil}
+
+      assert text_fields(fields) == %{"name" => "Ada"}
+    end
+
+    test "removes each element of a list that is not text" do
+      assert text_fields(%{"days" => ["1", 2, %{}, ["3"], nil, "4"]}) == %{"days" => ["1", "4"]}
+    end
+
+    test "ignores the tail of an improper list" do
+      assert text_fields(%{"days" => ["1", "2" | "3"]}) == %{"days" => ["1", "2"]}
+    end
+
+    test "removes each field with a key that is not a string" do
+      assert text_fields(%{:name => "Ada", 1 => "one", "email" => "ada@example.com"}) ==
+               %{"email" => "ada@example.com"}
+    end
+
+    test "returns an empty map for a value that is not a plain map" do
+      for value <- [nil, "Ada", 7, ["a", "b"], [name: "Ada"], {:ok, %{}}, %URI{host: "example.com"}] do
+        assert text_fields(value) == %{}
+      end
+    end
+  end
+
   describe "the key :__struct__ in a plain map" do
     test "each function that puts a key raises ArgumentError, also if it does not put the value" do
       calls = [

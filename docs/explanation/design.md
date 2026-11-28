@@ -701,6 +701,19 @@ gives an error result, as other incorrect input does.
 The functions check their options first. A wrong option is a defect in the
 program, so it raises `ArgumentError` for each input.
 
+## Why text_fields accepts a value of each type
+
+`Shoddy.Maps.text_fields/1` is the only function of `Shoddy.Maps` that
+accepts a value of each type. Its input comes from the browser, as the
+input of `Shoddy.Parse` does. A forged request can send a list where the
+form sends a map. Such input is not a defect in the program. Thus the
+function returns an empty map, and the page shows an empty form.
+
+The function keeps a list of text, because a field with more than one
+value, such as a group of checkboxes, sends a list. It does not keep a
+nested map, because a nested map can contain a value of each type. A page
+with nested forms must examine each nested map itself.
+
 ## Why integer! and float! raise an exception
 
 `Shoddy.Parse.integer!/2` and `Shoddy.Parse.float!/2` raise `ArgumentError`
