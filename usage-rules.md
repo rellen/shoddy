@@ -83,6 +83,8 @@ Examples of these rules:
   string.
 - `Shoddy.Env.uri/2` returns the URL as a string. `Shoddy.Parse.uri/2`
   returns a `URI` struct.
+- For a term in a log, use `Shoddy.Terms.shape/2`, and not `inspect/1`.
+  `inspect/1` shows the data of the term.
 
 ### Tests
 

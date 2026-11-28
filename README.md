@@ -53,6 +53,8 @@ params = %{"name" => "Ada", "email" => nil}
   raises an exception for a wrong value.
 - `Shoddy.Numbers` divides two integers and rounds up, keeps a number in a
   range, and calculates a mean.
+- `Shoddy.Terms` describes the form of any term, and hides the data in the
+  term. Use it to write a term into a log.
 - `Shoddy.Result` operates on an ok tuple and on an error tuple in a
   pipeline.
 - `Shoddy.Tagging` puts a value into a tagged tuple, such as the return
@@ -119,6 +121,7 @@ For one task, use a how-to guide:
 - [Round a time value up](docs/how-to/round-a-time-value-up.md)
 - [Check if a time value is in a period](docs/how-to/check-if-a-time-value-is-in-a-period.md)
 - [Test a process](docs/how-to/test-a-process.md)
+- [Write a term into a log](docs/how-to/write-a-term-into-a-log.md)
 
 For the rules that apply to each function, read the reference:
 

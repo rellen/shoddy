@@ -84,6 +84,7 @@ defmodule Shoddy.MixProject do
         "docs/how-to/round-a-time-value-up.md",
         "docs/how-to/check-if-a-time-value-is-in-a-period.md",
         "docs/how-to/test-a-process.md",
+        "docs/how-to/write-a-term-into-a-log.md",
         "docs/reference/conventions.md",
         {"usage-rules.md", title: "Usage rules"},
         "docs/explanation/design.md",
@@ -97,7 +98,7 @@ defmodule Shoddy.MixProject do
         Development: ["docs/development.md"]
       ],
       groups_for_modules: [
-        Values: [Shoddy, Shoddy.Strings, Shoddy.Parse, Shoddy.Numbers],
+        Values: [Shoddy, Shoddy.Strings, Shoddy.Parse, Shoddy.Numbers, Shoddy.Terms],
         Collections: [Shoddy.Maps, Shoddy.Keywords, Shoddy.MapSets, Shoddy.Lists],
         "Results and tagged tuples": [Shoddy.Result, Shoddy.Tagging],
         Configuration: [Shoddy.Env],
