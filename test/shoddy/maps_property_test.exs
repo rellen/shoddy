@@ -13,6 +13,8 @@ defmodule Shoddy.MapsPropertyTest do
 
   defp any_map, do: map_of(simple(), simple(), max_length: 10)
 
+  defp field_value, do: one_of([simple(), list_of(simple(), max_length: 4), any_map(), constant(nil)])
+
   describe "put_if/3" do
     property "returns the map with no change for a falsy value" do
       check all(map <- any_map(), key <- simple(), value <- falsy()) do
@@ -278,6 +280,29 @@ defmodule Shoddy.MapsPropertyTest do
     case model_put_path(child, rest) do
       {:ok, new_child} -> {:ok, Map.put(map, key, new_child)}
       :not_a_map -> :not_a_map
+    end
+  end
+
+  describe "text_fields/1" do
+    property "returns only string keys, with a string or a list of strings" do
+      check all(fields <- map_of(simple(), field_value(), max_length: 10)) do
+        for {key, value} <- Maps.text_fields(fields) do
+          assert is_binary(key)
+          assert is_binary(value) or (is_list(value) and Enum.all?(value, &is_binary/1))
+        end
+      end
+    end
+
+    property "keeps each entry with a string key and a string value" do
+      check all(fields <- map_of(string(:alphanumeric), string(:alphanumeric), max_length: 10)) do
+        assert Maps.text_fields(fields) == fields
+      end
+    end
+
+    property "keeps the strings of a list in their order" do
+      check all(values <- list_of(simple(), max_length: 8)) do
+        assert Maps.text_fields(%{"list" => values}) == %{"list" => Enum.filter(values, &is_binary/1)}
+      end
     end
   end
 end
