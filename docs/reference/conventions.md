@@ -16,6 +16,7 @@ of each module gives the full description of each function.
 | `Shoddy.Parse` | `Shoddy.Parse.integer/2`, `Shoddy.Parse.float/2`, `Shoddy.Parse.integer!/2`, `Shoddy.Parse.float!/2`, `Shoddy.Parse.boolean/2`, `Shoddy.Parse.one_of/2`, `Shoddy.Parse.uri/2` |
 | `Shoddy.Env` | `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2`, `Shoddy.Env.one_of/3`, `Shoddy.Env.uri/2` |
 | `Shoddy.Numbers` | `Shoddy.Numbers.ceil_div/2`, `Shoddy.Numbers.clamp/3`, `Shoddy.Numbers.mean/1` |
+| `Shoddy.Terms` | `Shoddy.Terms.shape/2` |
 | `Shoddy.Result` | Guards, predicates and transformations for an ok tuple and an error tuple |
 | `Shoddy.Tagging` | A function for each usual tag, and `Shoddy.Tagging.tag/2` and `Shoddy.Tagging.tag/3` for the other tags |
 | `Shoddy.DateTimes` | `Shoddy.DateTimes.extend_precision/2`, `Shoddy.DateTimes.floor/2`, `Shoddy.DateTimes.ceil/2`, `Shoddy.DateTimes.next_start/2`, `Shoddy.DateTimes.between?/3`, `Shoddy.DateTimes.within?/3`, `Shoddy.DateTimes.overlap?/2`, `Shoddy.DateTimes.stream/3`, `Shoddy.DateTimes.round/2` |
@@ -41,6 +42,7 @@ function can be a step of a pipeline.
 | `Shoddy.Parse` | The text. |
 | `Shoddy.Env` | The name of the environment variable. |
 | `Shoddy.Numbers` | The number. For `Shoddy.Numbers.ceil_div/2`, the dividend. |
+| `Shoddy.Terms` | The term. |
 | `Shoddy.Result` | The result. For `Shoddy.Result.normalize/1`, the result or the tuple of three elements. For `Shoddy.Result.from_nil/2` and `Shoddy.Result.ensure/3`, the value. For `Shoddy.Result.ok_if/2`, the condition. For `Shoddy.Result.from_errors/2`, the list of errors. For `Shoddy.Result.collect/2`, the list or stream of results. For `Shoddy.Result.reduce_ok/3`, `Shoddy.Result.find_error/3`, `Shoddy.Result.traverse/2` and `Shoddy.Result.each_ok/2`, the enumerable. For `Shoddy.Result.collect_map/1`, the map of results. For `Shoddy.Result.attempt/2`, the function to call. |
 | `Shoddy.Tagging` | The value that goes into the tuple. For `Shoddy.Tagging.reply_with/2` and `Shoddy.Tagging.stop_with/2`, the state. |
 | `Shoddy.DateTimes` | The time value. For `Shoddy.DateTimes.between?/3` and `Shoddy.DateTimes.within?/3`, the date or the time value to examine. For `Shoddy.DateTimes.overlap?/2`, the first period. |
@@ -273,6 +275,7 @@ These functions compare two values with the strict equality operator
 | `ArgumentError` | More than one element of the second list with the same key, for `Shoddy.Lists.join_by/4`. This rule does not apply to the key `nil`. |
 | `ArgumentError` | The key `:__struct__` for a plain map, for `Shoddy.Maps.put_if/3`, `Shoddy.Maps.put_present/3`, `Shoddy.Maps.put_path/3`, `Shoddy.Maps.increment/3`, `Shoddy.Maps.get_and_increment/3`, `Shoddy.Maps.get_or_put_lazy/3`, `Shoddy.Maps.rename_key/3`, `Shoddy.Maps.map_keys/2`, `Shoddy.Maps.invert/1` and `Shoddy.Maps.take_as/2`. The map would then be a struct. |
 | `ArgumentError` | A minimum that is higher than the maximum, for `Shoddy.Numbers.clamp/3`. |
+| `ArgumentError` | An unknown option, a `:fields` that is not a list of atoms, or a `:depth` that is not a non-negative integer, for `Shoddy.Terms.shape/2`. |
 | `ArgumentError` | An unknown option, a count that is not a non-negative integer, or a `:char` that is not a string of exactly one grapheme, for `Shoddy.Strings.mask/2`. |
 | `ArgumentError` | An empty separator, an empty list, or a list with a value that is not a non-empty string, for `Shoddy.Strings.split_trim/2`. |
 | `ArgumentError` | A value of the variable that is not correct, or an unknown or wrong option, for `Shoddy.Env.integer/2`, `Shoddy.Env.boolean/2`, `Shoddy.Env.list/2`, `Shoddy.Env.string/2`, `Shoddy.Env.one_of/3` and `Shoddy.Env.uri/2`. An allowed list that is not a list of atoms and not a keyword list, for `Shoddy.Env.one_of/3`. A value that is shorter than the option `:min_bytes`, for `Shoddy.Env.string/2`. A URL without a scheme or a host, or with a scheme that is not permitted, for `Shoddy.Env.uri/2`. The function checks the options also if the variable is absent. An absent variable or a blank value without the option `:default`. A blank value is empty or contains only whitespace. For `Shoddy.Env.list/2`, a value without a list element is also blank. |

@@ -20,6 +20,7 @@ Shoddy has no release yet. The first release contains these modules:
 - `Shoddy.Tagging`
 - `Shoddy.DateTimes`
 - `Shoddy.Tests`
+- `Shoddy.Terms`
 
 The first release also contains these changes:
 
@@ -266,3 +267,6 @@ The first release also contains these changes:
   does. Thus it now rescues an error such as `:badarg`. For each Erlang
   error that it rescues, `attempt/2` returns the exception of a `rescue`
   clause, with the same message.
+- Add `Shoddy.Terms.shape/2`. It describes the form of a term for a log,
+  and it hides the data in the term. It shows the atoms, the kind of each
+  other value, and the module of an exception.

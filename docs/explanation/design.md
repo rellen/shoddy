@@ -1099,3 +1099,32 @@ overlap.
 
 `Shoddy.DateTimes.round/2` rounds a value at the middle of a unit up. The
 rule follows `Kernel.round/1`, which rounds 0.5 up.
+
+## What shape shows
+
+`Shoddy.Terms.shape/2` is for a log. A log often goes to a service of
+another company, and more people can read it than the data of the
+application. Thus the function shows only the parts of a term that code
+writes, and not the parts that a person writes.
+
+An atom comes from the code, so the function shows it. A binary, a number
+and a map often come from a person, so the function shows only their kind.
+The size of a map is safe, and it can help a reader to find a cause. The
+function does not show the length of a list, because `length/1` raises an
+exception for an improper list. An improper list is a list whose last tail
+is not an empty list.
+
+The message of an exception is a binary. It often contains the value that
+the code refused, so the function never shows it. The other fields of an
+exception can contain data too. Thus the function shows only the fields in
+the option `:fields`, and only an atom, a tuple, an exception or a list of
+exceptions in such a field. The default is `[:reason]`, because the reason
+of a standard exception, such as `File.Error`, is often an atom.
+
+A list of exceptions is different from another list. A library such as
+Splode puts each error of an action into a field `:errors`. The modules of
+those errors tell the reader what failed, and they contain no data. Thus
+the function shows up to five of them, and the number of the others.
+
+The option `:depth` limits the size of the result. A deep term, such as a
+tuple in a tuple in an exception, would otherwise give a very long line.
